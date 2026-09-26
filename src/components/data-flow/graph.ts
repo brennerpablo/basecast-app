@@ -74,8 +74,7 @@ export type FlowGraph = {
 
 /** The input tables of a derived table: SQL-derived tables and the marts (`inputs`, contract §6). */
 export function tableInputs(table: TableSummary): string[] | null {
-  const inputs = (table as TableSummary & { inputs?: string[] | null }).inputs;
-  return Array.isArray(inputs) && inputs.length > 0 ? inputs : null;
+  return table.inputs?.length ? table.inputs : null;
 }
 
 /** Derived from other tables: built by SQL, or declaring its input tables whatever its write mode (the marts). */

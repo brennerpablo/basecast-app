@@ -5,7 +5,7 @@ import { FileText, Flag, type LucideIcon, MapPinOff, Scale, Unplug } from "lucid
 import { AppBadge, type AppBadgeState } from "@/components/components-app/ui/badge";
 import { formatDate, GAP } from "@/components/product/format";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { type AccountFlag, type AccountSummary, codeLabel, type NextAction } from "@/lib/accounts/labels";
+import { type AccountFlag, type AccountSummary, type CodeKind, type NextAction, useCodeLabels } from "@/lib/accounts/labels";
 import { cn } from "@/lib/utils";
 
 /** One color per next action: call now in the product's green, nurture blue, watch amber, hold muted. */
@@ -19,20 +19,39 @@ const ACTION_STATE: Record<NextAction, AppBadgeState> = {
 /** The order next actions sort and list in, most urgent first. */
 export const ACTION_ORDER: NextAction[] = ["call_now", "nurture", "watch", "hold"];
 
+/** A glossary code as a badge: the label on it, the glossary's text in the tooltip. */
+function CodeBadge({ kind, code, state }: { kind: CodeKind; code: string; state: AppBadgeState }) {
+  const { entry } = useCodeLabels();
+  const item = entry(kind, code);
+  const badge = (
+    <AppBadge state={state} tabIndex={item?.text ? 0 : undefined} className={cn(item?.text && "cursor-help")}>
+      {item?.label ?? code}
+    </AppBadge>
+  );
+  if (!item?.text) return badge;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{badge}</TooltipTrigger>
+      <TooltipContent className="max-w-xs text-xs">{item.text}</TooltipContent>
+    </Tooltip>
+  );
+}
+
 export function NextActionBadge({ action }: { action: NextAction }) {
-  return <AppBadge state={ACTION_STATE[action] ?? "meta"}>{codeLabel("next_action", action)}</AppBadge>;
+  return <CodeBadge kind="next_action" code={action} state={ACTION_STATE[action] ?? "meta"} />;
 }
 
 const days = (n: number) => `${n} ${n === 1 ? "day" : "days"}`;
 
-/** The freshest strong trigger with its age ("dc_permit · 38 days"); the event's title and date in the tooltip. */
+/** The freshest strong trigger with its age ("Data-center permit · 38 days"); the event's title and date in the tooltip. */
 export function TopTrigger({ trigger }: { trigger: AccountSummary["top_trigger"] }) {
+  const { label } = useCodeLabels();
   if (!trigger) return <span className="text-muted-foreground">{GAP}</span>;
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <span tabIndex={0} className="cursor-help text-xs whitespace-nowrap">
-          {codeLabel("trigger", trigger.trigger)} · {days(trigger.age_days)}
+          {label("trigger", trigger.trigger)} · {days(trigger.age_days)}
         </span>
       </TooltipTrigger>
       <TooltipContent className="max-w-xs text-xs">
@@ -48,15 +67,13 @@ export function TriggerChips({ triggers, className }: { triggers: string[]; clas
   return (
     <span className={cn("flex flex-wrap gap-1", className)}>
       {[...new Set(triggers)].map((trigger) => (
-        <AppBadge key={trigger} state="meta">
-          {codeLabel("trigger", trigger)}
-        </AppBadge>
+        <CodeBadge key={trigger} kind="trigger" code={trigger} state="meta" />
       ))}
     </span>
   );
 }
 
-/** A glyph per data-quality flag; the flag itself names it in the tooltip. */
+/** A glyph per data-quality flag; the glossary names and explains it in the tooltip. */
 const FLAG_ICON: Record<AccountFlag, LucideIcon> = {
   no_exposed_county: MapPinOff,
   apportionment_under: Scale,
@@ -66,12 +83,14 @@ const FLAG_ICON: Record<AccountFlag, LucideIcon> = {
 };
 
 export function FlagIcons({ flags }: { flags: AccountFlag[] }) {
+  const { entry } = useCodeLabels();
   if (!flags.length) return null;
   return (
     <span className="inline-flex items-center gap-1.5 text-muted-foreground">
       {flags.map((flag) => {
         const Icon = FLAG_ICON[flag] ?? Flag;
-        const label = codeLabel("flag", flag);
+        const item = entry("flag", flag);
+        const label = item?.label ?? flag;
         return (
           <Tooltip key={flag}>
             <TooltipTrigger asChild>
@@ -79,7 +98,10 @@ export function FlagIcons({ flags }: { flags: AccountFlag[] }) {
                 <Icon className="size-3.5" aria-hidden />
               </span>
             </TooltipTrigger>
-            <TooltipContent className="text-xs">{label}</TooltipContent>
+            <TooltipContent className="max-w-xs space-y-0.5 text-xs">
+              <p className="font-medium">{label}</p>
+              {item?.text && <p>{item.text}</p>}
+            </TooltipContent>
           </Tooltip>
         );
       })}

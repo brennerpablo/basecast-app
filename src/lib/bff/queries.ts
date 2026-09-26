@@ -18,6 +18,7 @@ export const productKeys = {
   all: ["product"] as const,
   resource: (path: string, params?: Params) => ["product", path, params ?? {}] as const,
   caveats: () => ["product", "caveats"] as const,
+  glossary: () => ["product", "glossary"] as const,
 };
 
 /**
@@ -51,6 +52,19 @@ export function useCaveatCatalog() {
     queryKey: productKeys.caveats(),
     queryFn: ({ signal }) => fetchJson<components["schemas"]["CaveatsResponse"]>("caveats", undefined, signal),
     select: (catalog) => new Map(catalog.items.map((caveat) => [caveat.code, caveat])),
+    staleTime: Infinity,
+    retry,
+  });
+}
+
+export type GlossaryItem = components["schemas"]["GlossaryItem"];
+
+/** The glossary (`GET /glossary`, not an envelope): label and text of each trigger, flag and next-action code. */
+export function useGlossary() {
+  return useQuery({
+    queryKey: productKeys.glossary(),
+    queryFn: ({ signal }) => fetchJson<components["schemas"]["GlossaryResponse"]>("glossary", undefined, signal),
+    select: (glossary) => new Map(glossary.items.map((item) => [`${item.kind}:${item.code}`, item])),
     staleTime: Infinity,
     retry,
   });

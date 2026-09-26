@@ -271,6 +271,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/glossary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Glossary
+         * @description The label and meaning of every trigger, flag and next-action code the account resources send.
+         */
+        get: operations["glossary_glossary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/lake/sources": {
         parameters: {
             query?: never;
@@ -1503,6 +1523,39 @@ export interface components {
             /** Detail */
             detail: string;
         };
+        /** GlossaryItem */
+        GlossaryItem: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "trigger" | "flag" | "next_action";
+            /** Code */
+            code: string;
+            /**
+             * Label
+             * @description Short, for a chip or a column
+             */
+            label: string;
+            /**
+             * Text
+             * @description What the code means, for a tooltip
+             */
+            text: string;
+            /**
+             * Strength
+             * @description Triggers only
+             */
+            strength?: ("strong" | "context") | null;
+        };
+        /**
+         * GlossaryResponse
+         * @description Not an envelope: the labels of every trigger, flag and next-action code.
+         */
+        GlossaryResponse: {
+            /** Items */
+            items: components["schemas"]["GlossaryItem"][];
+        };
         /** GridColumn */
         GridColumn: {
             /** Name */
@@ -1528,6 +1581,14 @@ export interface components {
             lake: string;
             /** Database */
             database: boolean;
+            /** Data Mode */
+            data_mode: string;
+            /** Marts Live */
+            marts_live: string[];
+            /** Marts Loaded */
+            marts_loaded: {
+                [key: string]: number;
+            };
         };
         /** HorizonSummary */
         HorizonSummary: {
@@ -2750,6 +2811,8 @@ export interface components {
             mode?: string | null;
             /** Description */
             description?: string | null;
+            /** Inputs */
+            inputs?: string[] | null;
             /** Declared */
             declared: boolean;
             /** Loaded */
@@ -2810,6 +2873,8 @@ export interface components {
             mode?: string | null;
             /** Description */
             description?: string | null;
+            /** Inputs */
+            inputs?: string[] | null;
             /** Declared */
             declared: boolean;
             /** Loaded */
@@ -3613,6 +3678,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    glossary_glossary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlossaryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The mart behind this resource is not built yet */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MartNotBuilt"];
                 };
             };
         };

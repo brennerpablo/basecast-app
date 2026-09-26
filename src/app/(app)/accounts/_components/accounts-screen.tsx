@@ -19,7 +19,7 @@ import {
   LIST_FILTERS,
   type ListFilter,
 } from "@/lib/accounts/filters";
-import { ACCOUNT_TYPE_LABEL, type AccountsData, type AccountSummary, codeLabel } from "@/lib/accounts/labels";
+import { ACCOUNT_TYPE_LABEL, type AccountsData, type AccountSummary, type CodeKind, useCodeLabels } from "@/lib/accounts/labels";
 import type { components } from "@/lib/api/get-data";
 import { useProductQuery } from "@/lib/bff/queries";
 import { dataUrl } from "@/lib/bff/url";
@@ -42,7 +42,10 @@ const distinct = (values: (string | null | undefined)[]) =>
   [...new Set(values.filter((v): v is string => Boolean(v)))].sort((a, b) => a.localeCompare(b));
 
 /** Each list filter's choices, from the unfiltered list: the app keeps no list of triggers, zones or G&Ts. */
-function filterOptions(items: AccountSummary[]): Record<ListFilter, { value: string; label: string }[]> {
+function filterOptions(
+  items: AccountSummary[],
+  codeLabel: (kind: CodeKind, code: string) => string,
+): Record<ListFilter, { value: string; label: string }[]> {
   const actions = [...new Set(items.map((i) => i.next_action))].sort((a, b) => ACTION_ORDER.indexOf(a) - ACTION_ORDER.indexOf(b));
   return {
     type: distinct(items.map((i) => i.account_type)).map((v) => ({
@@ -87,7 +90,8 @@ export function AccountsScreen() {
   const list = useProductQuery<AccountsData>("accounts", params, { keepPrevious: true });
   // The unfiltered list: the filters' choices and the universe count. The same entry as `list` without filters.
   const universe = useProductQuery<AccountsData>("accounts", undefined, { throwOnError: false });
-  const options = useMemo(() => filterOptions(universe.data?.data.items ?? []), [universe.data]);
+  const { label: codeLabel } = useCodeLabels();
+  const options = filterOptions(universe.data?.data.items ?? [], codeLabel);
   const columns = useMemo(() => accountColumns(filters.rank), [filters.rank]);
 
   const pendingWeights = list.data?.meta.caveats?.find((c) => c.code === "weights_pending_review");
