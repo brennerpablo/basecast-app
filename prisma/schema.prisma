@@ -1,0 +1,30 @@
+// Tables the app owns: only the users of ACCESS_MODE=login for now. They live in the `app` schema
+// of the `basecast` database (Cloud SQL), apart from the pipelines' tables in `public`, so
+// `prisma db push` never sees those. Applied with `npm run db:push`; there is no migration history.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["app"]
+}
+
+model User {
+  id           String    @id @default(cuid())
+  /// Lowercase, no "@" (see `USERNAME_PATTERN`), so a sign-in identifier with "@" is always an email.
+  username     String    @unique
+  /// Lowercase.
+  email        String    @unique
+  name         String?
+  /// bcrypt.
+  passwordHash String
+  isSuperAdmin Boolean   @default(false)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@schema("app")
+}

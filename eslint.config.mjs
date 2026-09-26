@@ -1,10 +1,12 @@
-import { defineConfig } from "eslint/config";
+import { defineConfig, globalIgnores } from "eslint/config";
 import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 import betterTailwind from "eslint-plugin-better-tailwindcss";
 import reactHooks from "eslint-plugin-react-hooks";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 
 export default defineConfig([
+  // The Prisma client, regenerated on npm install.
+  globalIgnores(["src/generated/"]),
   {
     extends: [...nextCoreWebVitals],
 
