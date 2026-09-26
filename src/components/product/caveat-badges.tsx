@@ -4,12 +4,12 @@ import { FlaskConical, Info, type LucideIcon, ScanEye } from "lucide-react";
 
 import { AppBadge, type AppBadgeState } from "@/components/components-app/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { Caveat } from "@/lib/bff/envelope";
+import type { Caveat, CaveatCode } from "@/lib/bff/envelope";
 import { useCaveatCatalog } from "@/lib/bff/queries";
 import { cn } from "@/lib/utils";
 
 /** How a caveat looks: machine-read values in amber, simulated or invented ones dashed, the rest as metadata. */
-const LOOK: Record<string, { state: AppBadgeState; Icon: LucideIcon }> = {
+const LOOK: Partial<Record<CaveatCode, { state: AppBadgeState; Icon: LucideIcon }>> = {
   machine_read_unverified: { state: "alert", Icon: ScanEye },
   simulated: { state: "draft", Icon: FlaskConical },
   fixture: { state: "draft", Icon: FlaskConical },
@@ -51,10 +51,10 @@ export function CaveatBadges({ caveats, className }: { caveats: Caveat[] | null 
   );
 }
 
-const fromCode = (code: string) => code.charAt(0).toUpperCase() + code.slice(1).replaceAll("_", " ");
+const fromCode = (code: CaveatCode) => code.charAt(0).toUpperCase() + code.slice(1).replaceAll("_", " ");
 
 /** A caveat of the `GET /caveats` catalog by code. Until the catalog answers, the badge reads the code. */
-function CatalogBadge({ code }: { code: string }) {
+function CatalogBadge({ code }: { code: CaveatCode }) {
   const catalog = useCaveatCatalog();
   return <CaveatBadge caveat={catalog.data?.get(code) ?? { code, label: fromCode(code), text: "" }} />;
 }

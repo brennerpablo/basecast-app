@@ -7,7 +7,7 @@ import { formatDate, GAP } from "./format";
 /** A data card's footer: the response's sources, data date and model version. */
 export function Provenance({ meta, className }: { meta: Meta; className?: string }) {
   const parts: { label: string; value: string; mono?: boolean }[] = [
-    { label: "Source", value: meta.sources.length ? meta.sources.join(", ") : GAP },
+    { label: "Source", value: meta.sources?.length ? meta.sources.join(", ") : GAP },
     { label: "Data as of", value: formatDate(meta.data_as_of) },
   ];
   if (meta.model_version) parts.push({ label: "Model", value: meta.model_version, mono: true });

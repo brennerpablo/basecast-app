@@ -40,7 +40,7 @@ test("a 200 returns data and meta", async () => {
   const calls = answer(200, { data: { items: [] }, meta: META });
   const envelope = await fetchEnvelope<{ items: unknown[] }>("accounts", { tier: "A" });
   assert.deepEqual(envelope.data, { items: [] });
-  assert.equal(envelope.meta.caveats[0].code, "fixture");
+  assert.equal(envelope.meta.caveats?.[0].code, "fixture");
   assert.deepEqual(calls, ["/api/data/accounts?tier=A"]);
 });
 

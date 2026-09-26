@@ -161,8 +161,8 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
 - Product screens (accounts, explorer, forecast, backtest) read get-data's v2 envelope `{data, meta}` through the same
   BFF catch-all (add each path to the allowlist in `src/lib/get-data/routes.ts`). Client side in `src/lib/bff/`:
   `fetchEnvelope`, `BffError` (its `mart` is set on a 503 `mart_not_built`), `useProductQuery` (other failures go to
-  `error.tsx`), `useCaveatCatalog` (`GET /caveats`). Its types mirror the v2 draft until get-data's openapi.json
-  carries them. Shared UI in `src/components/product/`: `DataCard` (loading, "being rebuilt", empty, caveats on top,
+  `error.tsx`), `useCaveatCatalog` (`GET /caveats`, a bare `{items}`, not an envelope). `Meta`, `Caveat` and `Fact`
+  are the generated contract types. Shared UI in `src/components/product/`: `DataCard` (loading, "being rebuilt", empty, caveats on top,
   `Provenance` below), `StatCard`, `FactValue` (a null is a gap, never a zero), `CaveatBadges`, `VerifiedBadge`,
   `SimulatedBadge`, formatters in `format.ts`. Caveat labels and texts come only from the API.
 - `public/geo/`: `tx-counties.geojson` (254 counties; `county_fips` for `promoteId`, `county_name`, `weather_zone`,

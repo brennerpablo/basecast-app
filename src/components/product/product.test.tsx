@@ -29,14 +29,12 @@ for (const key of Object.getOwnPropertyNames(dom.window)) {
 g.Event = dom.window.Event;
 g.CustomEvent = dom.window.CustomEvent;
 
+// `GET /caveats` is the bare catalog, not an envelope.
 const CATALOG = {
-  data: {
-    items: [
-      { code: "simulated", label: "Simulated", text: "Comes from a simulated adapter." },
-      { code: "machine_read_unverified", label: "Machine-read, not verified", text: "Read by machine." },
-    ],
-  },
-  meta: { generated_at: "2026-09-26T18:00:00Z", simulated: false, verified: true, sources: [], caveats: [] },
+  items: [
+    { code: "simulated", label: "Simulated", text: "Comes from a simulated adapter." },
+    { code: "machine_read_unverified", label: "Machine-read, not verified", text: "Read by machine." },
+  ],
 };
 const realFetch = globalThis.fetch;
 globalThis.fetch = (async () => new Response(JSON.stringify(CATALOG), { status: 200 })) as typeof fetch;

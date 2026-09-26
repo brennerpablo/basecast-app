@@ -4,6 +4,273 @@
  */
 
 export interface paths {
+    "/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Accounts */
+        get: operations["list_accounts_accounts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/accounts/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Accounts
+         * @description The rows of `GET /accounts` with the same filters, one line per account, signals flattened.
+         */
+        get: operations["export_accounts_accounts_export_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/accounts/{account_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Account Detail
+         * @description The diagnosis of one account: header facts, score breakdown, next action, triggers, territory, EIA
+         *     series and data gaps. Every scalar is a Fact with its source and as-of date.
+         */
+        get: operations["account_detail_accounts__account_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/accounts/{account_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Account Events
+         * @description The account's full event history, newest first.
+         */
+        get: operations["account_events_accounts__account_id__events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/geo/counties": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Counties
+         * @description All 254 Texas counties in one payload: acquisition priority (null outside ERCOT), the generation queue
+         *     for the horizon and stratum (null without an active project) and the new data-center sites.
+         */
+        get: operations["counties_geo_counties_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/geo/counties/{county_fips}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * County Detail
+         * @description One county: the priority's signals, drivers and drags, the queue by stratum and its largest projects,
+         *     the data-center sites and the co-ops and munis that cover at least 1% of it.
+         */
+        get: operations["county_detail_geo_counties__county_fips__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/queue/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Projects
+         * @description Active projects of the latest GIS report with their chance of reaching COD by December 2027 and
+         *     2028.
+         */
+        get: operations["projects_queue_projects_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forecasts/peak": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Peak
+         * @description Summer peak by year: the total with its P10–P90 band, the three layers (organic, large load,
+         *     unattributed), ERCOT's official forecasts as lines and the inputs of the large-load layer.
+         */
+        get: operations["peak_forecasts_peak_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forecasts/large-load": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Large Load
+         * @description What each ERCOT large-load deck promised against what got approved, the approved stock month by month,
+         *     the realization-ratio band and dated annotations (policy changes, batches).
+         */
+        get: operations["large_load_forecasts_large_load_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/backtest/peak": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Peak
+         * @description Our model re-run at past dates against the official vintages of the same date and the actual summer
+         *     peak: the cells of one date, the scores by era over every date, the paired comparison with each official
+         *     source, the organic-only ablation and the latest fan.
+         */
+        get: operations["peak_backtest_peak_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/backtest/official-errors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Official Errors
+         * @description Every official summer-peak forecast (product × vintage × target year) against the actual, and the mean
+         *     error by product and horizon.
+         */
+        get: operations["official_errors_backtest_official_errors_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/backtest/queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Queue
+         * @description The generation-queue model re-run on past GIS reports, 24 months ahead: predicted vs built vs the
+         *     developers' own dates, statewide and by fuel, and how well each ranks the counties.
+         */
+        get: operations["queue_backtest_queue_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caveats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Caveats
+         * @description Every code that `meta.caveats` can carry, with the label and text the app shows.
+         */
+        get: operations["caveats_caveats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/lake/sources": {
         parameters: {
             query?: never;
@@ -252,6 +519,768 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AccountCounty */
+        AccountCounty: {
+            /** County Fips */
+            county_fips: string;
+            /** County Name */
+            county_name: string;
+            /** Overlap Km2 */
+            overlap_km2: number;
+            /** County Share */
+            county_share: number;
+            /** Territory Share */
+            territory_share: number;
+            /** Weather Zone */
+            weather_zone?: string | null;
+            /**
+             * Exposed
+             * @description The account covers ≥ 20% of the county
+             */
+            exposed: boolean;
+            /**
+             * Context
+             * @description Used for the territory facts (the exposed counties, or the home county)
+             */
+            context: boolean;
+        };
+        /** AccountDetail */
+        AccountDetail: {
+            /** Account Id */
+            account_id: string;
+            /** Name */
+            name: string;
+            /**
+             * Account Type
+             * @enum {string}
+             */
+            account_type: "coop" | "muni";
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /**
+             * Simulated
+             * @default false
+             */
+            simulated: boolean;
+            /** Header */
+            header: components["schemas"]["Fact"][];
+            score: components["schemas"]["AccountScore"];
+            next_action: components["schemas"]["NextActionCard"];
+            triggers: components["schemas"]["AccountTriggers"];
+            territory: components["schemas"]["Territory"];
+            /** Eia Series */
+            eia_series: components["schemas"]["EiaYear"][];
+            /** Gaps */
+            gaps?: components["schemas"]["Gap"][];
+            coverage?: components["schemas"]["Coverage"];
+        };
+        /** AccountDetailResponse */
+        AccountDetailResponse: {
+            meta: components["schemas"]["Meta"];
+            data: components["schemas"]["AccountDetail"];
+        };
+        /** AccountScore */
+        AccountScore: {
+            /** Score */
+            score: number;
+            /** Rank */
+            rank: number;
+            /** Rank Within Type */
+            rank_within_type?: number | null;
+            /** N Accounts */
+            n_accounts: number;
+            /**
+             * Tier
+             * @enum {string}
+             */
+            tier: "A" | "B" | "C";
+            /** Method */
+            method: string;
+            /** Weights Set */
+            weights_set?: string | null;
+            /** Weights Status */
+            weights_status?: string | null;
+            /** Signals */
+            signals: components["schemas"]["ScoreSignal"][];
+        };
+        /** AccountSummary */
+        AccountSummary: {
+            /**
+             * Account Id
+             * @description PUCT ccn_no
+             */
+            account_id: string;
+            /** Name */
+            name: string;
+            /**
+             * Account Type
+             * @enum {string}
+             */
+            account_type: "coop" | "muni";
+            /** Eia Utility Id */
+            eia_utility_id?: string | null;
+            /**
+             * Gt
+             * @description G&T / wholesale supplier
+             */
+            gt?: string | null;
+            /** Primary Weather Zone */
+            primary_weather_zone?: string | null;
+            /**
+             * Meters
+             * @description EIA latest final year, bundled + delivery-only
+             */
+            meters?: number | null;
+            /** Score */
+            score: number;
+            /**
+             * Rank
+             * @description 1 = best, over every account
+             */
+            rank: number;
+            /**
+             * Rank Within Type
+             * @description 1 = best among the accounts of the same type
+             */
+            rank_within_type: number;
+            /**
+             * Tier
+             * @enum {string}
+             */
+            tier: "A" | "B" | "C";
+            /** Signals */
+            signals: {
+                [key: string]: components["schemas"]["SignalValue"];
+            };
+            /**
+             * Next Action
+             * @enum {string}
+             */
+            next_action: "call_now" | "nurture" | "watch" | "hold";
+            /**
+             * Action Changes On
+             * @description The day the action lapses without a new event
+             */
+            action_changes_on?: string | null;
+            /** N Strong */
+            n_strong: number;
+            /** N Context */
+            n_context: number;
+            /** Latest Event Date */
+            latest_event_date?: string | null;
+            top_trigger?: components["schemas"]["TopTrigger"] | null;
+            /** Active Triggers */
+            active_triggers: string[];
+            /** Flags */
+            flags: ("no_exposed_county" | "apportionment_under" | "apportionment_over" | "short_form" | "eia_break")[];
+            /**
+             * Simulated
+             * @default false
+             */
+            simulated: boolean;
+        };
+        /** AccountTriggers */
+        AccountTriggers: {
+            /**
+             * Active
+             * @description Every active strong event
+             */
+            active: components["schemas"]["Event"][];
+            /**
+             * Context Summary
+             * @description One line per context trigger
+             */
+            context_summary: components["schemas"]["ContextSummary"][];
+            /**
+             * History Count
+             * @description Every event ever; the full list is /accounts/{id}/events
+             */
+            history_count: number;
+        };
+        /** AccountsData */
+        AccountsData: {
+            /** Items */
+            items: components["schemas"]["AccountSummary"][];
+            /** Total */
+            total: number;
+            /**
+             * Rank Scope
+             * @enum {string}
+             */
+            rank_scope: "all" | "within_type";
+            /** Signals */
+            signals: components["schemas"]["SignalDef"][];
+            /** Weights Set */
+            weights_set: string;
+            /** Weights Status */
+            weights_status: string;
+        };
+        /** AccountsResponse */
+        AccountsResponse: {
+            meta: components["schemas"]["Meta"];
+            data: components["schemas"]["AccountsData"];
+        };
+        /** AcquisitionWeights */
+        AcquisitionWeights: {
+            /** Signals */
+            signals: components["schemas"]["SignalWeight"][];
+            /**
+             * Grid Tilt
+             * @description grid_factor = 1 − tilt + tilt × grid_score
+             */
+            grid_tilt: number;
+        };
+        /** ActualPeak */
+        ActualPeak: {
+            /** Year */
+            year: number;
+            /** Hourly Peak Mw */
+            hourly_peak_mw: number;
+            /** Peak Ts Utc */
+            peak_ts_utc?: string | null;
+            /** Hour Ending Local */
+            hour_ending_local?: number | null;
+            /** Peak 15Min Mw */
+            peak_15min_mw?: number | null;
+            /** Interval End Local 15Min */
+            interval_end_local_15min?: string | null;
+            /** Final */
+            final: boolean;
+        };
+        /** Annotation */
+        Annotation: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Title */
+            title: string;
+            /** Detail */
+            detail?: string | null;
+            /**
+             * Source Url
+             * @description Null = source not verified
+             */
+            source_url?: string | null;
+            /**
+             * Verified
+             * @default false
+             */
+            verified: boolean;
+        };
+        /** BacktestCell */
+        BacktestCell: {
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Target Year */
+            target_year: number;
+            /**
+             * Horizon
+             * @description Summers ahead of the as-of date
+             */
+            horizon: number;
+            /**
+             * Source
+             * @description basecast, basecast_organic_only (the ablation), LTLF, CDR or LTLF-prelim
+             */
+            source: string;
+            /** Product */
+            product?: string | null;
+            /** Vintage */
+            vintage?: string | null;
+            /** Vintage Date */
+            vintage_date?: string | null;
+            /**
+             * Variant
+             * @description basecast rows only
+             */
+            variant?: string | null;
+            /**
+             * Era
+             * @description See data.eras
+             */
+            era: string;
+            /**
+             * P10 Mw
+             * @description Official rows fill p50_mw only
+             */
+            p10_mw?: number | null;
+            /** P50 Mw */
+            p50_mw: number;
+            /** P90 Mw */
+            p90_mw?: number | null;
+            /** Actual Mw */
+            actual_mw?: number | null;
+            /**
+             * Actual Final
+             * @default true
+             */
+            actual_final: boolean;
+            /**
+             * Error Pct
+             * @description (forecast − actual) ÷ actual, in %
+             */
+            error_pct?: number | null;
+            /** In Band */
+            in_band?: boolean | null;
+            /** Organic P50 */
+            organic_p50?: number | null;
+            /** Ll P50 */
+            ll_p50?: number | null;
+            /** U P50 */
+            u_p50?: number | null;
+            /** Ll Realized */
+            ll_realized?: number | null;
+            /** U Realized */
+            u_realized?: number | null;
+            /**
+             * Leak Note
+             * @description Information from after the as-of date that the cell used
+             */
+            leak_note?: string | null;
+            /**
+             * Verified
+             * @default true
+             */
+            verified: boolean;
+        };
+        /**
+         * BacktestScore
+         * @description Scores over the cells of one era and source: mean |error|, mean error and band coverage.
+         */
+        BacktestScore: {
+            /** Era */
+            era: string;
+            /** Source */
+            source: string;
+            /** N */
+            n: number;
+            /**
+             * Mape
+             * @description Mean absolute error_pct, in %
+             */
+            mape: number;
+            /**
+             * Bias Pct
+             * @description Mean error_pct, in %
+             */
+            bias_pct: number;
+            /**
+             * Coverage
+             * @description Share of cells inside the P10–P90 band (basecast only)
+             */
+            coverage?: number | null;
+        };
+        /** Caveat */
+        Caveat: {
+            /**
+             * Code
+             * @enum {string}
+             */
+            code: "machine_read_unverified" | "preliminary_actuals" | "weights_pending_review" | "band_uncalibrated" | "beyond_backtested_window" | "allocated_statewide" | "by_county_not_point" | "by_area_not_homes" | "requests_not_forecasts" | "policy_pause_2026" | "optimistic_weather" | "simulated" | "fixture";
+            /** Label */
+            label: string;
+            /** Text */
+            text: string;
+        };
+        /**
+         * CaveatsResponse
+         * @description Not an envelope: the static catalog of caveat codes and their standard text.
+         */
+        CaveatsResponse: {
+            /** Items */
+            items: components["schemas"]["Caveat"][];
+        };
+        /** ContextSummary */
+        ContextSummary: {
+            /** Trigger */
+            trigger: string;
+            /** Label */
+            label: string;
+            /** Count */
+            count: number;
+            /**
+             * Latest Date
+             * Format: date
+             */
+            latest_date: string;
+            /** Counties */
+            counties?: string[];
+        };
+        /** CountiesData */
+        CountiesData: {
+            /** Items */
+            items: components["schemas"]["CountyRow"][];
+            /**
+             * Horizon
+             * @enum {integer}
+             */
+            horizon: 2027 | 2028;
+            /**
+             * Stratum
+             * @enum {string}
+             */
+            stratum: "all" | "solar" | "storage" | "wind" | "gas_other";
+            /** Horizons */
+            horizons: number[];
+            /** Strata */
+            strata: string[];
+            /** Queue As Of Month */
+            queue_as_of_month?: string | null;
+            legend: components["schemas"]["LegendClasses"];
+            weights: components["schemas"]["AcquisitionWeights"];
+        };
+        /** CountiesResponse */
+        CountiesResponse: {
+            meta: components["schemas"]["Meta"];
+            data: components["schemas"]["CountiesData"];
+        };
+        /** CountyAccount */
+        CountyAccount: {
+            /** Account Id */
+            account_id: string;
+            /** Name */
+            name: string;
+            /**
+             * Account Type
+             * @enum {string}
+             */
+            account_type: "coop" | "muni";
+            /**
+             * County Share
+             * @description Share of the county's land the account covers (≥ 1%)
+             */
+            county_share: number;
+            /** Rank */
+            rank: number;
+            /**
+             * Tier
+             * @enum {string}
+             */
+            tier: "A" | "B" | "C";
+            /**
+             * Next Action
+             * @enum {string}
+             */
+            next_action: "call_now" | "nurture" | "watch" | "hold";
+        };
+        /** CountyAcquisition */
+        CountyAcquisition: {
+            /**
+             * Priority
+             * @description 0–1: market_score × grid_factor
+             */
+            priority: number;
+            /**
+             * Rank
+             * @description 1 = best of the ERCOT counties
+             */
+            rank: number;
+            /**
+             * Priority Class
+             * @description 1–5 quintile class (5 = top); breaks in data.legend
+             */
+            priority_class: number;
+            /** Market Score */
+            market_score: number;
+            /** Grid Score */
+            grid_score: number;
+            /** Grid Factor */
+            grid_factor: number;
+            /**
+             * Channel
+             * @enum {string}
+             */
+            channel: "retail_direct" | "partnership" | "mixed";
+            /**
+             * Partner Type
+             * @description The larger of co-op and muni land
+             */
+            partner_type?: ("coop" | "muni") | null;
+            /**
+             * Retail Share
+             * @description By land area
+             */
+            retail_share: number;
+            /** Coop Share */
+            coop_share: number;
+            /** Muni Share */
+            muni_share: number;
+            /** Outside Share */
+            outside_share: number;
+            /** Partner Share */
+            partner_share: number;
+            /** Addressable Share */
+            addressable_share: number;
+            /**
+             * Retail Rank
+             * @description Null = not in the retail-direct list (share < 25%)
+             */
+            retail_rank?: number | null;
+            /**
+             * Partner Rank
+             * @description Null = not in the partnership list (share < 25%)
+             */
+            partner_rank?: number | null;
+            /** N Partners */
+            n_partners: number;
+            /** Top Partner Share */
+            top_partner_share?: number | null;
+            /**
+             * Drivers
+             * @description Top signals pushing the priority up
+             */
+            drivers: string[];
+            /**
+             * Drags
+             * @description Top signals pulling it down
+             */
+            drags: string[];
+        };
+        /** CountyDataCenters */
+        CountyDataCenters: {
+            /**
+             * Sites
+             * @description New data-center sites since 2025, every match
+             */
+            sites: number;
+            /**
+             * Sites Naics Only
+             * @description Of which matched on NAICS 518210 only
+             */
+            sites_naics_only: number;
+        };
+        /** CountyDetail */
+        CountyDetail: {
+            /** County Fips */
+            county_fips: string;
+            /** County Name */
+            county_name: string;
+            /** Weather Zone */
+            weather_zone?: string | null;
+            /** In Ercot */
+            in_ercot: boolean;
+            acquisition?: components["schemas"]["CountyAcquisition"] | null;
+            /** Signals */
+            signals: components["schemas"]["CountySignal"][];
+            /** Queue */
+            queue: components["schemas"]["CountyQueueStratum"][];
+            /** Queue As Of Month */
+            queue_as_of_month?: string | null;
+            /**
+             * Top Projects
+             * @description The county's 10 largest by expected MW in Dec 2028
+             */
+            top_projects: components["schemas"]["QueueProject"][];
+            /** Data Centers */
+            data_centers: components["schemas"]["DataCenterSite"][];
+            /**
+             * Accounts
+             * @description Co-ops and munis covering ≥ 1% of the county
+             */
+            accounts: components["schemas"]["CountyAccount"][];
+        };
+        /** CountyDetailResponse */
+        CountyDetailResponse: {
+            meta: components["schemas"]["Meta"];
+            data: components["schemas"]["CountyDetail"];
+        };
+        /**
+         * CountyQueue
+         * @description The generation queue of the county for the requested horizon and stratum.
+         */
+        CountyQueue: {
+            /** Projects */
+            projects: number;
+            /** Projects Ia */
+            projects_ia: number;
+            /** Raw Mw */
+            raw_mw: number;
+            /** Raw Mw Ia */
+            raw_mw_ia: number;
+            /**
+             * Adj Mw
+             * @description Expected MW reaching COD by December of the horizon
+             */
+            adj_mw: number;
+            /**
+             * Ratio
+             * @description adj_mw ÷ raw_mw
+             */
+            ratio?: number | null;
+            /** Rank Raw */
+            rank_raw: number;
+            /** Rank Adj */
+            rank_adj: number;
+            /**
+             * Rank Change
+             * @description rank_raw − rank_adj: positive = moves up once adjusted
+             */
+            rank_change: number;
+            /**
+             * Large Gas Mw 2028
+             * @description Adjusted MW from gas/other projects ≥ 500 MW
+             */
+            large_gas_mw_2028?: number | null;
+        };
+        /** CountyQueueStratum */
+        CountyQueueStratum: {
+            /**
+             * Stratum
+             * @enum {string}
+             */
+            stratum: "all" | "solar" | "storage" | "wind" | "gas_other";
+            /** Projects */
+            projects: number;
+            /** Projects Ia */
+            projects_ia: number;
+            /** Raw Mw */
+            raw_mw: number;
+            /** Raw Mw Ia */
+            raw_mw_ia: number;
+            /** Adj Mw 2027 */
+            adj_mw_2027: number;
+            /** Adj Mw 2028 */
+            adj_mw_2028: number;
+            /** Ratio 2027 */
+            ratio_2027?: number | null;
+            /** Ratio 2028 */
+            ratio_2028?: number | null;
+            /** Large Gas Mw 2028 */
+            large_gas_mw_2028?: number | null;
+        };
+        /**
+         * CountyRankCheck
+         * @description Spearman correlation across counties between each ranking and what was built.
+         */
+        CountyRankCheck: {
+            /**
+             * Report Month
+             * Format: date
+             */
+            report_month: string;
+            /** Rho Adj */
+            rho_adj?: number | null;
+            /** Rho Raw */
+            rho_raw?: number | null;
+            /** Rho Developer */
+            rho_developer?: number | null;
+        };
+        /** CountyRow */
+        CountyRow: {
+            /** County Fips */
+            county_fips: string;
+            /** County Name */
+            county_name: string;
+            /** Weather Zone */
+            weather_zone?: string | null;
+            /** In Ercot */
+            in_ercot: boolean;
+            acquisition?: components["schemas"]["CountyAcquisition"] | null;
+            /** @description Null = no active project in the stratum */
+            queue?: components["schemas"]["CountyQueue"] | null;
+            data_centers: components["schemas"]["CountyDataCenters"];
+        };
+        /** CountySignal */
+        CountySignal: {
+            /** Signal */
+            signal: string;
+            /** Label */
+            label: string;
+            /**
+             * Block
+             * @enum {string}
+             */
+            block: "market" | "grid";
+            /** Unit */
+            unit?: string | null;
+            /** Raw */
+            raw?: number | null;
+            /** Pct */
+            pct?: number | null;
+            /** Weight */
+            weight: number;
+        };
+        /** Coverage */
+        Coverage: {
+            /**
+             * Public Data
+             * @default true
+             */
+            public_data: boolean;
+            /**
+             * Utility Private Data
+             * @default false
+             */
+            utility_private_data: boolean;
+            /**
+             * Fleet Data
+             * @default false
+             */
+            fleet_data: boolean;
+            /**
+             * Resolution
+             * @default zone
+             * @enum {string}
+             */
+            resolution: "zone" | "territory (simulated)";
+        };
+        /** DataCenterSite */
+        DataCenterSite: {
+            /** Tceq Rn */
+            tceq_rn: string;
+            /** Site Name */
+            site_name: string;
+            /** County Fips */
+            county_fips: string;
+            /** County Name */
+            county_name: string;
+            /** City */
+            city?: string | null;
+            /**
+             * First Permit Date
+             * @description Earliest TCEQ affiliation date (meaning not verified)
+             */
+            first_permit_date?: string | null;
+            /**
+             * Matched By
+             * @enum {string}
+             */
+            matched_by: "name" | "naics";
+            /**
+             * Has Undated Affiliation
+             * @default false
+             */
+            has_undated_affiliation: boolean;
+            /**
+             * Largest Type
+             * @description coop, muni or iou, by county (not by point)
+             */
+            largest_type?: string | null;
+            /** Coop Share W */
+            coop_share_w?: number | null;
+            /** Iso Class */
+            iso_class?: string | null;
+            /** Density Per Km2 */
+            density_per_km2?: number | null;
+            /**
+             * Metro Legacy
+             * @default false
+             */
+            metro_legacy: boolean;
+            /**
+             * Metro Density
+             * @default false
+             */
+            metro_density: boolean;
+        };
         /** DatasetRef */
         DatasetRef: {
             /** Name */
@@ -273,12 +1302,206 @@ export interface components {
              */
             rows_estimated: boolean;
         };
+        /** EiaYear */
+        EiaYear: {
+            /** Data Year */
+            data_year: number;
+            /** Early Release */
+            early_release: boolean;
+            /** Form */
+            form?: ("long" | "short") | null;
+            /** Customers */
+            customers?: number | null;
+            /** Delivery Customers */
+            delivery_customers?: number | null;
+            /** Meters */
+            meters?: number | null;
+            /** Sales Mwh */
+            sales_mwh?: number | null;
+            /** Revenue Kusd */
+            revenue_kusd?: number | null;
+            /** Price Usd Kwh */
+            price_usd_kwh?: number | null;
+            /** Res Price Usd Kwh */
+            res_price_usd_kwh?: number | null;
+        };
+        /** Era */
+        Era: {
+            /** Era */
+            era: string;
+            /** Label */
+            label: string;
+            /** Description */
+            description: string;
+        };
+        /** ErrorDetail */
+        ErrorDetail: {
+            /** Detail */
+            detail: string;
+        };
+        /** Event */
+        Event: {
+            /**
+             * Event Date
+             * Format: date
+             */
+            event_date: string;
+            /** Age Days */
+            age_days: number;
+            /**
+             * Active
+             * @description Inside the 12-month window
+             */
+            active: boolean;
+            /**
+             * Trigger
+             * @description Trigger code: dc_permit, gen_storage_ia, dev_agreement, dev_agreement_gen, market_registration, permit_surge, new_transmission, rate_increase, tsp_large_load (more may be added).
+             */
+            trigger: string;
+            /** Label */
+            label: string;
+            /**
+             * Strength
+             * @enum {string}
+             */
+            strength: "strong" | "context";
+            /** Title */
+            title: string;
+            /** Detail */
+            detail?: string | null;
+            /**
+             * County Fips
+             * @description Null for a match by name
+             */
+            county_fips?: string | null;
+            /** County Name */
+            county_name?: string | null;
+            /**
+             * Exposure
+             * @description The account's share of the county, or 1 for a match by name
+             */
+            exposure: number;
+            /**
+             * Mapping
+             * @description county or name
+             */
+            mapping: string;
+            /** Source */
+            source: string;
+            /** Source Ref */
+            source_ref?: string | null;
+            /** Offer */
+            offer?: string | null;
+        };
+        /** EventsPage */
+        EventsPage: {
+            /** Items */
+            items: components["schemas"]["Event"][];
+            /** Total */
+            total: number;
+            /** Offset */
+            offset: number;
+            /** Limit */
+            limit: number;
+        };
+        /** EventsResponse */
+        EventsResponse: {
+            meta: components["schemas"]["Meta"];
+            data: components["schemas"]["EventsPage"];
+        };
+        /**
+         * Fact
+         * @description One displayed value with where it comes from. `value = null` is a gap, never a zero.
+         */
+        Fact: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Value */
+            value?: number | string | null;
+            /** Unit */
+            unit?: string | null;
+            /** Source */
+            source: string;
+            /** As Of */
+            as_of?: string | null;
+            /** Note */
+            note?: string | null;
+            /**
+             * Simulated
+             * @default false
+             */
+            simulated: boolean;
+            /**
+             * Verified
+             * @default true
+             */
+            verified: boolean;
+        };
+        /**
+         * FanPoint
+         * @description One mark of the fan chart of the latest summer: every official figure, the actual and our model.
+         */
+        FanPoint: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "official_preliminary" | "official_range" | "official" | "actual" | "model";
+            /** Label */
+            label: string;
+            /** Product */
+            product?: string | null;
+            /** Vintage */
+            vintage?: string | null;
+            /** Vintage Date */
+            vintage_date?: string | null;
+            /**
+             * Value Mw
+             * @description Null for a range
+             */
+            value_mw?: number | null;
+            /** Low Mw */
+            low_mw?: number | null;
+            /** High Mw */
+            high_mw?: number | null;
+            /** Source */
+            source: string;
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "file" | "manual" | "model";
+            /**
+             * Final
+             * @default true
+             */
+            final: boolean;
+            /**
+             * Verified
+             * @default true
+             */
+            verified: boolean;
+        };
         /** FormatCount */
         FormatCount: {
             /** Extension */
             extension: string;
             /** Files */
             files: number;
+        };
+        /** Gap */
+        Gap: {
+            /** Key */
+            key: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "missing" | "stale" | "no_as_of" | "structural" | "quality" | "coverage";
+            /** Detail */
+            detail: string;
         };
         /** GridColumn */
         GridColumn: {
@@ -305,6 +1528,61 @@ export interface components {
             lake: string;
             /** Database */
             database: boolean;
+        };
+        /** HorizonSummary */
+        HorizonSummary: {
+            /** Product */
+            product: string;
+            /** Horizon */
+            horizon: number;
+            /** N */
+            n: number;
+            /** Mape */
+            mape: number;
+            /** Bias Pct */
+            bias_pct: number;
+        };
+        /** InService */
+        InService: {
+            /**
+             * Deck Vintage
+             * Format: date
+             */
+            deck_vintage: string;
+            /** In Service Year */
+            in_service_year: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "approved_to_energize" | "planning_studies_approved" | "under_ercot_review" | "no_studies_submitted";
+            /**
+             * Mw
+             * @description Cumulative MW in service by the end of the year
+             */
+            mw: number;
+            /** Document */
+            document?: string | null;
+            /** Page */
+            page?: number | null;
+            /**
+             * Verified
+             * @default false
+             */
+            verified: boolean;
+        };
+        /**
+         * InvalidAsOf
+         * @description 422 body when `as_of` is not one of the backtest dates.
+         */
+        InvalidAsOf: {
+            /**
+             * Detail
+             * @constant
+             */
+            detail: "invalid_as_of";
+            /** As Of Dates */
+            as_of_dates: string[];
         };
         /** JsonNode */
         JsonNode: {
@@ -404,6 +1682,51 @@ export interface components {
             /** Bytes */
             bytes: number;
         };
+        /** LargeLoadData */
+        LargeLoadData: {
+            /** Realization */
+            realization: components["schemas"]["Realization"][];
+            ratio_band: components["schemas"]["RatioBand"];
+            /** In Service */
+            in_service: components["schemas"]["InService"][];
+            /** Monthly */
+            monthly: components["schemas"]["MonthlyStock"][];
+            /** Annotations */
+            annotations: components["schemas"]["Annotation"][];
+            /** Deck Vintages */
+            deck_vintages: string[];
+        };
+        /** LargeLoadResponse */
+        LargeLoadResponse: {
+            meta: components["schemas"]["Meta"];
+            data: components["schemas"]["LargeLoadData"];
+        };
+        /** LeadTrigger */
+        LeadTrigger: {
+            /** Trigger */
+            trigger: string;
+            /** Title */
+            title: string;
+            /**
+             * Event Date
+             * Format: date
+             */
+            event_date: string;
+            /** Source */
+            source: string;
+            /** Source Ref */
+            source_ref?: string | null;
+        };
+        /** LegendClasses */
+        LegendClasses: {
+            /**
+             * Breaks
+             * @description The 4 priority breaks between the 5 classes
+             */
+            breaks: number[];
+            /** Classes */
+            classes: number;
+        };
         /** LineagePage */
         LineagePage: {
             /** Items */
@@ -441,6 +1764,19 @@ export interface components {
             meta: components["schemas"]["Meta"];
             data: components["schemas"]["LakeListing"];
         };
+        /**
+         * MartNotBuilt
+         * @description 503 body when a resource's mart does not exist yet. The app shows it as an empty state.
+         */
+        MartNotBuilt: {
+            /**
+             * Detail
+             * @constant
+             */
+            detail: "mart_not_built";
+            /** Mart */
+            mart: string;
+        };
         /** Meta */
         Meta: {
             /**
@@ -450,15 +1786,104 @@ export interface components {
             generated_at: string;
             /** Data As Of */
             data_as_of?: string | null;
-            /** Model Run Id */
-            model_run_id?: string | null;
+            /** Model Version */
+            model_version?: string | null;
             /**
              * Simulated
              * @default false
              */
             simulated: boolean;
+            /**
+             * Verified
+             * @default true
+             */
+            verified: boolean;
             /** Sources */
             sources?: string[];
+            /** Caveats */
+            caveats?: components["schemas"]["Caveat"][];
+        };
+        /** MonthlyStock */
+        MonthlyStock: {
+            /**
+             * Month
+             * Format: date
+             * @description First of the month
+             */
+            month: string;
+            /**
+             * A2E Mw
+             * @description Approved-to-energize stock; null = no reading that month
+             */
+            a2e_mw?: number | null;
+            /** Observed Simultaneous Mw */
+            observed_simultaneous_mw?: number | null;
+            /** Observed Nonsimultaneous Mw */
+            observed_nonsimultaneous_mw?: number | null;
+            /** A2E Lz West Mw */
+            a2e_lz_west_mw?: number | null;
+            /** A2E Other Mw */
+            a2e_other_mw?: number | null;
+            /** Read From Vintage */
+            read_from_vintage?: string | null;
+            /** Document */
+            document?: string | null;
+            /** Page */
+            page?: number | null;
+            /**
+             * Verified
+             * @default false
+             */
+            verified: boolean;
+        };
+        /** NearbyDataCenter */
+        NearbyDataCenter: {
+            /** First Permit Date */
+            first_permit_date?: string | null;
+            /** Name */
+            name: string;
+            /** Tceq Rn */
+            tceq_rn: string;
+            /** County Name */
+            county_name: string;
+            /** County Share */
+            county_share: number;
+            /** Exposed */
+            exposed: boolean;
+            /**
+             * Context
+             * @default false
+             */
+            context: boolean;
+            /**
+             * Matched By
+             * @enum {string}
+             */
+            matched_by: "name" | "naics";
+        };
+        /** NextActionCard */
+        NextActionCard: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "call_now" | "nurture" | "watch" | "hold";
+            /** Action Label */
+            action_label: string;
+            /**
+             * Rule
+             * @description The rule that fired, in words
+             */
+            rule: string;
+            lead_trigger?: components["schemas"]["LeadTrigger"] | null;
+            /** Offer */
+            offer?: string | null;
+            /** Talking Points */
+            talking_points?: string[];
+            /** Changes On */
+            changes_on?: string | null;
+            /** Changes To */
+            changes_to?: ("call_now" | "nurture" | "watch" | "hold") | null;
         };
         /** ObjectDetail */
         ObjectDetail: {
@@ -520,6 +1945,262 @@ export interface components {
             /** Blocks */
             blocks: components["schemas"]["TextBlock"][];
         };
+        /** OfficialError */
+        OfficialError: {
+            /** Product */
+            product: string;
+            /** Vintage */
+            vintage: string;
+            /** Vintage Date */
+            vintage_date?: string | null;
+            /** Target Year */
+            target_year: number;
+            /** Horizon */
+            horizon: number;
+            /**
+             * Series
+             * @description Which base series the value came from
+             */
+            series?: string | null;
+            /** Forecast Mw */
+            forecast_mw: number;
+            /** Actual Mw */
+            actual_mw?: number | null;
+            /**
+             * Actual Complete
+             * @default true
+             */
+            actual_complete: boolean;
+            /** Actual Peak Local */
+            actual_peak_local?: string | null;
+            /** Error Mw */
+            error_mw?: number | null;
+            /** Error Pct */
+            error_pct?: number | null;
+        };
+        /** OfficialErrorsData */
+        OfficialErrorsData: {
+            /** Items */
+            items: components["schemas"]["OfficialError"][];
+            /** Summary */
+            summary: components["schemas"]["HorizonSummary"][];
+            /** Products */
+            products: string[];
+        };
+        /** OfficialErrorsResponse */
+        OfficialErrorsResponse: {
+            meta: components["schemas"]["Meta"];
+            data: components["schemas"]["OfficialErrorsData"];
+        };
+        /** OfficialLine */
+        OfficialLine: {
+            /**
+             * Product
+             * @description LTLF or CDR
+             */
+            product: string;
+            /** Vintage */
+            vintage: string;
+            /** Vintage Date */
+            vintage_date?: string | null;
+            /**
+             * Series
+             * @description ercot_adjusted, tsp_provided or cdr
+             */
+            series: string;
+            /** Label */
+            label: string;
+            /** Target Year */
+            target_year: number;
+            /** Mw */
+            mw: number;
+        };
+        /** PeakBacktestData */
+        PeakBacktestData: {
+            /**
+             * As Of
+             * Format: date
+             * @description The selected as-of date
+             */
+            as_of: string;
+            /** As Of Dates */
+            as_of_dates: string[];
+            /**
+             * Cells
+             * @description Every cell of the selected as-of date
+             */
+            cells: components["schemas"]["BacktestCell"][];
+            /**
+             * Scores
+             * @description Over every as-of date, split by era (and era = all)
+             */
+            scores: components["schemas"]["BacktestScore"][];
+            /**
+             * Comparisons
+             * @description basecast vs each official source, paired cells
+             */
+            comparisons: components["schemas"]["SourceComparison"][];
+            /**
+             * Ablation
+             * @description basecast vs basecast_organic_only over every cell
+             */
+            ablation: components["schemas"]["BacktestScore"][];
+            /** Eras */
+            eras: components["schemas"]["Era"][];
+            /** Actuals */
+            actuals: components["schemas"]["ActualPeak"][];
+            /** Fan Target Year */
+            fan_target_year: number;
+            /** Fan */
+            fan: components["schemas"]["FanPoint"][];
+        };
+        /** PeakBacktestResponse */
+        PeakBacktestResponse: {
+            meta: components["schemas"]["Meta"];
+            data: components["schemas"]["PeakBacktestData"];
+        };
+        /** PeakForecastData */
+        PeakForecastData: {
+            /**
+             * Region
+             * @enum {string}
+             */
+            region: "ERCOT" | "COAST" | "EAST" | "FWEST" | "NCENT" | "NORTH" | "SCENT" | "SOUTH" | "WEST";
+            /**
+             * Region Type
+             * @enum {string}
+             */
+            region_type: "ercot" | "weather_zone";
+            /**
+             * Variant
+             * @enum {string}
+             */
+            variant: "deck_pre_batch_zero" | "deck_latest" | "approvals_pace";
+            /**
+             * Available
+             * @description False when this variant is not built for the region: empty series
+             */
+            available: boolean;
+            /** Variants */
+            variants: components["schemas"]["VariantOption"][];
+            /** Regions */
+            regions: ("ERCOT" | "COAST" | "EAST" | "FWEST" | "NCENT" | "NORTH" | "SCENT" | "SOUTH" | "WEST")[];
+            /** Run Id */
+            run_id?: string | null;
+            /** As Of */
+            as_of?: string | null;
+            /**
+             * Series
+             * @description The total, with the P10–P90 band
+             */
+            series: components["schemas"]["PeakPoint"][];
+            /**
+             * Layers
+             * @description organic, large_load and unattributed per year
+             */
+            layers: components["schemas"]["PeakLayer"][];
+            /**
+             * Official
+             * @description ERCOT's own forecasts for the same region, as lines
+             */
+            official: components["schemas"]["OfficialLine"][];
+            inputs: components["schemas"]["PeakInputs"];
+        };
+        /** PeakForecastResponse */
+        PeakForecastResponse: {
+            meta: components["schemas"]["Meta"];
+            data: components["schemas"]["PeakForecastData"];
+        };
+        /**
+         * PeakInputs
+         * @description How the large-load layer was built: the "how we got here" panel.
+         */
+        PeakInputs: {
+            /**
+             * Deck Vintage
+             * @description The large-load deck behind the layer
+             */
+            deck_vintage?: string | null;
+            /**
+             * Factor
+             * @description Observed simultaneous peak ÷ approved stock
+             */
+            factor?: number | null;
+            /**
+             * Ratio P10
+             * @description Incremental realization ratio
+             */
+            ratio_p10?: number | null;
+            /** Ratio P50 */
+            ratio_p50?: number | null;
+            /** Ratio P90 */
+            ratio_p90?: number | null;
+            /** Approved Stock Mw */
+            approved_stock_mw?: number | null;
+            /**
+             * Share Of Ll U
+             * @description Zones only: the fixed share of large load + unattributed
+             */
+            share_of_ll_u?: number | null;
+            /**
+             * Verified
+             * @default true
+             */
+            verified: boolean;
+        };
+        /** PeakLayer */
+        PeakLayer: {
+            /** Target Year */
+            target_year: number;
+            /**
+             * P10 Mw
+             * @description Null when the variant has no band (approvals_pace)
+             */
+            p10_mw?: number | null;
+            /** P50 Mw */
+            p50_mw: number;
+            /** P90 Mw */
+            p90_mw?: number | null;
+            /**
+             * Band Kind
+             * @description p10_p90: a probabilistic band; allocation_range: low/high across the candidate zone shares, not a P10–P90; null: no band
+             */
+            band_kind?: ("p10_p90" | "allocation_range") | null;
+            /**
+             * Verified
+             * @default true
+             */
+            verified: boolean;
+            /**
+             * Layer
+             * @enum {string}
+             */
+            layer: "organic" | "large_load" | "unattributed";
+        };
+        /** PeakPoint */
+        PeakPoint: {
+            /** Target Year */
+            target_year: number;
+            /**
+             * P10 Mw
+             * @description Null when the variant has no band (approvals_pace)
+             */
+            p10_mw?: number | null;
+            /** P50 Mw */
+            p50_mw: number;
+            /** P90 Mw */
+            p90_mw?: number | null;
+            /**
+             * Band Kind
+             * @description p10_p90: a probabilistic band; allocation_range: low/high across the candidate zone shares, not a P10–P90; null: no band
+             */
+            band_kind?: ("p10_p90" | "allocation_range") | null;
+            /**
+             * Verified
+             * @default true
+             */
+            verified: boolean;
+        };
         /** ProcessedRef */
         ProcessedRef: {
             /** Dataset */
@@ -535,6 +2216,212 @@ export interface components {
             processed_at: string;
             /** Current */
             current: boolean;
+        };
+        /** QueueBacktestData */
+        QueueBacktestData: {
+            /** Items */
+            items: components["schemas"]["QueueBacktestRow"][];
+            /** County Rank */
+            county_rank: components["schemas"]["CountyRankCheck"][];
+        };
+        /** QueueBacktestResponse */
+        QueueBacktestResponse: {
+            meta: components["schemas"]["Meta"];
+            data: components["schemas"]["QueueBacktestData"];
+        };
+        /** QueueBacktestRow */
+        QueueBacktestRow: {
+            /**
+             * Report Month
+             * Format: date
+             */
+            report_month: string;
+            /** Stratum */
+            stratum: string;
+            /** Window Months */
+            window_months: number;
+            /** Raw Mw */
+            raw_mw: number;
+            /** Pred Mw */
+            pred_mw: number;
+            /** Actual Mw */
+            actual_mw: number;
+            /** Developer Projected Mw */
+            developer_projected_mw?: number | null;
+            /** Error Pct */
+            error_pct: number;
+            /** Model Variant */
+            model_variant?: string | null;
+        };
+        /** QueueProject */
+        QueueProject: {
+            /** Inr */
+            inr: string;
+            /** Project Name */
+            project_name: string;
+            /** County Fips */
+            county_fips: string;
+            /** County Name */
+            county_name: string;
+            /** Weather Zone */
+            weather_zone?: string | null;
+            /** Cdr Reporting Zone */
+            cdr_reporting_zone?: string | null;
+            /** Fuel Type */
+            fuel_type: string;
+            /**
+             * Stratum
+             * @enum {string}
+             */
+            stratum: "solar" | "storage" | "wind" | "gas_other";
+            /**
+             * Stage
+             * @description entry (incl. FIS approved without an IA) or ia (IA signed, or synchronized)
+             * @enum {string}
+             */
+            stage: "entry" | "ia";
+            /** Stage Date */
+            stage_date?: string | null;
+            /**
+             * Elapsed Months
+             * @description Time spent at the stage
+             */
+            elapsed_months?: number | null;
+            /** Capacity Mw */
+            capacity_mw: number;
+            /**
+             * Projected Cod
+             * @description The developer's date, the baseline the model beats
+             */
+            projected_cod?: string | null;
+            /**
+             * Curve
+             * @description The survival curve used: own stratum or pooled
+             */
+            curve: string;
+            /**
+             * P Cod 2027
+             * @description P(COD by Dec 2027 | stage, elapsed time)
+             */
+            p_cod_2027: number;
+            /**
+             * P Cod 2028
+             * @description P(COD by Dec 2028 | stage, elapsed time)
+             */
+            p_cod_2028: number;
+            /** Mw 2027 */
+            mw_2027: number;
+            /** Mw 2028 */
+            mw_2028: number;
+            /**
+             * Clamped 2027
+             * @description Clock clamped past the curve's support (fewer than 10 at risk)
+             */
+            clamped_2027: boolean;
+            /** Clamped 2028 */
+            clamped_2028: boolean;
+        };
+        /** QueueProjectsData */
+        QueueProjectsData: {
+            /** Items */
+            items: components["schemas"]["QueueProject"][];
+            /** Total */
+            total: number;
+            /** Offset */
+            offset: number;
+            /** Limit */
+            limit: number;
+            /**
+             * As Of Month
+             * @description The GIS report month
+             */
+            as_of_month?: string | null;
+        };
+        /** QueueProjectsResponse */
+        QueueProjectsResponse: {
+            meta: components["schemas"]["Meta"];
+            data: components["schemas"]["QueueProjectsData"];
+        };
+        /**
+         * RatioBand
+         * @description The realization-ratio band the default forecast variant uses.
+         */
+        RatioBand: {
+            /** P10 */
+            p10?: number | null;
+            /** P50 */
+            p50?: number | null;
+            /** P90 */
+            p90?: number | null;
+            /** Deck Vintage */
+            deck_vintage?: string | null;
+            /** Definition */
+            definition: string;
+            /**
+             * Verified
+             * @default false
+             */
+            verified: boolean;
+        };
+        /** Realization */
+        Realization: {
+            /**
+             * Deck Vintage
+             * Format: date
+             */
+            deck_vintage: string;
+            /** Report Date */
+            report_date?: string | null;
+            /** Target Year */
+            target_year: number;
+            /** Horizon Months */
+            horizon_months: number;
+            /**
+             * Promised Mw
+             * @description The deck's in-service bar for the year
+             */
+            promised_mw: number;
+            /**
+             * Promised Firm Mw
+             * @description Minus 'No Studies Submitted'
+             */
+            promised_firm_mw?: number | null;
+            /**
+             * Base A2E Mw
+             * @description The deck's own approved-to-energize stock
+             */
+            base_a2e_mw?: number | null;
+            /**
+             * Realized A2E Mw
+             * @description Approved stock in December of the target year
+             */
+            realized_a2e_mw?: number | null;
+            /** Realized Energized Mw */
+            realized_energized_mw?: number | null;
+            /**
+             * Known From
+             * @description First deck that reports the December stock
+             */
+            known_from?: string | null;
+            /** Gross A2E */
+            gross_a2e?: number | null;
+            /** Gross A2E Firm */
+            gross_a2e_firm?: number | null;
+            /** Incremental A2E */
+            incremental_a2e?: number | null;
+            /** Incremental A2E Firm */
+            incremental_a2e_firm?: number | null;
+            /** Gross Energized */
+            gross_energized?: number | null;
+            /** Document */
+            document?: string | null;
+            /** Page */
+            page?: number | null;
+            /**
+             * Verified
+             * @default false
+             */
+            verified: boolean;
         };
         /**
          * RowsPage
@@ -626,6 +2513,35 @@ export interface components {
             meta: components["schemas"]["Meta"];
             data: components["schemas"]["RunsPage"];
         };
+        /** ScoreSignal */
+        ScoreSignal: {
+            /** Signal */
+            signal: string;
+            /** Label */
+            label: string;
+            /** Raw */
+            raw?: number | null;
+            /** Unit */
+            unit?: string | null;
+            /** Pct */
+            pct?: number | null;
+            /** Weight */
+            weight: number;
+            /**
+             * Weight Used
+             * @description Renormalized when a signal is missing
+             */
+            weight_used: number;
+            /**
+             * Contribution
+             * @description Contributions sum to the score
+             */
+            contribution: number;
+            /** Source */
+            source: string;
+            /** As Of */
+            as_of?: string | null;
+        };
         /** SheetInfo */
         SheetInfo: {
             /** Name */
@@ -634,6 +2550,46 @@ export interface components {
             rows?: number | null;
             /** Columns */
             columns?: number | null;
+        };
+        /** SignalDef */
+        SignalDef: {
+            /** Signal */
+            signal: string;
+            /** Label */
+            label: string;
+            /** Unit */
+            unit?: string | null;
+            /** Weight */
+            weight: number;
+        };
+        /** SignalValue */
+        SignalValue: {
+            /** Raw */
+            raw?: number | null;
+            /**
+             * Pct
+             * @description Percentile rank within the scored universe, 0–1
+             */
+            pct?: number | null;
+        };
+        /** SignalWeight */
+        SignalWeight: {
+            /** Signal */
+            signal: string;
+            /** Label */
+            label: string;
+            /**
+             * Block
+             * @enum {string}
+             */
+            block: "market" | "grid";
+            /** Unit */
+            unit?: string | null;
+            /**
+             * Weight
+             * @description Weight within its block
+             */
+            weight: number;
         };
         /** SignedUrl */
         SignedUrl: {
@@ -657,6 +2613,26 @@ export interface components {
             file: string;
             /** Bytes */
             bytes: number;
+        };
+        /**
+         * SourceComparison
+         * @description basecast against one official source on the cells where both exist, paired by (as_of, target_year).
+         */
+        SourceComparison: {
+            /** Era */
+            era: string;
+            /** Official Source */
+            official_source: string;
+            /** N */
+            n: number;
+            /** Basecast Mape */
+            basecast_mape: number;
+            /** Official Mape */
+            official_mape: number;
+            /** Basecast Bias Pct */
+            basecast_bias_pct: number;
+            /** Official Bias Pct */
+            official_bias_pct: number;
         };
         /** SourceRef */
         SourceRef: {
@@ -858,6 +2834,47 @@ export interface components {
             meta: components["schemas"]["Meta"];
             data: components["schemas"]["TablesData"];
         };
+        /** Territory */
+        Territory: {
+            /** Facts */
+            facts: components["schemas"]["Fact"][];
+            /** Counties */
+            counties: components["schemas"]["AccountCounty"][];
+            /**
+             * Context Rule
+             * @default exposed
+             * @enum {string}
+             */
+            context_rule: "exposed" | "home_county";
+            /** Context Label */
+            context_label?: string | null;
+            /** Zones */
+            zones: components["schemas"]["ZoneShare"][];
+            /** Data Centers */
+            data_centers: components["schemas"]["NearbyDataCenter"][];
+            /** Queue */
+            queue: components["schemas"]["TerritoryQueue"][];
+            zone_outlook?: components["schemas"]["ZoneOutlook"] | null;
+        };
+        /** TerritoryQueue */
+        TerritoryQueue: {
+            /** Stratum */
+            stratum: string;
+            /** Projects Context */
+            projects_context?: number | null;
+            /** Raw Mw Context */
+            raw_mw_context?: number | null;
+            /** Adj Mw 2027 Context */
+            adj_mw_2027_context?: number | null;
+            /** Adj Mw 2028 Context */
+            adj_mw_2028_context?: number | null;
+            /** Raw Mw Apportioned */
+            raw_mw_apportioned?: number | null;
+            /** Adj Mw 2027 Apportioned */
+            adj_mw_2027_apportioned?: number | null;
+            /** Adj Mw 2028 Apportioned */
+            adj_mw_2028_apportioned?: number | null;
+        };
         /** TextBlock */
         TextBlock: {
             /** Title */
@@ -869,6 +2886,23 @@ export interface components {
         TextResponse: {
             meta: components["schemas"]["Meta"];
             data: components["schemas"]["ObjectText"];
+        };
+        /** TopTrigger */
+        TopTrigger: {
+            /**
+             * Trigger
+             * @description Trigger code: dc_permit, gen_storage_ia, dev_agreement, dev_agreement_gen, market_registration, permit_surge, new_transmission, rate_increase, tsp_large_load (more may be added).
+             */
+            trigger: string;
+            /** Title */
+            title: string;
+            /**
+             * Event Date
+             * Format: date
+             */
+            event_date: string;
+            /** Age Days */
+            age_days: number;
         };
         /** ValidationError */
         ValidationError: {
@@ -882,6 +2916,25 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VariantOption */
+        VariantOption: {
+            /**
+             * Variant
+             * @enum {string}
+             */
+            variant: "deck_pre_batch_zero" | "deck_latest" | "approvals_pace";
+            /** Label */
+            label: string;
+            /** Is Default */
+            is_default: boolean;
+            /** Has Band */
+            has_band: boolean;
+            /**
+             * Regions
+             * @description Regions built for this variant (zones: the default variant only)
+             */
+            regions: ("ERCOT" | "COAST" | "EAST" | "FWEST" | "NCENT" | "NORTH" | "SCENT" | "SOUTH" | "WEST")[];
         };
         /** ZipMember */
         ZipMember: {
@@ -899,6 +2952,71 @@ export interface components {
             /** Modified */
             modified?: string | null;
         };
+        /** ZoneOutlook */
+        ZoneOutlook: {
+            /** Zone */
+            zone: string;
+            /**
+             * Ltlf Start
+             * @description LTLF summer peak, first year (MW)
+             */
+            ltlf_start?: number | null;
+            /**
+             * Ltlf End
+             * @description LTLF summer peak, last year (MW)
+             */
+            ltlf_end?: number | null;
+            /**
+             * Ltlf Now
+             * @description LTLF summer peak for the current year (MW)
+             */
+            ltlf_now?: number | null;
+            /** Ltlf Cagr */
+            ltlf_cagr?: number | null;
+            /** Cp Year */
+            cp_year?: number | null;
+            /** Cp Avg Mw */
+            cp_avg_mw?: number | null;
+            /** Cf Summer */
+            cf_summer?: number | null;
+            /** Share 4Cp */
+            share_4cp?: number | null;
+            /** Share Energy */
+            share_energy?: number | null;
+            /** Intensity */
+            intensity?: number | null;
+            /** Ncp Summer Mw Full */
+            ncp_summer_mw_full?: number | null;
+            /**
+             * Ncp End Hour
+             * @description Local hour as a decimal (18.25 = 18:15)
+             */
+            ncp_end_hour?: number | null;
+            /** Hour Years */
+            hour_years?: string | null;
+            /** Ncp Now Mw */
+            ncp_now_mw?: number | null;
+            /** Ncp Now Months */
+            ncp_now_months?: number | null;
+            /** Now Vs Ltlf */
+            now_vs_ltlf?: number | null;
+            /** Peak Mismatch */
+            peak_mismatch?: ("early" | "late") | null;
+            /** Q7 Holdout Mape */
+            q7_holdout_mape?: number | null;
+            /**
+             * Line
+             * @description The zone's 4CP talking point
+             */
+            line?: string | null;
+        };
+        /** ZoneShare */
+        ZoneShare: {
+            /** Weather Zone */
+            weather_zone: string;
+            /** Area Share */
+            area_share: number;
+        };
     };
     responses: never;
     parameters: never;
@@ -908,6 +3026,597 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_accounts_accounts_get: {
+        parameters: {
+            query?: {
+                type?: ("coop" | "muni")[] | null;
+                tier?: ("A" | "B" | "C")[] | null;
+                next_action?: ("call_now" | "nurture" | "watch" | "hold")[] | null;
+                /** @description Accounts with any of these active triggers */
+                trigger?: string[] | null;
+                /** @description Primary weather zone */
+                zone?: string[] | null;
+                /** @description G&T / wholesale supplier */
+                gt?: string[] | null;
+                /** @description Accounts covering ≥ 1% of this county */
+                county?: string | null;
+                /** @description Name contains */
+                q?: string | null;
+                sort?: "rank" | "score" | "name" | "meters" | "latest_event_date" | "action_changes_on";
+                desc?: boolean;
+                /** @description within_type: sort=rank orders by rank_within_type */
+                rank_scope?: "all" | "within_type";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The mart behind this resource is not built yet */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MartNotBuilt"];
+                };
+            };
+        };
+    };
+    export_accounts_accounts_export_csv_get: {
+        parameters: {
+            query?: {
+                type?: ("coop" | "muni")[] | null;
+                tier?: ("A" | "B" | "C")[] | null;
+                next_action?: ("call_now" | "nurture" | "watch" | "hold")[] | null;
+                /** @description Accounts with any of these active triggers */
+                trigger?: string[] | null;
+                /** @description Primary weather zone */
+                zone?: string[] | null;
+                /** @description G&T / wholesale supplier */
+                gt?: string[] | null;
+                /** @description Accounts covering ≥ 1% of this county */
+                county?: string | null;
+                /** @description Name contains */
+                q?: string | null;
+                sort?: "rank" | "score" | "name" | "meters" | "latest_event_date" | "action_changes_on";
+                desc?: boolean;
+                /** @description within_type: sort=rank orders by rank_within_type */
+                rank_scope?: "all" | "within_type";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The mart behind this resource is not built yet */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": components["schemas"]["MartNotBuilt"];
+                };
+            };
+        };
+    };
+    account_detail_accounts__account_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description PUCT ccn_no */
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountDetailResponse"];
+                };
+            };
+            /** @description `not_found`: the same body for every unknown id */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The mart behind this resource is not built yet */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MartNotBuilt"];
+                };
+            };
+        };
+    };
+    account_events_accounts__account_id__events_get: {
+        parameters: {
+            query?: {
+                /** @description Events on or after this date */
+                since?: string | null;
+                trigger?: string[] | null;
+                strength?: ("strong" | "context") | null;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                /** @description PUCT ccn_no */
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventsResponse"];
+                };
+            };
+            /** @description `not_found`: the same body for every unknown id */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The mart behind this resource is not built yet */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MartNotBuilt"];
+                };
+            };
+        };
+    };
+    counties_geo_counties_get: {
+        parameters: {
+            query?: {
+                /** @description Adjusted queue: expected MW reaching COD by December of this year */
+                horizon?: number;
+                stratum?: "all" | "solar" | "storage" | "wind" | "gas_other";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CountiesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The mart behind this resource is not built yet */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MartNotBuilt"];
+                };
+            };
+        };
+    };
+    county_detail_geo_counties__county_fips__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                county_fips: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CountyDetailResponse"];
+                };
+            };
+            /** @description `not_found`: the same body for every unknown id */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The mart behind this resource is not built yet */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MartNotBuilt"];
+                };
+            };
+        };
+    };
+    projects_queue_projects_get: {
+        parameters: {
+            query?: {
+                /** @description County FIPS */
+                county?: string[] | null;
+                stratum?: ("solar" | "storage" | "wind" | "gas_other")[] | null;
+                stage?: ("entry" | "ia") | null;
+                /** @description Weather zone */
+                zone?: string[] | null;
+                /** @description Project name or INR contains */
+                q?: string | null;
+                sort?: "mw_2028" | "mw_2027" | "capacity_mw" | "p_cod_2028" | "projected_cod" | "project_name";
+                desc?: boolean;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueueProjectsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The mart behind this resource is not built yet */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MartNotBuilt"];
+                };
+            };
+        };
+    };
+    peak_forecasts_peak_get: {
+        parameters: {
+            query?: {
+                /** @description ERCOT, or a weather zone (its coincident contribution) */
+                region?: "ERCOT" | "COAST" | "EAST" | "FWEST" | "NCENT" | "NORTH" | "SCENT" | "SOUTH" | "WEST";
+                /** @description Which large-load input drives the layer; default in data */
+                variant?: ("deck_pre_batch_zero" | "deck_latest" | "approvals_pace") | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PeakForecastResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The mart behind this resource is not built yet */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MartNotBuilt"];
+                };
+            };
+        };
+    };
+    large_load_forecasts_large_load_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LargeLoadResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The mart behind this resource is not built yet */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MartNotBuilt"];
+                };
+            };
+        };
+    };
+    peak_backtest_peak_get: {
+        parameters: {
+            query?: {
+                /** @description One of data.as_of_dates; default the latest */
+                as_of?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PeakBacktestResponse"];
+                };
+            };
+            /** @description `as_of` is not a backtest date */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvalidAsOf"];
+                };
+            };
+            /** @description The mart behind this resource is not built yet */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MartNotBuilt"];
+                };
+            };
+        };
+    };
+    official_errors_backtest_official_errors_get: {
+        parameters: {
+            query?: {
+                /** @description LTLF, CDR... */
+                product?: string[] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfficialErrorsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The mart behind this resource is not built yet */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MartNotBuilt"];
+                };
+            };
+        };
+    };
+    queue_backtest_queue_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueueBacktestResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The mart behind this resource is not built yet */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MartNotBuilt"];
+                };
+            };
+        };
+    };
+    caveats_caveats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaveatsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     lake_sources_lake_sources_get: {
         parameters: {
             query?: never;
@@ -1323,7 +4032,7 @@ export interface operations {
         parameters: {
             query?: {
                 source?: string | null;
-                /** @description raw or process */
+                /** @description raw, process or model */
                 stage?: string | null;
                 /** @description running, success, partial, failed or abandoned */
                 status?: string | null;

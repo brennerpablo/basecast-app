@@ -2,7 +2,9 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
-import { type Caveat, fetchEnvelope, isMartNotBuilt } from "./envelope";
+import type { components } from "@/lib/api/get-data";
+
+import { fetchEnvelope, fetchJson, isMartNotBuilt } from "./envelope";
 import type { Params } from "./url";
 
 /** Retry what can pass on a second try: not a 4xx, and not a mart that is not built yet. */
@@ -38,12 +40,12 @@ export function useProductQuery<T>(
   });
 }
 
-/** The caveat catalog (`GET /caveats`), by code. It only changes with the contract. */
+/** The caveat catalog (`GET /caveats`, not an envelope), by code. It only changes with the contract. */
 export function useCaveatCatalog() {
   return useQuery({
     queryKey: productKeys.caveats(),
-    queryFn: ({ signal }) => fetchEnvelope<{ items: Caveat[] }>("caveats", undefined, signal),
-    select: (envelope) => new Map(envelope.data.items.map((caveat) => [caveat.code, caveat])),
+    queryFn: ({ signal }) => fetchJson<components["schemas"]["CaveatsResponse"]>("caveats", undefined, signal),
+    select: (catalog) => new Map(catalog.items.map((caveat) => [caveat.code, caveat])),
     staleTime: Infinity,
     retry,
   });
