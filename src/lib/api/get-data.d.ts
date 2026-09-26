@@ -1114,6 +1114,8 @@ export interface operations {
         parameters: {
             query: {
                 key: string;
+                /** @description Ask the browser to save the file instead of opening it */
+                download?: boolean;
             };
             header?: never;
             path?: never;

@@ -16,8 +16,11 @@ export const GET = withSession(async (request) => {
   if (!key) return Response.json({ detail: "key is required" }, { status: 400 });
 
   try {
+    const download = url.searchParams.get("download") === "1";
     if (!member) {
-      const signed = await getDataJson<SignedUrl>("/lake/object/url", { search: { key } });
+      const signed = await getDataJson<SignedUrl>("/lake/object/url", {
+        search: { key, download: download ? "true" : undefined },
+      });
       if (signed.data.url) return Response.redirect(signed.data.url, 302);
     }
     const range = request.headers.get("range");
@@ -28,7 +31,7 @@ export const GET = withSession(async (request) => {
     });
     const headers = new Headers({ "Cache-Control": "private, max-age=3600" });
     passHeaders(upstream.headers, headers);
-    if (url.searchParams.get("download") === "1") {
+    if (download) {
       const name = (member ?? key).split("/").at(-1) ?? "file";
       headers.set("content-disposition", `attachment; filename="${name.replace(/"/g, "")}"`);
     }
