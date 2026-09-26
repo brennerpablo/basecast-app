@@ -4,8 +4,8 @@ Next.js frontend for **BaseCast**, which forecasts how much of ERCOT's interconn
 loads and generation) actually gets built, where and when, and turns that into peak-demand forecasts and
 partnership decisions.
 
-Pages: county map (Explorer), forecast, backtest, commercial intelligence for co-ops and munis, and
-pipeline status. The browser only talks to this app's route handlers (BFF), which call
+Pages: commercial intelligence for co-ops and munis (Accounts, the landing page), county map (Explorer),
+forecast, backtest, and pipeline status. The browser only talks to this app's route handlers (BFF), which call
 `basecast-get-data` with a server-side token.
 
 > **Status:** B0 done. The app shell (sidebar menu, page card, light and dark themes, component library)
@@ -116,6 +116,10 @@ the Data mode's own: Overview, Tables, Pipeline runs, Flow and the bucket's fold
 The browser only calls the BFF under `/api/data` (`src/app/api/data/`), which adds the token: a
 catch-all that forwards an allowlist of get-data paths, `grid/` for the DataGrid's blocks, and `file` for
 bytes (a signed GCS URL when get-data can sign one, otherwise streamed with `Range`).
+
+The product screens read get-data's v2 envelope (`data` plus a `meta` with sources, data date, model version and
+caveats) through the same catch-all: `src/lib/bff/` fetches it, and `src/components/product/` shows each card's
+caveats, provenance and its loading, "being rebuilt" (a 503 `mart_not_built`) and empty states.
 
 ## Email
 

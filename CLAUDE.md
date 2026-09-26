@@ -27,8 +27,9 @@ retail power and runs the fleet as a virtual power plant. It makes money from th
 the ERCOT wholesale market, and utilities (co-ops and munis that buy capacity).
 
 **Problem:** Texas plans its grid around inflated interconnection queues. In Jan 2026 ERCOT was tracking
-~232.5 GW of large loads, only 3.8% of them approved to energize, against a demand record of ~87–91 GW.
-ERCOT's own official preliminary 2026 forecast (~112 GW) missed that same year's peak by more than 20 GW.
+~232.5 GW of large loads, only 3.8% of them approved to energize, against a demand record of 85,508 MW
+(2023-08-10) until 2026-07-22, when the peak reached 91.1 GW (preliminary). ERCOT's own preliminary long-term
+forecast for 2026 (~112 GW) missed that same year's peak by about 21 GW.
 
 **Product:** forecast how much of the queues (large loads and generation) actually gets built, where and
 when; turn that into a **peak MW** forecast by region and year (P10/P50/P90); and translate it into
@@ -83,7 +84,7 @@ basecast-app/
 ├── .env.example              # GET_DATA_URL, GET_DATA_TOKEN (server-only), DATABASE_URL, NEXTAUTH_SECRET
 ├── src/ (or app/)            # Fundsys base: layout, auth, components-app, theme
 ├── lib/api/                  # TypeScript client generated from get-data's openapi.json
-├── public/geo/               # Texas counties TopoJSON (generated in task A1)
+├── public/geo/               # Texas counties and weather zones GeoJSON (A-M2)
 └── docs/
     ├── KICKOFF.md
     └── decisions.md
@@ -103,7 +104,8 @@ basecast-app/
   contract from day one.
 - **Pages:** `/explorer` (map), `/forecast`, `/backtest`, `/accounts` and `/accounts/[id]` (commercial
   intelligence), `/data` (sources, last update and `etl_run` history, to show the pipeline's robustness).
-- **Map:** MapLibre GL with the Texas counties (TopoJSON from task A1), choropleth by FIPS via
+- **Map:** MapLibre GL with the Texas counties (GeoJSON from A-M2; *superseded:* the kickoff's TopoJSON, see
+  `docs/decisions.md`), choropleth by FIPS via
   feature-state, tooltip, legend and metric toggle. A token-free basemap (e.g., OpenFreeMap) or polygons
   only.
 - **Visual:** follow the Fundsys components and charts, with basecast's own identity.
@@ -123,7 +125,7 @@ basecast-app/
 
 All three live in `~/Documents/repos/basecast/`:
 
-- `basecast-airflow` (front A): produces the data and the county TopoJSON for `public/geo/`.
+- `basecast-airflow` (front A): produces the data and the geo for `public/geo/` (`basecast export-geo`).
 - `basecast-get-data` (front C): the API this app's BFF calls; owns `docs/data-contract.md`. Regenerate
   `lib/api/` whenever its `openapi.json` changes.
 - `basecast-app` (this repo, front B).
@@ -156,6 +158,15 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   freshness rule (latest run, then `schedule_cron` + 6 h grace; its own small cron reader); `layout.ts` is dagre;
   `flow-view.tsx` renders it with `@xyflow/react` (state in the URL: `node`, `group`, `steps`, `derived`).
   Derived tables link to their input tables only when get-data sends `inputs` on a table (not yet).
+- Product screens (accounts, explorer, forecast, backtest) read get-data's v2 envelope `{data, meta}` through the same
+  BFF catch-all (add each path to the allowlist in `src/lib/get-data/routes.ts`). Client side in `src/lib/bff/`:
+  `fetchEnvelope`, `BffError` (its `mart` is set on a 503 `mart_not_built`), `useProductQuery` (other failures go to
+  `error.tsx`), `useCaveatCatalog` (`GET /caveats`). Its types mirror the v2 draft until get-data's openapi.json
+  carries them. Shared UI in `src/components/product/`: `DataCard` (loading, "being rebuilt", empty, caveats on top,
+  `Provenance` below), `StatCard`, `FactValue` (a null is a gap, never a zero), `CaveatBadges`, `VerifiedBadge`,
+  `SimulatedBadge`, formatters in `format.ts`. Caveat labels and texts come only from the API.
+- `public/geo/`: `tx-counties.geojson` (254 counties; `county_fips` for `promoteId`, `county_name`, `weather_zone`,
+  `in_ercot`) and `ercot-weather-zones.geojson` (`weather_zone`), from basecast-airflow `basecast export-geo`.
 - `src/components/data-grid/` is the DataGrid (virtualized, server blocks through `src/lib/hooks/use-grid-window-query.ts`
   and `src/lib/grid-params.ts`); prefer it over DataTable for anything past a few thousand rows.
 - Tests: `npm test` (Node's `node:test` run by `tsx`, `jsdom` for DOM tests), next to the code as `*.test.ts(x)`.
