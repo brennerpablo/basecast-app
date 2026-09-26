@@ -146,6 +146,13 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   cut is blue). The favicon is `src/app/icon.svg`.
 - `src/lib/tabs/` (store, URL title, link rule) + `src/components/tabs/` (hooks, `TabScreen`, link menus) +
   `src/app/(app)/_components/tabs/` (the strip) + `src/instrumentation-client.ts`: same-window tabs (below).
+- `/data` (the data browser): pages in `src/app/(app)/data/`, screens in `src/components/data-browser/` (overview,
+  folder and file views, previews, tables, runs, the Data mode sidebar swapped in by
+  `src/app/(app)/_components/sidebar-modes.tsx`). The BFF is `src/app/api/data/` over `src/lib/get-data/` (the only
+  place that calls get-data, server-only). Types come from get-data's `openapi.json` (`npm run api:generate` →
+  `src/lib/api/get-data.d.ts`). Lake routes mirror the bucket path (`lake-path.ts`).
+- `src/components/data-grid/` is the DataGrid (virtualized, server blocks through `src/lib/hooks/use-grid-window-query.ts`
+  and `src/lib/grid-params.ts`); prefer it over DataTable for anything past a few thousand rows.
 - Tests: `npm test` (Node's `node:test` run by `tsx`, `jsdom` for DOM tests), next to the code as `*.test.ts(x)`.
 - Some comments in `components/ui`, `components-app` and `fields` are still in Portuguese (pending
   translation pass).
