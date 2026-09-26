@@ -7,15 +7,6 @@ This file carries the stable parts of `docs/KICKOFF.md` (in Portuguese): section
 part of section 3, the working rules from section 0 and the front B rules from section 5. The tasks and
 their done criteria (B0–B4) stay only in `docs/KICKOFF.md` §5.
 
-## Bootstrap status (remove after B0)
-
-The Fundsys base has not been copied in yet. When copying from `~/Documents/repos/fundsys/fundsys-app`:
-
-- leave out `.git`, `node_modules`, `.next`, `.vercel` (it links to the Fundsys Vercel project), `.env`
-  (Fundsys secrets), `.claude` and `tsconfig.tsbuildinfo`;
-- keep this repo's `docs/`, `.env.example`, `CLAUDE.md` and `README.md`: the Fundsys versions would
-  overwrite them.
-
 ## Working agreements
 
 - Code, comments, README and names in English. Talk to the user in Portuguese.
@@ -135,6 +126,29 @@ All three live in `~/Documents/repos/basecast/`:
 Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Documents/repos/components-app`
 (the component library). The fundsys-app `CLAUDE.md` is ~230 KB: search it, don't read it whole.
 
+## Code map
+
+- `src/app/(app)/`: the shell (`layout.tsx`, `_components/` with sidebar, card, skeleton) and one folder per
+  page. Pages are placeholders until their data lands.
+- `src/lib/navigation.ts`: the sidebar menu (`MAIN_MENU`). Add a page there to put it in the menu.
+- `src/components/ui/`: shadcn primitives. `src/components/components-app/`: charts, DataTable and product
+  components from the Fundsys base. Prefer these before adding a package.
+- `src/app/globals.css`: tokens for light and the two dark themes (Zinc, Deep); brand hex palette is
+  `--basecast-brand-*` (mirrored in `src/lib/brand-tokens.ts`).
+- Some comments in `components/ui`, `components-app` and `fields` are still in Portuguese (pending
+  translation pass).
+
 ## Docs
 
 - `docs/KICKOFF.md`: the full kickoff, including tasks B0–B4 and the open questions (§8).
+- `docs/decisions.md`: decision log.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
