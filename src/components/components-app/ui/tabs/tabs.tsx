@@ -11,6 +11,9 @@ import { cn } from "@/lib/utils";
 type TabsVariant = "line" | "solid";
 type TabsColor =
   | "default"
+  /** BaseCast's accent, in the place the Fundsys app gives emerald: the brand ink for the line
+   *  (forest in light, lime in dark), the lime fill for solid. */
+  | "brand"
   | "blue"
   | "red"
   | "green"
@@ -30,6 +33,7 @@ const TabsListContext = React.createContext<TabsListContext>({
 // Static class maps so Tailwind doesn't purge them
 const lineActiveClasses: Record<TabsColor, string> = {
   default: "data-[state=active]:border-foreground data-[state=active]:text-foreground",
+  brand:   "data-[state=active]:border-basecast-brand data-[state=active]:text-basecast-brand",
   blue:    "data-[state=active]:border-blue-500 data-[state=active]:text-blue-600",
   red:     "data-[state=active]:border-red-500 data-[state=active]:text-red-600",
   green:   "data-[state=active]:border-green-500 data-[state=active]:text-green-600",
@@ -42,6 +46,7 @@ const lineActiveClasses: Record<TabsColor, string> = {
 
 const solidActiveClasses: Record<TabsColor, string> = {
   default: "data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
+  brand:   "data-[state=active]:bg-brand data-[state=active]:text-brand-foreground data-[state=active]:shadow-sm",
   blue:    "data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm",
   red:     "data-[state=active]:bg-red-500 data-[state=active]:text-white data-[state=active]:shadow-sm",
   green:   "data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-sm",
