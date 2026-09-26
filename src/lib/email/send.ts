@@ -6,6 +6,15 @@ import type { CreateEmailResponse } from "resend";
 /** The app's only sender: its Resend key (`RESEND_API_KEY`) can only send from this domain. */
 export const EMAIL_FROM = "BaseCast <noreply@basecast.pbrenner.com>";
 
+export interface EmailAttachment {
+  filename: string;
+  /** Base64. */
+  content: string;
+  contentType?: string;
+  /** Set for an image the HTML shows inline (`<img src="cid:…">`), like the layout's logo. */
+  contentId?: string;
+}
+
 export interface Email {
   to: string | string[];
   subject: string;
@@ -13,6 +22,7 @@ export interface Email {
   /** Plain-text part, for clients that do not render HTML. */
   text?: string;
   replyTo?: string | string[];
+  attachments?: EmailAttachment[];
 }
 
 /** The part of the Resend client this module uses, so a test can pass a stand-in. */

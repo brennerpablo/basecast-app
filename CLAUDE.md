@@ -163,9 +163,11 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   photos in `app."UserAvatar"`; crop dialog in `src/components/avatar-upload/`. After an edit the page calls
   `update()`, and the `jwt` callback re-reads name and photo from the database. `withSession` hands the
   session to the handler. Screens outside the sidebar get their tab name and icon from `OTHER_ROUTES`.
-- Email: `sendEmail()` in `src/lib/email.ts` (server-only; Resend, from `noreply@basecast.pbrenner.com`). The
-  check of Resend's `{ data, error }` lives in `src/lib/email/send.ts`, shared with `npm run email:test`.
-  `RESEND_API_KEY` only sends from `basecast.pbrenner.com`.
+- Email: `sendEmail()` in `src/lib/email.ts` (server-only; Resend, from `noreply@basecast.pbrenner.com`) takes
+  content, not HTML: every email renders in the one layout of `src/lib/email/layout.ts` (forest band with the
+  logo as an inline CID PNG from `logo.ts`, lime rule, light-mode tokens as hex; content is escaped). The
+  check of Resend's `{ data, error }` lives in `src/lib/email/send.ts`. `npm run email:test` sends a sample
+  notification. `RESEND_API_KEY` only sends from `basecast.pbrenner.com`.
 
 ## Same-window tabs
 

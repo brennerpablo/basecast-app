@@ -77,9 +77,11 @@ gcloud secrets versions access latest --secret app-superadmin-password --project
 ## Email
 
 The app sends email through [Resend](https://resend.com), from `BaseCast <noreply@basecast.pbrenner.com>`.
-Server code calls `sendEmail()` from `src/lib/email.ts`, which rejects with `EmailError` when Resend refuses
-the email. `RESEND_API_KEY` is a sending-only key restricted to `basecast.pbrenner.com` (Secret Manager
-`app-resend-api-key`). No product email exists yet. To check the key and the domain:
+Server code calls `sendEmail()` from `src/lib/email.ts` with the content (heading, paragraphs, key facts, one
+button), and every email comes out in the same layout (`src/lib/email/layout.ts`, light-mode colors, logo
+inline). It rejects with `EmailError` when Resend refuses the email. `RESEND_API_KEY` is a sending-only key
+restricted to `basecast.pbrenner.com` (Secret Manager `app-resend-api-key`). No product email exists yet.
+To send a sample notification and see the layout in a real inbox:
 
 ```bash
 npm run email:test -- --to jane@example.com
