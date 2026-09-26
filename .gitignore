@@ -1,0 +1,8 @@
+# Minimal until the app base brings its own .gitignore (task B0). Never commit env files.
+.env*
+!.env.example
+node_modules/
+.next/
+.vercel/
+*.tsbuildinfo
+.DS_Store

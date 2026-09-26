@@ -1,0 +1,140 @@
+# CLAUDE.md — basecast-app
+
+**basecast** is being built for the Base Power × AITX Hackathon (Austin, Sep 25–27, 2026). This repo is
+**front B: the frontend**, a Next.js app built on the Fundsys app base and deployed to Vercel.
+
+This file carries the stable parts of `docs/KICKOFF.md` (in Portuguese): sections 1, 2 and 7, this repo's
+part of section 3, the working rules from section 0 and the front B rules from section 5. The tasks and
+their done criteria (B0–B4) stay only in `docs/KICKOFF.md` §5.
+
+## Bootstrap status (remove after B0)
+
+The Fundsys base has not been copied in yet. When copying from `~/Documents/repos/fundsys/fundsys-app`:
+
+- leave out `.git`, `node_modules`, `.next`, `.vercel` (it links to the Fundsys Vercel project), `.env`
+  (Fundsys secrets), `.claude` and `tsconfig.tsbuildinfo`;
+- keep this repo's `docs/`, `.env.example`, `CLAUDE.md` and `README.md`: the Fundsys versions would
+  overwrite them.
+
+## Working agreements
+
+- Code, comments, README and names in English. Talk to the user in Portuguese.
+- Plan each piece of work and show the plan to the user; implement only after approval.
+- Never use "Novi" in code, packages or branding: Novi Labs is a real Austin company, and
+  "Novi for Energy" is only the pitch analogy.
+- Anything not confirmed at the source stays marked "not verified".
+- Log decisions in `docs/decisions.md`, one line each: date, decision, reason. Decisions that affect more
+  than one repo go to `basecast-get-data`, which owns the contract.
+
+## Product context (KICKOFF §1)
+
+Base Power is an Austin energy company. It installs batteries in homes (and keeps owning them), sells
+retail power and runs the fleet as a virtual power plant. It makes money from three sources: homeowners,
+the ERCOT wholesale market, and utilities (co-ops and munis that buy capacity).
+
+**Problem:** Texas plans its grid around inflated interconnection queues. In Jan 2026 ERCOT was tracking
+~232.5 GW of large loads, only 3.8% of them approved to energize, against a demand record of ~87–91 GW.
+ERCOT's own official preliminary 2026 forecast (~112 GW) missed that same year's peak by more than 20 GW.
+
+**Product:** forecast how much of the queues (large loads and generation) actually gets built, where and
+when; turn that into a **peak MW** forecast by region and year (P10/P50/P90); and translate it into
+decisions for Base, mainly for the partnerships team: which co-ops to approach, when, and with what offer.
+
+**Modules:**
+1. **Explorer:** Texas map by county; raw vs. adjusted queue; priority acquisition zones.
+2. **Forecast:** per-project survival in the generation queue; aggregate flow by stage for large loads;
+   weather-normalized load time series; backtest.
+3. **Commercial intelligence (core of the demo):** prioritized accounts, triggers, per-co-op diagnosis,
+   rule-based next action. Read-only; CSV/webhook export.
+4. **Private data adapters:** `FleetDataSource` (Base's fleet, simulated) and `UtilityDataSource`
+   (large-load requests the co-op itself received). Public data gives a zone-level view; private data
+   takes the diagnosis down to the territory.
+
+**Judging:** 5-minute video + code. Completeness without crashes, technical depth, track fit (Open Grid
+Data is the main track), non-obvious insight, usability, performance.
+
+## Architecture decisions, closed (KICKOFF §2)
+
+- **Three repos, same design as Fundsys:** `basecast-airflow` (ingestion and models), `basecast-get-data`
+  (API) and `basecast-app` (frontend). No monorepo.
+- **Now:** mining runs locally on the Mac mini (Apple Silicon). Later it moves to a personal GCP project
+  in `us-central1` (the ERCOT API blocks access from outside the US) and a personal Vercel account.
+- **Lake:** immutable raw `raw/source=<id>/dt=<snapshot date>/<original file>` plus typed Parquet
+  `parquet/<dataset>/dt=<date>/part-*.parquet`. The local layout is identical to the GCS bucket's, so
+  moving up is `gcloud storage rsync` plus a BigQuery load, with no code rewrite.
+- **Warehouse (later):** BigQuery, tables partitioned by day. No Cloud SQL (there are no user writes).
+- **Pipelines (`basecast-airflow`):** each source is a pure Python module with
+  `run(*, storage, http, since=None, until=None)` that runs on its own from the CLI. The Airflow DAGs
+  (later, on a VM with Docker Compose and LocalExecutor) will be thin and only call these `run()`
+  functions. Patterns inherited from Fundsys: a `full` / `incremental` DAG factory, `etl_run` (one row per
+  run with status, duration and events), idempotency (reprocessing never duplicates).
+- **API (`basecast-get-data`):** FastAPI, later on Cloud Run. Same service name as Fundsys's, but
+  **one typed endpoint per resource** (no dispatch by `process`), Pydantic, and an OpenAPI spec that
+  generates the app's TypeScript client. Small marts loaded in memory (Polars) so the sliders respond in
+  milliseconds.
+- **Frontend (`basecast-app`):** Next.js on Vercel, built on the Fundsys base. The browser only talks to
+  the BFF (route handlers); the API token stays on the server. TanStack Query. MapLibre for the map.
+- **Time:** store everything in UTC; keep the sources' local hour and DST flag (ERCOT repeats an hour in
+  November and uses "hour ending"); crons and display in `America/Chicago`.
+- **Out of the MVP:** ancillary service prices (the post-RTC+B series is under a year old), 60-day
+  disclosures, outages, short-term price forecasting, multi-tenancy, user writes.
+
+## Repo layout (KICKOFF §3)
+
+```
+basecast-app/
+├── CLAUDE.md
+├── README.md
+├── .env.example              # GET_DATA_URL, GET_DATA_TOKEN (server-only), ACCESS_MODE
+├── src/ (or app/)            # Fundsys base: layout, auth, components-app, theme
+├── lib/api/                  # TypeScript client generated from get-data's openapi.json
+├── public/geo/               # Texas counties TopoJSON (generated in task A1)
+└── docs/
+    ├── KICKOFF.md
+    └── decisions.md
+```
+
+## Front B rules (KICKOFF §5)
+
+- **From the Fundsys base, keep** the layout/shell, auth, `components-app`, theme, the TanStack Query
+  setup and the BFF pattern in route handlers. **Remove** tenant scoping, RBAC, Prisma and domain modules,
+  Fundsys branding and any reference to clients or regulatory logic. No Fundsys data.
+- **Auth stays simple.** Judges must get in without friction: `ACCESS_MODE=public` is a read-only demo
+  without login; `ACCESS_MODE=login` uses the base's auth. Document it in the README.
+- **Data access:** the BFF calls `basecast-get-data` (running locally with fixtures) through the
+  TypeScript client generated from its `openapi.json`. The token stays on the server, never
+  `NEXT_PUBLIC_`. No mocks inside the app: the fixtures live in the API, so the app talks to the real
+  contract from day one.
+- **Pages:** `/explorer` (map), `/forecast`, `/backtest`, `/accounts` and `/accounts/[id]` (commercial
+  intelligence), `/data` (sources, last update and `etl_run` history, to show the pipeline's robustness).
+- **Map:** MapLibre GL with the Texas counties (TopoJSON from task A1), choropleth by FIPS via
+  feature-state, tooltip, legend and metric toggle. A token-free basemap (e.g., OpenFreeMap) or polygons
+  only.
+- **Visual:** follow the Fundsys components and charts, with basecast's own identity.
+
+## General rules (KICKOFF §7)
+
+- Plan before coding; small, descriptive commits; never commit `data/` or `.env`.
+- Tests use small fixtures trimmed from real files, especially for the parsers.
+- Label as **simulated** everything that comes from the private-data adapters and from fixtures.
+- Don't invent URLs, IDs or columns; confirm them at the source or mark them "not verified".
+- Contract changed? Update `data-contract.md`, the Pydantic models and `openapi.json` together, and
+  regenerate the client in the app.
+- Out of scope for now: Airflow deployment, BigQuery load, models, Fleet API mock, commercial-module
+  logic, real mart reads in the API.
+
+## Sibling repos
+
+All three live in `~/Documents/repos/basecast/`:
+
+- `basecast-airflow` (front A): produces the data and the county TopoJSON for `public/geo/`.
+- `basecast-get-data` (front C): the API this app's BFF calls; owns `docs/data-contract.md`. Regenerate
+  `lib/api/` whenever its `openapi.json` changes.
+- `basecast-app` (this repo, front B).
+
+Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Documents/repos/components-app`
+(the component library). The fundsys-app `CLAUDE.md` is ~230 KB: search it, don't read it whole.
+
+## Docs
+
+- `docs/KICKOFF.md`: the full kickoff, including tasks B0–B4 and the open questions (§8).
