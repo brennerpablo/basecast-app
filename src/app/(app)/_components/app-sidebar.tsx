@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Sidebar, SidebarContent } from "@/components/ui/sidebar";
 import { SIDEBAR_EXPANDED_COOKIE } from "@/lib/navigation";
 
-import { SidebarNav } from "./sidebar-nav";
+import { SidebarModes } from "./sidebar-modes";
 
 function parseCookieJson(value: string | undefined): string[] {
   if (!value) return [];
@@ -23,7 +23,7 @@ export async function AppSidebar({ footer }: { footer?: ReactNode }) {
   return (
     <Sidebar>
       <SidebarContent>
-        <SidebarNav initialExpanded={initialExpanded} footer={footer} />
+        <SidebarModes initialExpanded={initialExpanded} footer={footer} />
       </SidebarContent>
     </Sidebar>
   );
