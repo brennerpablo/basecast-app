@@ -97,7 +97,7 @@ psql "postgresql://postgres@127.0.0.1:5439/basecast" -v ON_ERROR_STOP=1 -f prism
 
 `/data` browses everything the pipelines fetched and built, through basecast-get-data (run it locally
 with its README; `GET_DATA_URL` and `GET_DATA_TOKEN` point the app at it). Under `/data` the sidebar is
-the Data mode's own: Overview, Tables, Pipeline runs and the bucket's folder tree.
+the Data mode's own: Overview, Tables, Pipeline runs, Flow and the bucket's folder tree.
 
 - `/data`: every raw source with its files, snapshots, formats and the tables it feeds.
 - `/data/lake/<bucket path>`: the route mirrors `gs://basecast-509812-lake`, so every folder and file has a
@@ -107,6 +107,11 @@ the Data mode's own: Overview, Tables, Pipeline runs and the bucket's folder tre
 - `/data/tables` and `/data/tables/<name>`: the processed tables in Postgres and BigQuery, with rows in the
   DataGrid (server blocks of 500, sort and filters on the server), the schema and the raw files behind them.
 - `/data/runs`: the pipelines' `etl_run` history.
+- `/data/flow`: the dataset flow in React Flow, from each origin (publisher) through its ingest and process
+  steps to the tables it writes and the derived tables built from them. Each node says when its data last
+  updated, with a health icon: up to date, running, overdue (no update 6 h past the next scheduled run of
+  `schedule_cron`, America/Chicago), degraded (last run abandoned or partial), failed, never. Selecting a node
+  highlights its whole lineage and opens its details.
 
 The browser only calls the BFF under `/api/data` (`src/app/api/data/`), which adds the token: a
 catch-all that forwards an allowlist of get-data paths, `grid/` for the DataGrid's blocks, and `file` for

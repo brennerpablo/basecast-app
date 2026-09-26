@@ -6,6 +6,7 @@ import {
   HistoryIcon,
   LayoutDashboardIcon,
   type LucideIcon,
+  NetworkIcon,
   SearchIcon,
   TableIcon,
 } from "lucide-react";
@@ -193,6 +194,7 @@ export function DataSidebar({ footer }: { footer?: ReactNode }) {
             onNavigate={onNavigate}
           />
           <NavItem href="/data/runs" label="Pipeline runs" Icon={HistoryIcon} active={pathname.startsWith("/data/runs")} onNavigate={onNavigate} />
+          <NavItem href="/data/flow" label="Flow" Icon={NetworkIcon} active={pathname.startsWith("/data/flow")} onNavigate={onNavigate} />
         </div>
 
         <div className="space-y-2">

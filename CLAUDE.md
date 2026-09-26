@@ -151,6 +151,11 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   `src/app/(app)/_components/sidebar-modes.tsx`). The BFF is `src/app/api/data/` over `src/lib/get-data/` (the only
   place that calls get-data, server-only). Types come from get-data's `openapi.json` (`npm run api:generate` →
   `src/lib/api/get-data.d.ts`). Lake routes mirror the bucket path (`lake-path.ts`).
+- `/data/flow` (dataset lineage): `src/components/data-flow/`. `graph.ts` builds origin → ingest → process →
+  tables → derived from `/lake/sources`, `/tables` and `/pipeline/runs` (pure, tested); `health.ts` is the
+  freshness rule (latest run, then `schedule_cron` + 6 h grace; its own small cron reader); `layout.ts` is dagre;
+  `flow-view.tsx` renders it with `@xyflow/react` (state in the URL: `node`, `group`, `steps`, `derived`).
+  Derived tables link to their input tables only when get-data sends `inputs` on a table (not yet).
 - `src/components/data-grid/` is the DataGrid (virtualized, server blocks through `src/lib/hooks/use-grid-window-query.ts`
   and `src/lib/grid-params.ts`); prefer it over DataTable for anything past a few thousand rows.
 - Tests: `npm test` (Node's `node:test` run by `tsx`, `jsdom` for DOM tests), next to the code as `*.test.ts(x)`.
