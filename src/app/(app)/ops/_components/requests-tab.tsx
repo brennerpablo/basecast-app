@@ -1,125 +1,151 @@
 "use client";
 
+import { Activity, Gauge, Timer, TriangleAlert } from "lucide-react";
 import Link from "next/link";
-import { parseAsStringLiteral, useQueryState } from "nuqs";
 
-import { useTabState } from "@/components/tabs/tab-screen";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { type ColumnMetadata, DataTable } from "@/components/components-app/data-table";
+import SkeletonDatatable from "@/components/skeleton-datatable";
 import { SLOW_REQUEST_MS } from "@/lib/observability/budgets";
 import type { OpsRange, RouteStats } from "@/lib/ops/types";
 import { cn } from "@/lib/utils";
 
 import { fmtDuration, fmtInt } from "./format";
-import { QueryState, RANGE_LABEL, ServiceLabel, useOpsQuery } from "./ops-bits";
-import { Segmented } from "./segmented";
-
-const SERVICES = ["all", "app", "get-data"] as const;
-type SortKey = "requests" | "e4" | "e5" | "p50Ms" | "p95Ms" | "p99Ms";
-const COLUMNS: { key: SortKey; label: string }[] = [
-  { key: "requests", label: "Requests" },
-  { key: "e4", label: "4xx" },
-  { key: "e5", label: "5xx" },
-  { key: "p50Ms", label: "p50" },
-  { key: "p95Ms", label: "p95" },
-  { key: "p99Ms", label: "p99" },
-];
-
-function Tile({ label, value, note, bad }: { label: string; value: string; note: string; bad?: boolean }) {
-  return (
-    <div className="rounded-lg border p-4">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={cn("text-2xl font-semibold tabular-nums", bad && "text-destructive")}>{value}</div>
-      <div className="text-xs text-muted-foreground">{note}</div>
-    </div>
-  );
-}
+import { ACCENT, KpiCard, LoadError, RANGE_LABEL, SectionCard, ServiceLabel, useOpsQuery } from "./ops-bits";
 
 export function RequestsTab({ range }: { range: OpsRange }) {
-  const [service, setService] = useQueryState("service", parseAsStringLiteral(SERVICES).withDefault("all"));
-  const [sort, setSort] = useTabState<SortKey>("ops.requests.sort", "p95Ms");
-  const url = `/api/ops/requests?range=${range}${service === "all" ? "" : `&service=${service}`}`;
-  const { data, isLoading, error } = useOpsQuery<RouteStats[]>(["requests", range, service], url);
+  const { data, isLoading, error } = useOpsQuery<RouteStats[]>(["requests", range], `/api/ops/requests?range=${range}`);
+  if (error && !data) return <LoadError error={error} />;
 
-  const rows = [...(data ?? [])].sort((a, b) => (b[sort] ?? -1) - (a[sort] ?? -1));
+  const rows = data ?? [];
   const total = rows.reduce((s, r) => s + r.requests, 0);
   const e5 = rows.reduce((s, r) => s + r.e5, 0);
   // Weighted by each route's traffic: an approximation of the overall percentile, labelled as such.
   const weighted = (k: "p50Ms" | "p95Ms") =>
     total ? rows.reduce((s, r) => s + (r[k] ?? 0) * r.requests, 0) / total : null;
+  const p95 = weighted("p95Ms");
+
+  const columns: ColumnMetadata<RouteStats>[] = [
+    {
+      columnId: "service",
+      title: "Service",
+      type: "text",
+      sortable: true,
+      filters: { checkbox: true },
+      inferOptions: true,
+      columnClassName: "w-[10%]",
+      cell: ({ row }) => <ServiceLabel service={row.original.service} />,
+    },
+    {
+      columnId: "method",
+      title: "Method",
+      type: "text",
+      sortable: true,
+      filters: { checkbox: true },
+      inferOptions: true,
+      columnClassName: "w-[7%]",
+      cell: ({ row }) => <span className="font-mono text-xs text-muted-foreground">{row.original.method}</span>,
+    },
+    {
+      columnId: "route",
+      title: "Route",
+      type: "text",
+      sortable: true,
+      filters: { text: true },
+      columnClassName: "w-[33%]",
+      cell: ({ row }) => (
+        <Link
+          href={`/ops?tab=logs&range=${range}&q=${encodeURIComponent(row.original.route)}`}
+          className="font-mono text-xs hover:text-basecast-brand hover:underline"
+        >
+          {row.original.route}
+        </Link>
+      ),
+    },
+    { columnId: "requests", title: "Requests", type: "number", sortable: true, aligned: "right", filters: { number: true }, formatter: (v) => fmtInt(v as number) },
+    {
+      columnId: "e4",
+      title: "4xx",
+      type: "number",
+      sortable: true,
+      aligned: "right",
+      cell: ({ row }) => <span className={cn("tabular-nums", !row.original.e4 && "text-muted-foreground")}>{fmtInt(row.original.e4)}</span>,
+    },
+    {
+      columnId: "e5",
+      title: "5xx",
+      type: "number",
+      sortable: true,
+      aligned: "right",
+      filters: { number: true },
+      cell: ({ row }) => (
+        <span className={cn("tabular-nums", row.original.e5 ? "font-semibold text-red-600 dark:text-red-400" : "text-muted-foreground")}>
+          {fmtInt(row.original.e5)}
+        </span>
+      ),
+    },
+    { columnId: "p50Ms", title: "p50", type: "number", sortable: true, aligned: "right", formatter: (v) => fmtDuration(v as number | null) },
+    {
+      columnId: "p95Ms",
+      title: "p95",
+      type: "number",
+      sortable: true,
+      aligned: "right",
+      cell: ({ row }) => (
+        <span className={cn("tabular-nums", (row.original.p95Ms ?? 0) > SLOW_REQUEST_MS && "font-semibold text-amber-700 dark:text-amber-300")}>
+          {fmtDuration(row.original.p95Ms)}
+        </span>
+      ),
+    },
+    { columnId: "p99Ms", title: "p99", type: "number", sortable: true, aligned: "right", formatter: (v) => fmtDuration(v as number | null) },
+  ];
 
   return (
-    <div className="flex flex-col gap-4">
-      <Segmented
-        label="Service"
-        options={SERVICES.map((v) => ({ value: v, label: v === "all" ? "All" : v }))}
-        value={service}
-        onChange={(v) => void setService(v === "all" ? null : v)}
-      />
-      <QueryState isLoading={isLoading} error={error} />
-      {data && (
-        <>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Tile label="Requests" value={fmtInt(total)} note={RANGE_LABEL[range]} />
-            <Tile label="5xx rate" value={total ? `${((e5 / total) * 100).toFixed(2)}%` : "—"} note={`${fmtInt(e5)} server errors`} bad={e5 > 0} />
-            <Tile label="p50" value={fmtDuration(weighted("p50Ms"))} note="weighted by route" />
-            <Tile label="p95" value={fmtDuration(weighted("p95Ms"))} note="weighted by route" />
-          </div>
-          <div>
-            <div className="mb-2 flex flex-wrap items-baseline gap-x-3">
-              <h2 className="text-sm font-semibold">By route</h2>
-              <span className="text-xs text-muted-foreground">
-                route templates; p95 over {fmtInt(SLOW_REQUEST_MS)} ms in amber, any 5xx in red; open a route for its logs
-              </span>
-            </div>
-            <div className="overflow-x-auto rounded-lg border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Service</TableHead>
-                    <TableHead>Route</TableHead>
-                    {COLUMNS.map((c) => (
-                      <TableHead key={c.key} className="text-right" aria-sort={sort === c.key ? "descending" : undefined}>
-                        <button type="button" onClick={() => setSort(c.key)} className={cn("hover:text-foreground", sort === c.key && "text-foreground")}>
-                          {c.label}{sort === c.key ? " ↓" : ""}
-                        </button>
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rows.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={8} className="py-6 text-center text-muted-foreground">
-                        No requests in the {RANGE_LABEL[range]}.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {rows.map((r) => (
-                    <TableRow key={`${r.service} ${r.method} ${r.route}`}>
-                      <TableCell><ServiceLabel service={r.service} /></TableCell>
-                      <TableCell>
-                        <Link
-                          href={`/ops?tab=logs&range=${range}&q=${encodeURIComponent(r.route)}`}
-                          className="font-mono text-xs hover:underline"
-                        >
-                          <span className="mr-1.5 text-muted-foreground">{r.method}</span>
-                          {r.route}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">{fmtInt(r.requests)}</TableCell>
-                      <TableCell className={cn("text-right tabular-nums", !r.e4 && "text-muted-foreground")}>{fmtInt(r.e4)}</TableCell>
-                      <TableCell className={cn("text-right tabular-nums", r.e5 ? "font-semibold text-destructive" : "text-muted-foreground")}>{fmtInt(r.e5)}</TableCell>
-                      <TableCell className="text-right tabular-nums">{fmtDuration(r.p50Ms)}</TableCell>
-                      <TableCell className={cn("text-right tabular-nums", (r.p95Ms ?? 0) > SLOW_REQUEST_MS && "font-semibold text-amber-700 dark:text-amber-300")}>{fmtDuration(r.p95Ms)}</TableCell>
-                      <TableCell className="text-right tabular-nums">{fmtDuration(r.p99Ms)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        </>
-      )}
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard Icon={Activity} isLoading={isLoading} value={fmtInt(total)} label="Requests" note={`app + get-data, ${RANGE_LABEL[range]}`} accent={ACCENT.blue} />
+        <KpiCard
+          Icon={TriangleAlert}
+          iconClassName={e5 ? "text-red-600" : "text-muted-foreground"}
+          isLoading={isLoading}
+          value={total ? `${((e5 / total) * 100).toFixed(2)}%` : "—"}
+          label="5xx rate"
+          note={e5 ? `${fmtInt(e5)} server errors` : "No server errors in the period"}
+          accent={e5 ? ACCENT.red : ACCENT.brand}
+        />
+        <KpiCard Icon={Timer} isLoading={isLoading} value={fmtDuration(weighted("p50Ms"))} label="p50" note="Weighted by route" accent={ACCENT.brand} />
+        <KpiCard
+          Icon={Gauge}
+          iconClassName={p95 !== null && p95 > SLOW_REQUEST_MS ? "text-amber-600" : undefined}
+          isLoading={isLoading}
+          value={fmtDuration(p95)}
+          label="p95"
+          note={`Weighted by route; budget ${fmtInt(SLOW_REQUEST_MS)} ms`}
+          accent={p95 !== null && p95 > SLOW_REQUEST_MS ? ACCENT.amber : ACCENT.brand}
+        />
+      </div>
+
+      <SectionCard
+        title="By route"
+        subtitle={`${fmtInt(rows.length)} routes; templates, never raw URLs. p95 over ${fmtInt(SLOW_REQUEST_MS)} ms in amber, any 5xx in red; open a route for its logs.`}
+      >
+        {isLoading ? (
+          <SkeletonDatatable />
+        ) : (
+          <DataTable<RouteStats>
+            columnsMetadata={columns}
+            data={rows}
+            pageSize={50}
+            tableName="ops-requests"
+            language="en"
+            bordered
+            compact
+            paginationDisplayTop
+            toolbarIconsOnly
+            initialSorting={[{ id: "p95Ms", desc: true }]}
+            getRowId={(r) => `${r.service} ${r.method} ${r.route}`}
+          />
+        )}
+      </SectionCard>
     </div>
   );
 }

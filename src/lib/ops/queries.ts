@@ -13,6 +13,7 @@ import type {
   OpsLogPage,
   OpsOverview,
   OpsRange,
+  OpsRuns,
   OpsService,
   PipelineDay,
   PipelineHealth,
@@ -231,22 +232,52 @@ function toRun(r: EtlRunDbRow): EtlRunRow {
   };
 }
 
-export async function getRuns(range: OpsRange, now = new Date()): Promise<EtlRunRow[]> {
+export async function getRuns(range: OpsRange, now = new Date()): Promise<OpsRuns> {
   const db = await getDb();
   const since = sinceOf(range, now);
+  const spec = RANGE_SPEC[range];
   const monthAgo = new Date(now.getTime() - 30 * 86_400_000);
-  const rows = await db.$queryRaw<EtlRunDbRow[]>`
-    SELECT r.run_id, r.source, r.stage, r.dag_id, r.try_number, r.started_at, r.finished_at,
-      r.duration_s, r.status, r.rows, r.files, r.error, m.median_s
-    FROM etl_run r
-    LEFT JOIN (
-      SELECT source, stage, percentile_cont(0.5) WITHIN GROUP (ORDER BY duration_s) AS median_s
-      FROM etl_run WHERE started_at >= ${monthAgo} AND status IN ('success', 'partial')
-      GROUP BY 1, 2
-    ) m USING (source, stage)
-    WHERE r.started_at >= ${since}
-    ORDER BY r.started_at DESC LIMIT 300`;
-  return rows.map(toRun);
+  const [rows, buckets, sources] = await Promise.all([
+    db.$queryRaw<EtlRunDbRow[]>`
+      SELECT r.run_id, r.source, r.stage, r.dag_id, r.try_number, r.started_at, r.finished_at,
+        r.duration_s, r.status, r.rows, r.files, r.error, m.median_s
+      FROM etl_run r
+      LEFT JOIN (
+        SELECT source, stage, percentile_cont(0.5) WITHIN GROUP (ORDER BY duration_s) AS median_s
+        FROM etl_run WHERE started_at >= ${monthAgo} AND status IN ('success', 'partial')
+        GROUP BY 1, 2
+      ) m USING (source, stage)
+      WHERE r.started_at >= ${since}
+      ORDER BY r.started_at DESC LIMIT 1000`,
+    db.$queryRaw<{ bucket: Date; success: number; partial: number; failed: number; running: number }[]>`
+      SELECT date_bin(${spec.bucket}::interval, started_at, ${BUCKET_ORIGIN}::timestamptz) AS bucket,
+        count(*) FILTER (WHERE status = 'success')::int AS success,
+        count(*) FILTER (WHERE status IN ('partial', 'abandoned'))::int AS partial,
+        count(*) FILTER (WHERE status = 'failed')::int AS failed,
+        count(*) FILTER (WHERE status = 'running')::int AS running
+      FROM etl_run WHERE started_at >= ${since}
+      GROUP BY 1 ORDER BY 1`,
+    db.$queryRaw<{ source: string; runs: number; ok: number; p50: number | null; p95: number | null; last_status: string; last_at: Date }[]>`
+      SELECT source, count(*)::int AS runs,
+        count(*) FILTER (WHERE status IN ('success', 'partial'))::int AS ok,
+        percentile_cont(0.5) WITHIN GROUP (ORDER BY duration_s) AS p50,
+        percentile_cont(0.95) WITHIN GROUP (ORDER BY duration_s) AS p95,
+        (array_agg(status ORDER BY started_at DESC))[1] AS last_status,
+        max(started_at) AS last_at
+      FROM etl_run WHERE started_at >= ${since}
+      GROUP BY source ORDER BY source`,
+  ]);
+  return {
+    since: since.toISOString(),
+    generatedAt: now.toISOString(),
+    bucketMs: spec.bucketMs,
+    runs: rows.map(toRun),
+    buckets: buckets.map((b) => ({ bucket: b.bucket.toISOString(), success: b.success, partial: b.partial, failed: b.failed, running: b.running })),
+    sources: sources.map((r) => ({
+      source: r.source, runs: r.runs, successRate: r.runs ? r.ok / r.runs : 0, p50S: r.p50, p95S: r.p95,
+      lastStatus: r.last_status, lastAt: r.last_at.toISOString(),
+    })),
+  };
 }
 
 export async function getRunDetail(runId: string): Promise<EtlRunDetail | null> {

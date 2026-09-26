@@ -10,7 +10,7 @@ function listParam<T extends string>(value: string | null, allowed: readonly T[]
 
 /**
  * /ops Logs: `ops.log` lines, newest first. Filters: `level` and `service` (comma lists), `q` (text),
- * `request` or `run` (a whole request or run, whatever the range), `before` (next page).
+ * `request` or `run` (a whole request or run, whatever the range), `before` (next page), `limit` (up to 500).
  */
 export const GET = withSession(async (request) => {
   const params = new URL(request.url).searchParams;
@@ -24,6 +24,7 @@ export const GET = withSession(async (request) => {
       requestId: params.get("request") || undefined,
       runId: params.get("run") || undefined,
       before: before && /^\d{1,19}$/.test(before) ? before : undefined,
+      limit: Number(params.get("limit")) || undefined,
     }),
   );
 });

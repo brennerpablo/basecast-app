@@ -103,6 +103,29 @@ export type EtlRunRow = {
   medianS: number | null;
 };
 
+/** Runs per chart bucket, by outcome. */
+export type RunBucket = { bucket: string; success: number; partial: number; failed: number; running: number };
+
+/** One row of the "By source" table, like the Fundsys app's "Por DAG". */
+export type SourceSummary = {
+  source: string;
+  runs: number;
+  successRate: number;
+  p50S: number | null;
+  p95S: number | null;
+  lastStatus: string;
+  lastAt: string;
+};
+
+export type OpsRuns = {
+  since: string;
+  generatedAt: string;
+  bucketMs: number;
+  runs: EtlRunRow[];
+  buckets: RunBucket[];
+  sources: SourceSummary[];
+};
+
 export type EtlRunDetail = {
   run: EtlRunRow & { events: unknown; params: unknown };
   logs: OpsLogEntry[];

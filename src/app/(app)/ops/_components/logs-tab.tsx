@@ -1,19 +1,21 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { Search } from "lucide-react";
-import { parseAsArrayOf, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
+import { parseAsString, useQueryState } from "nuqs";
 import { useMemo } from "react";
 
-import { useTabState } from "@/components/tabs/tab-screen";
+import { type ColumnMetadata, DataTable } from "@/components/components-app/data-table";
+import { FilterSearchInput } from "@/components/components-app/url-filters";
+import SkeletonDatatable from "@/components/skeleton-datatable";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { OPS_LEVELS, OPS_SERVICES, type OpsLogEntry, type OpsLogPage, type OpsRange } from "@/lib/ops/types";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import type { OpsLogEntry, OpsLogPage, OpsRange } from "@/lib/ops/types";
 import { cn } from "@/lib/utils";
 
-import { fmtDuration, fmtInt, fmtLogTime } from "./format";
-import { LevelBadge, OPS_REFETCH_MS, QueryState, SERVICE_COLOR, ServiceLabel, useOpsQuery } from "./ops-bits";
+import { fmtDayTime, fmtDuration, fmtInt, fmtLogTime } from "./format";
+import { Field, FieldBlock, LevelBadge, LoadError, RANGE_LABEL, SectionCard, SERVICE_COLOR, ServiceLabel, useOpsQuery } from "./ops-bits";
+
+/** Lines loaded per view; the table pages and filters them in the browser. */
+const LOG_LIMIT = 500;
 
 function logsUrl(params: Record<string, string | undefined>): string {
   const search = new URLSearchParams();
@@ -23,7 +25,7 @@ function logsUrl(params: Record<string, string | undefined>): string {
 
 /**
  * The spans of one request: each `http.request` line is a bar (its start is `ts − duration_ms`), every
- * other line a dot on the bar of its service.
+ * other line of the request a dot on its service's bar.
  */
 function Trace({ requestId }: { requestId: string }) {
   const { data } = useOpsQuery<OpsLogPage>(["trace", requestId], logsUrl({ range: "30d", request: requestId }));
@@ -38,18 +40,15 @@ function Trace({ requestId }: { requestId: string }) {
     const t1 = Math.max(...spans.map((s) => s.end), ...lines.map((l) => Date.parse(l.ts)));
     const total = Math.max(1, t1 - t0);
     const pct = (t: number) => `${(((t - t0) / total) * 100).toFixed(2)}%`;
-    return { spans, marks: lines.filter((l) => l.event !== "http.request"), total, pct, t0 };
+    return { spans, marks: lines.filter((l) => l.event !== "http.request"), total, pct };
   }, [data]);
   if (!trace) return null;
   return (
-    <div>
-      <h3 className="mb-2 text-xs font-semibold">Trace</h3>
-      <div className="flex flex-col gap-1.5">
+    <FieldBlock label="Trace">
+      <div className="space-y-1.5 rounded-md border border-border bg-card p-3">
         {trace.spans.map(({ line, start, end }) => (
-          <div key={line.id} className="grid grid-cols-[8rem_minmax(0,1fr)] items-center gap-2 text-xs">
-            <span className="truncate" title={`${line.method} ${line.route}`}>
-              <ServiceLabel service={line.service} />
-            </span>
+          <div key={line.id} className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-center gap-2 text-xs">
+            <ServiceLabel service={line.service} />
             <div className="relative h-4 rounded-sm bg-muted">
               <div
                 className={cn("absolute inset-y-0 rounded-sm", (line.status ?? 0) >= 500 && "ring-2 ring-red-500 ring-inset")}
@@ -69,216 +68,249 @@ function Trace({ requestId }: { requestId: string }) {
             </div>
           </div>
         ))}
-        <div className="flex justify-between pl-34 text-[11px] text-muted-foreground tabular-nums">
+        <div className="flex justify-between pl-28 text-[11px] text-muted-foreground tabular-nums">
           <span>0</span>
           <span>{fmtDuration(trace.total / 2)}</span>
           <span>{fmtDuration(trace.total)}</span>
         </div>
       </div>
-    </div>
+    </FieldBlock>
   );
 }
 
-function LogDetail({ entry, onFilter }: { entry: OpsLogEntry; onFilter: (key: "request" | "run", id: string) => void }) {
-  const rows: [string, string | null][] = [
-    ["event", entry.event],
-    ["route", entry.route ? `${entry.method ?? ""} ${entry.route}`.trim() : null],
-    ["status", entry.status === null ? null : String(entry.status)],
-    ["duration", entry.durationMs === null ? null : `${fmtInt(entry.durationMs)} ms`],
-    ["request_id", entry.requestId],
-    ["run_id", entry.runId],
-    ["user_id", entry.userId],
-    ["fingerprint", entry.fingerprint],
-    ["version", entry.version],
-    ["host", entry.host],
-    ["env", entry.env],
-    ["time (UTC)", entry.ts],
-  ];
+function LogDetailSheet({
+  entry,
+  onClose,
+  onScope,
+}: {
+  entry: OpsLogEntry | null;
+  onClose: () => void;
+  onScope: (key: "request" | "run", id: string) => void;
+}) {
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <LevelBadge level={entry.level} />
-        <ServiceLabel service={entry.service} />
-        <span className="font-mono text-xs text-muted-foreground">{fmtLogTime(entry.ts)} CT</span>
-      </div>
-      <h3 className="text-sm leading-snug font-semibold wrap-break-word">{entry.message}</h3>
-      <dl className="grid grid-cols-[6rem_minmax(0,1fr)] gap-x-3 gap-y-1 text-xs">
-        {rows.filter(([, v]) => v).map(([k, v]) => (
-          <div key={k} className="contents">
-            <dt className="text-muted-foreground">{k}</dt>
-            <dd className="font-mono break-all">{v}</dd>
+    <Sheet open={!!entry} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent side="right" className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        <SheetHeader className="border-b px-6 py-4">
+          <SheetTitle>Log line</SheetTitle>
+          <SheetDescription>{entry ? `${fmtDayTime(entry.ts)} CT · ${fmtLogTime(entry.ts)}` : ""}</SheetDescription>
+        </SheetHeader>
+        {entry && (
+          <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5 text-sm">
+            <div className="flex flex-wrap items-center gap-3">
+              <LevelBadge level={entry.level} />
+              <ServiceLabel service={entry.service} />
+              <span className="font-mono text-xs text-muted-foreground">{entry.event}</span>
+            </div>
+            <Field label="Message" value={entry.message} />
+            <div className="grid grid-cols-2 gap-4">
+              {entry.route && <Field label="Route" value={`${entry.method ?? ""} ${entry.route}`.trim()} mono />}
+              {entry.status !== null && <Field label="Status" value={entry.status} />}
+              {entry.durationMs !== null && <Field label="Duration" value={`${fmtInt(entry.durationMs)} ms`} />}
+              {entry.requestId && <Field label="Request ID" value={entry.requestId} mono />}
+              {entry.runId && <Field label="Run ID" value={entry.runId} mono />}
+              {entry.userId && <Field label="User ID" value={entry.userId} mono />}
+              {entry.fingerprint && <Field label="Fingerprint" value={entry.fingerprint} mono />}
+              {entry.version && <Field label="Version" value={entry.version} mono />}
+              {entry.host && <Field label="Host" value={entry.host} mono />}
+              <Field label="Environment" value={entry.env} />
+              <Field label="Time (UTC)" value={entry.ts} mono />
+            </div>
+            {entry.requestId && <Trace requestId={entry.requestId} />}
+            {entry.errorStack && (
+              <FieldBlock label={entry.errorClass ?? "Stack"} tone="error">
+                <pre className="overflow-x-auto rounded-md border border-red-200 bg-red-50 p-3 font-mono text-xs wrap-break-word whitespace-pre-wrap text-red-900 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
+                  {entry.errorStack}
+                </pre>
+              </FieldBlock>
+            )}
+            <FieldBlock label="Context">
+              <pre className="overflow-x-auto rounded-md bg-muted p-3 font-mono text-xs wrap-break-word whitespace-pre-wrap">
+                {entry.context ? JSON.stringify(entry.context, null, 2) : "—"}
+              </pre>
+            </FieldBlock>
+            {(entry.requestId || entry.runId) && (
+              <div className="flex flex-wrap gap-2">
+                {entry.requestId && (
+                  <Button variant="outline" size="sm" onClick={() => onScope("request", entry.requestId!)}>
+                    All lines of this request
+                  </Button>
+                )}
+                {entry.runId && (
+                  <Button variant="outline" size="sm" onClick={() => onScope("run", entry.runId!)}>
+                    All lines of this run
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
-        ))}
-      </dl>
-      {entry.requestId && <Trace requestId={entry.requestId} />}
-      {entry.errorStack && (
-        <div>
-          <h3 className="mb-1 text-xs font-semibold">Stack</h3>
-          <pre className="max-h-56 overflow-auto rounded-md border bg-muted/40 p-2 font-mono text-[11px] leading-relaxed text-destructive">{entry.errorStack}</pre>
-        </div>
-      )}
-      {entry.context && (
-        <div>
-          <h3 className="mb-1 text-xs font-semibold">Context</h3>
-          <pre className="max-h-56 overflow-auto rounded-md border bg-muted/40 p-2 font-mono text-[11px] leading-relaxed">{JSON.stringify(entry.context, null, 2)}</pre>
-        </div>
-      )}
-      <div className="flex flex-wrap gap-2">
-        {entry.requestId && (
-          <Button variant="outline" size="sm" onClick={() => onFilter("request", entry.requestId!)}>All lines of this request</Button>
         )}
-        {entry.runId && (
-          <Button variant="outline" size="sm" onClick={() => onFilter("run", entry.runId!)}>All lines of this run</Button>
-        )}
-      </div>
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 
 export function LogsTab({ range }: { range: OpsRange }) {
-  const [q, setQ] = useQueryState("q", parseAsString.withDefault("").withOptions({ throttleMs: 400 }));
-  const [levels, setLevels] = useQueryState("levels", parseAsArrayOf(parseAsStringLiteral(OPS_LEVELS)).withDefault([...OPS_LEVELS]));
-  const [services, setServices] = useQueryState("services", parseAsArrayOf(parseAsStringLiteral(OPS_SERVICES)).withDefault([...OPS_SERVICES]));
+  const [q, setQ] = useQueryState("q", parseAsString.withDefault(""));
   const [requestId, setRequestId] = useQueryState("request", parseAsString);
   const [runId, setRunId] = useQueryState("run", parseAsString);
-  const [selectedId, setSelectedId] = useTabState<string | null>("ops.logs.selected", null);
+  const [selectedId, setSelectedId] = useQueryState("line", parseAsString);
 
-  const baseParams = {
-    range,
-    q: q || undefined,
-    level: levels.length < OPS_LEVELS.length ? levels.join(",") : undefined,
-    service: services.length < OPS_SERVICES.length ? services.join(",") : undefined,
-    request: requestId ?? undefined,
-    run: runId ?? undefined,
-  };
-  const query = useInfiniteQuery({
-    queryKey: ["ops", "logs", baseParams],
-    queryFn: async ({ pageParam }) => {
-      const res = await fetch(logsUrl({ ...baseParams, before: pageParam ?? undefined }));
-      if (!res.ok) throw new Error(`The server answered ${res.status}`);
-      return (await res.json()) as OpsLogPage;
+  const url = logsUrl({ range, q: q || undefined, request: requestId ?? undefined, run: runId ?? undefined, limit: String(LOG_LIMIT) });
+  const { data, isLoading, error } = useOpsQuery<OpsLogPage>(["logs", range, q, requestId, runId], url);
+  const entries = data?.entries ?? [];
+  const selected = entries.find((e) => e.id === selectedId) ?? null;
+  const scope = requestId ? { key: "Request", id: requestId } : runId ? { key: "Run", id: runId } : null;
+
+  const columns: ColumnMetadata<OpsLogEntry>[] = [
+    {
+      columnId: "ts",
+      title: "Time (CT)",
+      type: "text",
+      sortable: true,
+      columnClassName: "w-[11%]",
+      cell: ({ row }) => (
+        <button
+          type="button"
+          onClick={() => void setSelectedId(row.original.id)}
+          className="text-left font-mono text-xs whitespace-nowrap hover:text-basecast-brand hover:underline"
+        >
+          {fmtLogTime(row.original.ts)}
+        </button>
+      ),
     },
-    initialPageParam: null as string | null,
-    getNextPageParam: (last) => last.nextBefore,
-    refetchInterval: OPS_REFETCH_MS,
-    staleTime: 0,
-  });
-  const entries = query.data?.pages.flatMap((p) => p.entries) ?? [];
-  const counts = query.data?.pages[0]?.levelCounts;
-  const selected = entries.find((e) => e.id === selectedId) ?? entries.find((e) => e.level === "error") ?? entries[0];
-
-  const toggle = <T extends string>(list: T[], value: T): T[] =>
-    list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
+    {
+      columnId: "level",
+      title: "Level",
+      type: "text",
+      sortable: true,
+      filters: { checkbox: true },
+      inferOptions: true,
+      columnClassName: "w-[7%]",
+      cell: ({ row }) => <LevelBadge level={row.original.level} />,
+    },
+    {
+      columnId: "service",
+      title: "Service",
+      type: "text",
+      sortable: true,
+      filters: { checkbox: true },
+      inferOptions: true,
+      columnClassName: "w-[9%]",
+      cell: ({ row }) => <ServiceLabel service={row.original.service} />,
+    },
+    {
+      columnId: "event",
+      title: "Event",
+      type: "text",
+      sortable: true,
+      filters: { checkboxSearch: true },
+      inferOptions: true,
+      columnClassName: "w-[12%]",
+      cell: ({ row }) => <span className="font-mono text-xs text-muted-foreground">{row.original.event}</span>,
+    },
+    {
+      columnId: "message",
+      title: "Message",
+      type: "text",
+      columnClassName: "w-[37%]",
+      cell: ({ row }) => (
+        <button
+          type="button"
+          onClick={() => void setSelectedId(row.original.id)}
+          className="block max-w-120 truncate text-left text-xs hover:underline"
+          title={row.original.message}
+        >
+          {row.original.message}
+        </button>
+      ),
+    },
+    {
+      columnId: "durationMs",
+      title: "Duration",
+      type: "number",
+      sortable: true,
+      aligned: "right",
+      filters: { number: true },
+      columnClassName: "w-[8%]",
+      formatter: (v) => (v == null ? "—" : fmtDuration(v as number)),
+    },
+    {
+      columnId: "requestId",
+      title: "Request / run",
+      type: "text",
+      columnClassName: "w-[16%]",
+      cell: ({ row }) => {
+        const id = row.original.requestId ?? row.original.runId;
+        return id ? (
+          <span className="block max-w-40 truncate font-mono text-[11px]" title={id}>{id}</span>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        );
+      },
+    },
+  ];
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative w-full max-w-md">
-          <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={q}
-            onChange={(e) => void setQ(e.target.value || null)}
-            placeholder="Search message, event, route, error, request or run id"
-            aria-label="Search logs"
-            className="pl-8"
-          />
-        </div>
-        {OPS_LEVELS.map((level) => (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-3">
+        <FilterSearchInput
+          value={q}
+          onValueChange={(v) => void setQ(v)}
+          placeholder="Search message, event, route, error, request or run id"
+          className="w-full max-w-md"
+        />
+        {scope && (
           <button
-            key={level}
             type="button"
-            aria-pressed={levels.includes(level)}
-            onClick={() => void setLevels(toggle(levels, level))}
-            className="inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs text-muted-foreground aria-pressed:border-basecast-brand-border aria-pressed:bg-basecast-brand-surface aria-pressed:text-foreground"
+            onClick={() => { void setRequestId(null); void setRunId(null); }}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-xs hover:bg-accent"
           >
-            <span className="font-mono font-bold uppercase">{level}</span>
-            <span className="tabular-nums">{counts ? fmtInt(counts[level]) : ""}</span>
+            <span className="text-muted-foreground">{scope.key}:</span>
+            <span className="font-mono">{scope.id}</span>
+            <span className="text-muted-foreground">×</span>
           </button>
-        ))}
-        {OPS_SERVICES.map((service) => (
-          <button
-            key={service}
-            type="button"
-            aria-pressed={services.includes(service)}
-            onClick={() => void setServices(toggle(services, service))}
-            className="inline-flex h-8 items-center rounded-full border px-3 text-muted-foreground aria-pressed:border-basecast-brand-border aria-pressed:bg-basecast-brand-surface aria-pressed:text-foreground"
-          >
-            <ServiceLabel service={service} />
-          </button>
-        ))}
-        {(requestId || runId) && (
-          <Button variant="outline" size="sm" onClick={() => { void setRequestId(null); void setRunId(null); }}>
-            Showing one {requestId ? "request" : "run"} · show all
-          </Button>
         )}
       </div>
 
-      <QueryState isLoading={query.isLoading} error={query.error} />
-
-      {query.data && (
-        <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_24rem]">
-          <div className="overflow-x-auto rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Time (CT)</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Service</TableHead>
-                  <TableHead>Message</TableHead>
-                  <TableHead>Request / run</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {entries.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">
-                      No lines match these filters. Clear the search or turn a level or service back on.
-                    </TableCell>
-                  </TableRow>
-                )}
-                {entries.map((e) => (
-                  <TableRow
-                    key={e.id}
-                    onClick={() => setSelectedId(e.id)}
-                    className={cn("cursor-pointer", e.id === selected?.id && "bg-basecast-brand-surface")}
-                    aria-selected={e.id === selected?.id}
-                  >
-                    <TableCell className="font-mono text-xs text-muted-foreground">{fmtLogTime(e.ts)}</TableCell>
-                    <TableCell><LevelBadge level={e.level} /></TableCell>
-                    <TableCell><ServiceLabel service={e.service} /></TableCell>
-                    <TableCell className="min-w-72 whitespace-normal">
-                      <div className="text-sm wrap-break-word">{e.message}</div>
-                      <div className="font-mono text-[11px] text-muted-foreground">
-                        {[e.event, e.route, e.durationMs === null ? null : fmtDuration(e.durationMs)].filter(Boolean).join(" · ")}
-                      </div>
-                    </TableCell>
-                    <TableCell className="max-w-40 truncate font-mono text-[11px]" title={e.requestId ?? e.runId ?? undefined}>
-                      {e.requestId ?? e.runId ?? <span className="text-muted-foreground">—</span>}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            {query.hasNextPage && (
-              <div className="border-t p-2 text-center">
-                <Button variant="ghost" size="sm" disabled={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>
-                  {query.isFetchingNextPage ? "Loading…" : "Show older lines"}
-                </Button>
-              </div>
-            )}
-          </div>
-          <aside className="rounded-lg border p-4 xl:sticky xl:top-3" aria-live="polite">
-            {selected ? (
-              <LogDetail
-                entry={selected}
-                onFilter={(key, id) => void (key === "request" ? setRequestId(id) : setRunId(id))}
-              />
-            ) : (
-              <p className="text-sm text-muted-foreground">Select a line to see its context.</p>
-            )}
-          </aside>
-        </div>
+      {error && !data ? (
+        <LoadError error={error} />
+      ) : (
+        <SectionCard
+          title="Log lines"
+          subtitle={
+            isLoading
+              ? "—"
+              : `${fmtInt(entries.length)}${data?.nextBefore ? `+ (newest ${fmtInt(LOG_LIMIT)} shown)` : ""} lines ${scope ? `of this ${scope.key.toLowerCase()}` : `in the ${RANGE_LABEL[range]}`}. Open a line by its time or message.`
+          }
+        >
+          {isLoading ? (
+            <SkeletonDatatable />
+          ) : (
+            <DataTable<OpsLogEntry>
+              columnsMetadata={columns}
+              data={entries}
+              pageSize={100}
+              tableName="ops-logs"
+              language="en"
+              bordered
+              compact
+              paginationDisplayTop
+              toolbarIconsOnly
+              initialSorting={[{ id: "ts", desc: true }]}
+              getRowId={(r) => r.id}
+            />
+          )}
+        </SectionCard>
       )}
+
+      <LogDetailSheet
+        entry={selected}
+        onClose={() => void setSelectedId(null)}
+        onScope={(key, id) => {
+          void setSelectedId(null);
+          void (key === "request" ? setRequestId(id) : setRunId(id));
+        }}
+      />
     </div>
   );
 }
