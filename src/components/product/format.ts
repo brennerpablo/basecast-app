@@ -33,6 +33,11 @@ export function formatPercent(
   return `${(signed ? SIGNED_ONE : ONE).format(ratio ? value * 100 : value)}%`;
 }
 
+/** `20,219`: a count, rounded to the unit. */
+export function formatWhole(value: number | null | undefined): string {
+  return missing(value) ? GAP : WHOLE.format(Math.round(value) || 0);
+}
+
 /** `1,234` or `0.72`: at most two decimals. */
 export function formatNumber(value: number | null | undefined): string {
   return missing(value) ? GAP : PLAIN.format(value);

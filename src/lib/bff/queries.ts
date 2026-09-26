@@ -8,7 +8,7 @@ import { fetchEnvelope, fetchJson, isMartNotBuilt } from "./envelope";
 import type { Params } from "./url";
 
 /** Retry what can pass on a second try: not a 4xx, and not a mart that is not built yet. */
-function retry(count: number, error: unknown): boolean {
+function retry(count: number, error: Error): boolean {
   if (isMartNotBuilt(error)) return false;
   const status = (error as { status?: unknown } | null)?.status;
   return (typeof status !== "number" || status >= 500) && count < 2;
@@ -23,19 +23,24 @@ export const productKeys = {
 /**
  * A product resource (`data` + `meta`) through the BFF. A missing mart (503 `mart_not_built`) stays in
  * the query for `<DataCard>` to show as an empty state; any other failure with nothing on screen yet
- * goes to the route's `error.tsx`. `keepPrevious` holds the last answer on screen while new filters load.
+ * goes to the route's `error.tsx`, unless `throwOnError` is false (a query that only decorates the page).
+ * `keepPrevious` holds the last answer on screen while new filters load.
  */
 export function useProductQuery<T>(
   path: string,
   params?: Params,
-  { enabled = true, keepPrevious = false }: { enabled?: boolean; keepPrevious?: boolean } = {},
+  {
+    enabled = true,
+    keepPrevious = false,
+    throwOnError = true,
+  }: { enabled?: boolean; keepPrevious?: boolean; throwOnError?: boolean } = {},
 ) {
   return useQuery({
     queryKey: productKeys.resource(path, params),
     queryFn: ({ signal }) => fetchEnvelope<T>(path, params, signal),
     enabled,
     retry,
-    throwOnError: (error, query) => !isMartNotBuilt(error) && query.state.data === undefined,
+    throwOnError: (error, query) => throwOnError && !isMartNotBuilt(error) && query.state.data === undefined,
     placeholderData: keepPrevious ? keepPreviousData : undefined,
   });
 }

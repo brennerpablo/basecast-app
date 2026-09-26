@@ -1,14 +1,13 @@
-import { Building2 } from "lucide-react";
+import { PageBreadcrumb } from "@/components/page-breadcrumb";
 
-import { PagePlaceholder } from "../_components/page-placeholder";
+import { AccountsScreen } from "./_components/accounts-screen";
 
+/** Commercial intelligence: the co-ops and munis ranked by priority, with their triggers and the next action. */
 export default function AccountsPage() {
   return (
-    <PagePlaceholder
-      breadcrumb={[{ label: "Accounts" }]}
-      Icon={Building2}
-      title="Commercial intelligence"
-      description="Co-ops and munis ranked by priority, with their triggers and the next action."
-    />
+    <>
+      <PageBreadcrumb items={[{ label: "Accounts" }]} />
+      <AccountsScreen />
+    </>
   );
 }

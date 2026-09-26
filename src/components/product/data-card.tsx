@@ -7,7 +7,7 @@ import type * as React from "react";
 import { Card } from "@/components/components-app/ui/card";
 import EmptyState from "@/components/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { type Envelope, isMartNotBuilt, type Meta } from "@/lib/bff/envelope";
+import { type CaveatCode, type Envelope, isMartNotBuilt, type Meta } from "@/lib/bff/envelope";
 import { cn } from "@/lib/utils";
 
 import { CaveatBadges } from "./caveat-badges";
@@ -41,6 +41,7 @@ export function DataCard<T>({
   query,
   isEmpty,
   empty,
+  omitCaveats,
   skeleton,
   className,
   children,
@@ -51,6 +52,8 @@ export function DataCard<T>({
   query: UseQueryResult<Envelope<T>>;
   isEmpty?: (data: T) => boolean;
   empty?: { Icon?: LucideIcon; title: string; description?: string };
+  /** Caveats the screen already shows elsewhere (e.g. as a banner), left out of the card's badges. */
+  omitCaveats?: CaveatCode[];
   skeleton?: React.ReactNode;
   className?: string;
   children: (data: T, meta: Meta) => React.ReactNode;
@@ -88,7 +91,10 @@ export function DataCard<T>({
         </div>
         {action && <div className="ml-auto shrink-0">{action}</div>}
       </div>
-      <CaveatBadges caveats={envelope?.meta.caveats} className="-mt-1 mb-4" />
+      <CaveatBadges
+        caveats={envelope?.meta.caveats?.filter((caveat) => !omitCaveats?.includes(caveat.code))}
+        className="-mt-1 mb-4"
+      />
       <div className="min-w-0 flex-1">{body}</div>
       {envelope && <Provenance meta={envelope.meta} className="mt-4 border-t border-border pt-3" />}
     </Card>

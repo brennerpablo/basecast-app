@@ -167,6 +167,11 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   are the generated contract types. Shared UI in `src/components/product/`: `DataCard` (loading, "being rebuilt", empty, caveats on top,
   `Provenance` below), `StatCard`, `FactValue` (a null is a gap, never a zero), `CaveatBadges`, `VerifiedBadge`,
   `SimulatedBadge`, formatters in `format.ts`. Caveat labels and texts come only from the API.
+- `/accounts` (`src/app/(app)/accounts/`): the ranked co-ops and munis in a DataTable. The filters live in the URL
+  (`src/lib/accounts/filters.ts`: repeated keys, `county` from the Explorer, `rank=within_type`), go to get-data as
+  they are, and the Export CSV link carries the same params; the chips' choices come from the unfiltered list.
+  Trigger, flag and next-action codes show raw until get-data serves the glossary (`codeLabel` in
+  `src/lib/accounts/labels.ts`, the one place to wire it).
 - `public/geo/`: `tx-counties.geojson` (254 counties; `county_fips` for `promoteId`, `county_name`, `weather_zone`,
   `in_ercot`) and `ercot-weather-zones.geojson` (`weather_zone`), from basecast-airflow `basecast export-geo`.
 - `src/components/data-grid/` is the DataGrid (virtualized, server blocks through `src/lib/hooks/use-grid-window-query.ts`

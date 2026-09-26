@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export interface FilterChipMultiselectProps {
-  /** Prefixo único para `id` de checkbox/label (ex.: `acoes`, `crm`). */
+  /** Unique prefix for the checkbox and label ids (e.g. `accounts`). */
   idPrefix: string;
   field: string;
   label: string;
@@ -28,7 +28,7 @@ export interface FilterChipMultiselectProps {
 }
 
 /**
- * Chip de filtro multiselect (popover + Aplicar), padrão Ações/CRM pipeline.
+ * A multiselect filter chip (popover + Apply), the Fundsys Actions/CRM pattern.
  */
 export function FilterChipMultiselect({
   idPrefix,
@@ -127,7 +127,7 @@ export function FilterChipMultiselect({
           <div className="space-y-2">
             <div>
               <Label className="text-base font-medium sm:text-sm">
-                Filtrar por {label.toLowerCase()}
+                Filter by {label.toLowerCase()}
               </Label>
               <div className="mt-2 space-y-2 overflow-y-auto sm:max-h-36">
                 {options.map((option) => (
@@ -157,7 +157,7 @@ export function FilterChipMultiselect({
             </div>
             <PopoverClose className="w-full" asChild>
               <Button type="submit" variant="brand" className="w-full" size="sm">
-                Aplicar
+                Apply
               </Button>
             </PopoverClose>
             {tempValues.length > 0 && (
@@ -168,7 +168,7 @@ export function FilterChipMultiselect({
                 type="button"
                 onClick={handleReset}
               >
-                Limpar
+                Clear
               </Button>
             )}
           </div>

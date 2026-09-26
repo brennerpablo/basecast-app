@@ -16,6 +16,7 @@ test("forwards only the allowlisted get-data paths", () => {
     "tables/gis_snapshots/lineage",
     "pipeline/runs",
     "caveats",
+    "glossary",
     "accounts",
     "accounts/export.csv",
     "accounts/FX001",

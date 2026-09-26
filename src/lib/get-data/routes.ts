@@ -13,6 +13,7 @@ const FORWARDED = [
   /^pipeline\/runs$/,
   // Product screens (contract v2).
   /^caveats$/,
+  /^glossary$/,
   /^accounts$/,
   /^accounts\/export\.csv$/,
   /^accounts\/[A-Za-z0-9_-]{1,32}$/,
