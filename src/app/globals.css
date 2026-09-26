@@ -1,0 +1,406 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ─── Design tokens (migrated from tailwind.config.ts) ─── */
+@theme {
+  /* shadcn/ui color tokens */
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  /* The background BEHIND the page card, which `--background` does not
+     describe: in light, `--background` is the card's white surface and the
+     canvas is the grey behind it. In dark the two MUST differ, or the card
+     does not lift off the page. */
+  --color-canvas: hsl(var(--canvas));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  /* Brand color. It is separate from `primary` because shadcn's `--primary`
+     is near-black and serves as the DARK FOREGROUND (`text-primary` is a text
+     color); painting it with the brand would turn that text green. So the
+     brand is its own token, and the controls that carry it (default Button,
+     Switch, Checkbox) use `bg-brand`. Mirrors BRAND in src/lib/brand-tokens.ts,
+     the source for contexts without Tailwind. */
+  --color-brand: hsl(var(--brand));
+  --color-brand-hover: hsl(var(--brand-hover));
+  --color-brand-foreground: hsl(var(--brand-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  /* Sidebar tokens */
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  /* Border radius */
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  /* Animations */
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  /* basecast brand palette (hex), used where an HSL channel triplet does not fit */
+  --color-basecast-brand: var(--basecast-brand);
+  --color-basecast-brand-hover: var(--basecast-brand-hover);
+  --color-basecast-brand-foreground: var(--basecast-brand-foreground);
+  --color-basecast-brand-50: var(--basecast-brand-50);
+  --color-basecast-brand-100: var(--basecast-brand-100);
+  --color-basecast-brand-700: var(--basecast-brand-700);
+  --color-basecast-brand-800: var(--basecast-brand-800);
+  --color-basecast-brand-surface: var(--basecast-brand-surface);
+  --color-basecast-brand-border: var(--basecast-brand-border);
+  --color-basecast-brand-ring: var(--basecast-brand-ring);
+}
+
+@keyframes accordion-down {
+  from { height: 0px; }
+  to { height: var(--radix-accordion-content-height); }
+}
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0px; }
+}
+/* ─── Safelist for dynamic chart color classes ─── */
+@source inline("{bg,text,border,ring,stroke,fill}-{slate,gray,zinc,neutral,stone,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{50,100,200,300,400,500,600,700,800,900,950}");
+
+@layer base {
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"] {
+    -webkit-appearance: none;
+    margin: 0;
+    -moz-appearance: textfield !important;
+  }
+
+  :root {
+    /* The product is light by default. Without this line UA widgets (the
+       <select> dropdown, the date picker, autofill, scrollbars) follow the
+       SYSTEM preference and show up dark inside a light page. `only light` is
+       also the documented opt-out of Chrome's Auto Dark Theme on Android.
+       Dark mode is an opt-in by cookie, served by
+       `.dark { color-scheme: only dark }` below, which wins by coming later. */
+    color-scheme: only light;
+
+    /* Page background; `--background` is the card surface. See `--color-canvas`
+       in @theme. `210 17% 97.6%` is #F8F9FA. */
+    --canvas: 210 17% 97.6%;
+
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    /* #10b981 (emerald-500) / #059669 (emerald-600) ; see BRAND. */
+    --brand: 160 84% 39%;
+    --brand-hover: 161 94% 30%;
+    --brand-foreground: 0 0% 100%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* basecast brand palette (emerald-500 base) */
+    --basecast-brand: #10b981;
+    --basecast-brand-hover: #059669;
+    --basecast-brand-foreground: #ffffff;
+    --basecast-brand-50: #ecfdf5;
+    --basecast-brand-100: #d1fae5;
+    --basecast-brand-700: #047857;
+    --basecast-brand-800: #065f46;
+    --basecast-brand-surface: color-mix(in srgb, var(--basecast-brand) 10%, transparent);
+    --basecast-brand-border: color-mix(in srgb, var(--basecast-brand) 35%, transparent);
+    --basecast-brand-ring: color-mix(in srgb, var(--basecast-brand) 20%, transparent);
+    --dt-accent: var(--basecast-brand);
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     DARK MODE
+     The class goes on <html> and ONLY there: the @theme above is the plain one
+     (not `@theme inline`), so `--color-border: hsl(var(--border))` is emitted
+     on :root and resolved at the root element. `.dark` and `:root` are the same
+     element with the same specificity, and `.dark` comes later, so the
+     semantic utilities re-resolve. The inline script in
+     `components/theme/theme-script.tsx` writes the class before the first
+     paint, from the `basecast-theme` cookie.
+     Two palettes: Zinc, the default, lives in the base `.dark`; Deep lives in
+     the `[data-dark-palette]` block below.
+     `--canvas` (the page background) sits one step BELOW `--background`, which
+     stays equal to `--card`: the frozen-cell rules at the end paint
+     `hsl(var(--background))` and must match the card surface.
+     ───────────────────────────────────────────────────────────────────────── */
+  /* Zinc: pure neutral with no color cast; the brand green is what stands out. */
+  .dark {
+    /* Beats the `only light` on :root by coming later with the same
+       specificity. Without it, UA widgets would stay light inside a dark page. */
+    color-scheme: only dark;
+
+    --canvas: 240 10% 4%;
+
+    --background: 240 6% 10%;
+    --foreground: 0 0% 98%;
+
+    /* In dark the brand lightens one step (emerald-400) to keep contrast. */
+    --brand: 158 64% 52%;
+    --brand-hover: 160 84% 39%;
+    --brand-foreground: 240 6% 10%;
+
+    --card: 240 6% 10%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 6% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 6% 10%;
+
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;
+
+    --accent: 240 4% 16%;
+    --accent-foreground: 0 0% 98%;
+
+    /* A mid red works both as a button fill and as `text-destructive`. */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 5% 21%;
+    --input: 240 5% 21%;
+    --ring: 240 5% 84%;
+
+    --sidebar-background: 240 10% 4%;
+    --sidebar-foreground: 240 5% 78%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 240 6% 10%;
+    --sidebar-accent: 240 4% 16%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 240 5% 21%;
+    --sidebar-ring: 217 91% 60%;
+
+    /* The hex brand family flips too: 50/100 were light surfaces and become
+       translucent tints; 700/800 were dark ink and become light tones.
+       `--dt-accent` follows on its own. */
+    --basecast-brand: #34d399;
+    --basecast-brand-hover: #10b981;
+    --basecast-brand-foreground: #022c22;
+    --basecast-brand-50: color-mix(in srgb, var(--basecast-brand) 12%, transparent);
+    --basecast-brand-100: color-mix(in srgb, var(--basecast-brand) 20%, transparent);
+    --basecast-brand-700: #6ee7b7;
+    --basecast-brand-800: #a7f3d0;
+    --basecast-brand-surface: color-mix(in srgb, var(--basecast-brand) 14%, transparent);
+    --basecast-brand-border: color-mix(in srgb, var(--basecast-brand) 42%, transparent);
+    --basecast-brand-ring: color-mix(in srgb, var(--basecast-brand) 28%, transparent);
+  }
+
+  /* Deep: an ink background with a green cast (hue 150) instead of grey, and a
+     brighter green brand. Surfaces are resolved as opaque colors because the
+     app stacks card on card and alpha on alpha would accumulate. */
+  .dark[data-dark-palette="deep"] {
+    --canvas: 150 15% 5%;
+
+    --background: 150 9% 9%;
+    --foreground: 0 0% 100%;
+
+    --brand: 125 72% 63%;
+    --brand-hover: 121 45% 48%;
+    --brand-foreground: 140 15% 8%;
+
+    --card: 150 9% 9%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 150 9% 9%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 150 15% 5%;
+
+    --secondary: 150 6% 13%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 150 6% 13%;
+    --muted-foreground: 150 3% 64%;
+
+    --accent: 150 6% 13%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 91% 71%;
+    --destructive-foreground: 140 15% 8%;
+
+    --border: 150 4% 18%;
+    --input: 150 4% 18%;
+    --ring: 125 72% 63%;
+
+    --sidebar-background: 150 15% 5%;
+    --sidebar-foreground: 150 3% 79%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 150 15% 5%;
+    --sidebar-accent: 150 6% 13%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 150 4% 18%;
+    --sidebar-ring: 125 72% 63%;
+
+    --basecast-brand: #5ee569;
+    --basecast-brand-hover: #44b145;
+    --basecast-brand-foreground: #111713;
+    --basecast-brand-700: #5ee569;
+    --basecast-brand-800: #96ee9e;
+    --basecast-brand-50: color-mix(in srgb, var(--basecast-brand) 15%, transparent);
+    --basecast-brand-border: color-mix(in srgb, var(--basecast-brand) 32%, transparent);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: gray transparent;
+  }
+  /* The fixed `gray` above disappears in dark; here the bar follows the token,
+     the same tone `.grid-scrollbar` uses in tables. */
+  html.dark {
+    scrollbar-color: hsl(var(--muted-foreground) / 0.45) transparent;
+  }
+  body {
+    /* `bg-canvas`, not `bg-background`: this is the background BEHIND the
+       page card. */
+    @apply bg-canvas text-foreground;
+  }
+}
+
+.rdp-vhidden {
+  @apply hidden;
+}
+
+/* Shared scrollbar for scrollable surfaces (the `<Table>` primitive applies it,
+   so it covers every table). Always visible when scrollable, so users notice
+   that a table scrolls. WebKit/Blink get the rich version; Firefox falls back
+   to the standard properties. Tokens are wrapped in hsl() because they are
+   stored as HSL channel triplets. */
+.grid-scrollbar {
+  /* `scrollbar-color` is set on <html> and INHERITS here, and while it is set
+     Chromium ignores ::-webkit-scrollbar styling entirely. Reset to `auto` to
+     re-enable the WebKit rules below. (Firefox's value comes from the
+     @supports block, which overrides this `auto`.) */
+  scrollbar-color: auto;
+}
+.grid-scrollbar::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+.grid-scrollbar::-webkit-scrollbar-track {
+  background: color-mix(in oklab, hsl(var(--muted)) 60%, transparent);
+}
+.grid-scrollbar::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, hsl(var(--muted-foreground)) 35%, transparent);
+  background-clip: padding-box;
+  border: 3px solid transparent;
+  border-radius: 9999px;
+}
+.grid-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, hsl(var(--muted-foreground)) 55%, transparent);
+  background-clip: padding-box;
+}
+.grid-scrollbar::-webkit-scrollbar-thumb:active {
+  background: color-mix(in oklab, hsl(var(--muted-foreground)) 70%, transparent);
+  background-clip: padding-box;
+}
+.grid-scrollbar::-webkit-scrollbar-corner {
+  background: color-mix(in oklab, hsl(var(--muted)) 60%, transparent);
+}
+@supports not selector(::-webkit-scrollbar) {
+  .grid-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, hsl(var(--muted-foreground)) 45%, transparent)
+      color-mix(in oklab, hsl(var(--muted)) 60%, transparent);
+  }
+}
+
+/* Frozen column cell in a DataTable (`position: sticky` + this class). The
+   cell has to be OPAQUE (or the scrolling columns show through), but theme
+   colors are translucent (`bg-muted/50` compiles to `color-mix(...,
+   transparent)`), so the composed color is written by hand. */
+.dt-frozen-cell {
+  background-color: hsl(var(--background));
+}
+th.dt-frozen-cell {
+  /* Same result as the header row's `bg-muted/50`, without the alpha. */
+  background-color: color-mix(in srgb, hsl(var(--muted)) 50%, hsl(var(--background)));
+}
+td.dt-frozen-cell {
+  /* A vertical line marks the frozen edge. An inset shadow, not a border:
+     with `border-collapse: collapse` the cell border fights its neighbor's. */
+  box-shadow: inset 1px 0 0 0 hsl(var(--border));
+}
+/* The row hover highlight is translucent and more specific than the rule
+   above; restored opaque so the frozen strip does not flash transparent. */
+.group:hover td.dt-frozen-cell {
+  background-color: hsl(var(--background));
+}
+
+/* Frozen label strip of the StatusMap: opaque for the same reason as
+   `.dt-frozen-cell`. `-head` matches the header row color without alpha. */
+.status-map-frozen-label {
+  background-color: hsl(var(--background));
+  box-shadow: 1px 0 0 0 hsl(var(--border));
+}
+.status-map-frozen-head {
+  background-color: color-mix(in srgb, hsl(var(--muted)) 50%, hsl(var(--background)));
+  box-shadow: 1px 0 0 0 hsl(var(--border));
+}
