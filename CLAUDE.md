@@ -141,6 +141,9 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
 - `docs/brand/`: the brand kit as delivered (logos, mark, favicon). `public/brand/` holds cleaned copies used
   by `src/components/brand/logo.tsx`: the kit's dark cut and a green recolor of its light cut (the kit's light
   cut is blue). The favicon is `src/app/icon.svg`.
+- `src/lib/tabs/` (store, URL title, link rule) + `src/components/tabs/` (hooks, `TabScreen`, link menus) +
+  `src/app/(app)/_components/tabs/` (the strip) + `src/instrumentation-client.ts`: same-window tabs (below).
+- Tests: `npm test` (Node's `node:test` run by `tsx`, `jsdom` for DOM tests), next to the code as `*.test.ts(x)`.
 - Some comments in `components/ui`, `components-app` and `fields` are still in Portuguese (pending
   translation pass).
 - Login (`ACCESS_MODE=login`, `src/lib/access-mode.ts`): next-auth v4 in `src/lib/auth.ts`, session helpers
@@ -149,6 +152,33 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   Users are in Cloud SQL (database `basecast`, schema `app`) through Prisma: `prisma/schema.prisma`,
   `src/lib/db.ts`, client generated to `src/generated/` on install. `npm run user:create` adds a user.
   Public mode never touches the database.
+
+## Same-window tabs
+
+Ported from fundsys-app (section "Abas na mesma janela" of its `CLAUDE.md`). On desktop the card's first row is a
+strip of app tabs; the breadcrumb moves below as the page title. Hidden on mobile.
+
+- **A tab is a URL, and the URL belongs to the active tab.** Switching tabs is `router.push`; every URL change
+  (link, `nuqs`, `router.push`) is written to the active tab. No screen needs to know the strip exists.
+- **Every screen lives in a tab: what it needs back lives in the URL or in `useTabState`.** `TabScreen` remounts
+  the page on each tab switch (a `key` per tab; `cacheComponents` is off), so plain `useState` never leaks
+  between two tabs on the same path, but it is also lost on a switch. `DataTable` filters, sorting and columns
+  already use `useTabState`. Values must fit in JSON (`Date` is fine): pinned tabs store them in `localStorage`.
+- **Navigation is a link (`Link`, `Button asChild` + `Link`), never `onClick={() => router.push()}`.** Every
+  `<a href>` in the shell gets the right-click menu ("Open in new tab", "Copy link") from `GlobalLinkMenu`;
+  `linkTarget` decides who is out (other origin, `target`, `download`, `/api`, `[role=menu]`,
+  `[data-native-menu]`). Don't wrap links in `LinkMenu`; it is for non-anchor triggers.
+- **Screen tabs bound to the URL are destinations**: `<Tabs urlParam="tab">` or `<Tabs tabHref={(v) => route}>`.
+  `src/lib/tabs/screen-tabs.test.ts` fails a `<Tabs value={x}>` fed by `useQueryState`, or a
+  `<Tabs defaultValue>` in a page file, without one of them.
+- **A pinned tab never leaves its screen**: a push to another path opens a new tab after the pinned ones
+  (`divertFromPinned`, from `onRouterTransitionStart`); `replace` (a `redirect()`) is left alone.
+- **Tab name**: a pinned tab's given name, else the last `<PageBreadcrumb>` item, else the `MAIN_MENU` label.
+  The browser title is `"<tab> · BaseCast"`.
+- **Traps paid in fundsys/ops**: nothing in `history.state` (nuqs would drop queued URL writes); Back comes
+  from `onRouterTransitionStart(url, "traverse")`, never `popstate`; a `<head>` observer keeps our `<title>`.
+- **Storage**: `sessionStorage` `basecast.tabs.<owner>`, pinned tabs also in `localStorage`
+  `basecast.pinned-tabs.<owner>`; `owner` is passed to `TabStrip` by `(app)/layout.tsx`.
 
 ## Docs
 
