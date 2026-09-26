@@ -54,6 +54,7 @@ Data is the main track), non-obvious insight, usability, performance.
   `parquet/<dataset>/dt=<date>/part-*.parquet`. The local layout is identical to the GCS bucket's, so
   moving up is `gcloud storage rsync` plus a BigQuery load, with no code rewrite.
 - **Warehouse (later):** BigQuery, tables partitioned by day. No Cloud SQL (there are no user writes).
+  *Superseded:* Cloud SQL `basecast-pg` exists, and the app keeps its login users there (`docs/decisions.md`).
 - **Pipelines (`basecast-airflow`):** each source is a pure Python module with
   `run(*, storage, http, since=None, until=None)` that runs on its own from the CLI. The Airflow DAGs
   (later, on a VM with Docker Compose and LocalExecutor) will be thin and only call these `run()`
@@ -76,7 +77,7 @@ Data is the main track), non-obvious insight, usability, performance.
 basecast-app/
 ├── CLAUDE.md
 ├── README.md
-├── .env.example              # GET_DATA_URL, GET_DATA_TOKEN (server-only), ACCESS_MODE
+├── .env.example              # GET_DATA_URL, GET_DATA_TOKEN (server-only), ACCESS_MODE, DATABASE_URL, NEXTAUTH_SECRET
 ├── src/ (or app/)            # Fundsys base: layout, auth, components-app, theme
 ├── lib/api/                  # TypeScript client generated from get-data's openapi.json
 ├── public/geo/               # Texas counties TopoJSON (generated in task A1)
@@ -89,7 +90,8 @@ basecast-app/
 
 - **From the Fundsys base, keep** the layout/shell, auth, `components-app`, theme, the TanStack Query
   setup and the BFF pattern in route handlers. **Remove** tenant scoping, RBAC, Prisma and domain modules,
-  Fundsys branding and any reference to clients or regulatory logic. No Fundsys data.
+  Fundsys branding and any reference to clients or regulatory logic. No Fundsys data. (Prisma came back
+  for the login users only; see `docs/decisions.md`.)
 - **Auth stays simple.** Judges must get in without friction: `ACCESS_MODE=public` is a read-only demo
   without login; `ACCESS_MODE=login` uses the base's auth. Document it in the README.
 - **Data access:** the BFF calls `basecast-get-data` (running locally with fixtures) through the
@@ -141,6 +143,12 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   cut is blue). The favicon is `src/app/icon.svg`.
 - Some comments in `components/ui`, `components-app` and `fields` are still in Portuguese (pending
   translation pass).
+- Login (`ACCESS_MODE=login`, `src/lib/access-mode.ts`): next-auth v4 in `src/lib/auth.ts`, session helpers
+  (`getCachedSession`, `withSession` for BFF route handlers) in `src/lib/auth/session.ts`, the redirect/401
+  gate in `src/proxy.ts` plus the check in `src/app/(app)/layout.tsx`, the page in `src/app/(auth)/sign-in/`.
+  Users are in Cloud SQL (database `basecast`, schema `app`) through Prisma: `prisma/schema.prisma`,
+  `src/lib/db.ts`, client generated to `src/generated/` on install. `npm run user:create` adds a user.
+  Public mode never touches the database.
 
 ## Docs
 
