@@ -38,6 +38,7 @@ npm run dev                  # http://localhost:3000
 | `npm run typecheck` | TypeScript, no emit |
 | `npm run db:push` | Applies `prisma/schema.prisma` to the database (login mode) |
 | `npm run user:create` | Creates a user (login mode); see [Access](#access) |
+| `npm test` | Unit and DOM tests (`node:test` via `tsx`) |
 
 ## Access
 
