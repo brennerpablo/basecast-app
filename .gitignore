@@ -15,3 +15,6 @@ next-env.d.ts
 /data/
 # Prisma client, regenerated on npm install
 src/generated/
+
+# pdf.js worker, copied from node_modules on install
+/public/pdfjs/
