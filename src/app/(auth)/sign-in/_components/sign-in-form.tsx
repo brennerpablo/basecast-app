@@ -4,6 +4,7 @@ import { LoaderCircle } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,16 +22,17 @@ import { safeInternalPath } from "./safe-internal-path";
 type Values = { identifier: string; password: string };
 
 export function SignInForm() {
-  const [failed, setFailed] = useState(false);
   const [entering, setEntering] = useState(false);
   const form = useForm<Values>({ defaultValues: { identifier: "", password: "" } });
   const busy = form.formState.isSubmitting || entering;
 
   const onSubmit = async (values: Values) => {
-    setFailed(false);
-    const result = await signIn("credentials", { ...values, redirect: false });
+    // A network failure lands here too: to the user it is the same "could not sign in".
+    const result = await signIn("credentials", { ...values, redirect: false }).catch(() => undefined);
     if (!result?.ok) {
-      setFailed(true);
+      toast.error("Couldn't sign in", {
+        description: "Check your email or username and password.",
+      });
       return;
     }
     setEntering(true);
@@ -83,12 +85,6 @@ export function SignInForm() {
             </FormItem>
           )}
         />
-
-        {failed && (
-          <p role="alert" className="text-sm text-destructive">
-            Wrong email, username or password.
-          </p>
-        )}
 
         <Button type="submit" className="w-full" disabled={busy}>
           {busy && <LoaderCircle className="animate-spin" />}
