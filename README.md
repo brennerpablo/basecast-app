@@ -54,7 +54,7 @@ Running it locally:
 ```bash
 cloud-sql-proxy --port 5439 --quota-project basecast-509812 basecast-509812:us-central1:basecast-pg
 # .env.local: DATABASE_URL, NEXTAUTH_SECRET (see .env.example)
-npm run db:push   # creates or updates the tables in schema `app`
+npm run db:push   # creates or updates the tables in schemas `app` and `ops`
 npm run dev
 ```
 
@@ -72,6 +72,24 @@ The superadmin is `admin`; its password is in Secret Manager:
 
 ```bash
 gcloud secrets versions access latest --secret app-superadmin-password --project basecast-509812
+```
+
+## Ops
+
+`/ops` shows what the app, get-data and the pipelines are doing: service health, requests per route
+(counts, 4xx/5xx, p50/p95/p99), pipeline runs from `etl_run`, and one log stream with a trace per
+request. All three services write the same row shape to `ops.log` (Postgres `basecast`, schema `ops`;
+format in basecast-get-data `docs/data-contract.md` §7), and the page reads it straight from Postgres.
+
+The app logs with `log.info(event, message, fields)` from `src/lib/observability`: one JSON line on
+stdout and, from `info` up, a row in `ops.log` written after the response. Every BFF route behind
+`withSession` gets its `http.request` line; unhandled server errors come from `onRequestError`.
+
+After `npm run db:push` created the table, run the grants once as `postgres` (the pipelines append,
+and the app reads `etl_run` through the reader role):
+
+```bash
+psql "postgresql://postgres@127.0.0.1:5439/basecast" -v ON_ERROR_STOP=1 -f prisma/ops-grants.sql
 ```
 
 ## Email

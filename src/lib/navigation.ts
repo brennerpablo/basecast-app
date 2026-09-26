@@ -1,4 +1,5 @@
 import {
+  Activity,
   Building2,
   Database,
   History,
@@ -69,6 +70,13 @@ export const MAIN_MENU: MainMenuItem[] = [
     icon: Database,
     href: "/data",
     activeCheck: underPath("/data"),
+  },
+  {
+    id: "ops",
+    label: "Ops",
+    icon: Activity,
+    href: "/ops",
+    activeCheck: underPath("/ops"),
   },
 ];
 

@@ -163,6 +163,14 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   photos in `app."UserAvatar"`; crop dialog in `src/components/avatar-upload/`. After an edit the page calls
   `update()`, and the `jwt` callback re-reads name and photo from the database. `withSession` hands the
   session to the handler. Screens outside the sidebar get their tab name and icon from `OTHER_ROUTES`.
+- Ops (`/ops`, `src/app/(app)/ops/`, after Data in the menu): tabs Overview, Requests, Pipelines, Logs, all state
+  in the URL, refetch every 30 s. Reads `ops.log` and `public.etl_run` straight from Postgres
+  (`src/lib/ops/queries.ts`, raw SQL) through `/api/ops/*`. The log is Prisma model `OpsLog` (schema `ops`),
+  grants in `prisma/ops-grants.sql`, row format in basecast-get-data `docs/data-contract.md` §7. The app writes it
+  with `log.info|warn|error(event, message, fields)` (`src/lib/observability/`, ported from Fundsys): stdout
+  plus a row queued in `after()`; `withSession` wraps every BFF request in `runWithRequestLog` (one
+  `http.request` line, `x-request-id` echoed; healthy `/api/ops` polls are not stored); `src/instrumentation.ts`
+  logs `server.error`. `getRequestId()` is the id to send to get-data as `x-request-id`.
 - Email: `sendEmail()` in `src/lib/email.ts` (server-only; Resend, from `noreply@basecast.pbrenner.com`) takes
   content, not HTML: every email renders in the one layout of `src/lib/email/layout.ts` (forest band with the
   logo as an inline CID PNG from `logo.ts`, lime rule, light-mode tokens as hex; content is escaped). The
