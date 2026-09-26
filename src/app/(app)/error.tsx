@@ -19,7 +19,7 @@ export default function AppError({ error, reset }: ErrorProps) {
   return (
     <div className="flex min-h-[70vh] items-center justify-center p-6">
       <div className="flex w-full max-w-md flex-col items-center text-center">
-        <div className="mb-8 text-foreground">
+        <div className="mb-8">
           <Logo size={36} />
         </div>
         <h1 className="mb-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">

@@ -1,42 +1,47 @@
+import Image from "next/image";
+
+import { cn } from "@/lib/utils";
+
+/** viewBox of the files in `public/brand`, cropped to the drawing. */
+const LOGO_WIDTH = 864;
+const LOGO_HEIGHT = 183;
+
 interface Props {
-  /** Height of the mark in px; the wordmark scales with it. */
+  /** Height in px; the width follows the logo's aspect ratio. */
   size?: number;
-  /** Hide the wordmark and show only the mark (collapsed or tight spaces). */
-  markOnly?: boolean;
   className?: string;
 }
 
 /**
- * basecast logo: a mark of three rising bars (a forecast climbing toward the
- * peak) plus the wordmark. The wordmark follows `currentColor`, so the parent
- * sets its ink for light and dark.
+ * BaseCast logo, the "small" cut from `docs/brand`: its five thicker strands
+ * hold up at UI sizes (the full cut's ten thin ones fade below ~100px).
+ * Light themes get `basecast-logo-small-green.svg`, the kit's light cut
+ * recolored to Base's greens (the kit's own light cut is blue); dark themes get
+ * the kit's dark cut unchanged. The `.dark` class on <html> picks which one
+ * shows, like the rest of the theme. The hidden one still downloads, but each
+ * is ~8 KB.
  */
-const Logo = ({ size = 28, markOnly = false, className }: Props) => {
+const Logo = ({ size = 32, className }: Props) => {
+  const width = Math.round((size * LOGO_WIDTH) / LOGO_HEIGHT);
+
   return (
-    <span className={`inline-flex items-center gap-2.5 ${className ?? ""}`}>
-      <svg
-        width={size}
+    <span className={cn("inline-flex", className)}>
+      <Image
+        src="/brand/basecast-logo-small-green.svg"
+        alt="BaseCast"
+        width={width}
         height={size}
-        viewBox="0 0 32 32"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden={!markOnly}
-        role={markOnly ? "img" : undefined}
-        aria-label={markOnly ? "basecast" : undefined}
-      >
-        <rect width="32" height="32" rx="8" className="fill-basecast-brand" />
-        <rect x="7" y="18" width="4.5" height="7" rx="1.5" fill="white" fillOpacity="0.7" />
-        <rect x="13.75" y="13" width="4.5" height="12" rx="1.5" fill="white" fillOpacity="0.85" />
-        <rect x="20.5" y="7" width="4.5" height="18" rx="1.5" fill="white" />
-      </svg>
-      {markOnly ? null : (
-        <span
-          className="font-semibold tracking-tight"
-          style={{ fontSize: Math.round(size * 0.72) }}
-        >
-          basecast
-        </span>
-      )}
+        loading="eager"
+        className="dark:hidden"
+      />
+      <Image
+        src="/brand/basecast-logo-small-dark.svg"
+        alt="BaseCast"
+        width={width}
+        height={size}
+        loading="eager"
+        className="hidden dark:block"
+      />
     </span>
   );
 };

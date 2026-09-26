@@ -1,6 +1,6 @@
 # basecast-app
 
-Next.js frontend for **basecast**, which forecasts how much of ERCOT's interconnection queues (large
+Next.js frontend for **BaseCast**, which forecasts how much of ERCOT's interconnection queues (large
 loads and generation) actually gets built, where and when, and turns that into peak-demand forecasts and
 partnership decisions.
 

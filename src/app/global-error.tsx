@@ -23,7 +23,7 @@ export default function GlobalError({ error }: GlobalErrorProps) {
       <body className="bg-canvas font-sans">
         <div className="flex min-h-screen items-center justify-center p-6">
           <div className="flex w-full max-w-md flex-col items-center text-center">
-            <div className="mb-8 text-foreground">
+            <div className="mb-8">
               <Logo size={36} />
             </div>
             <h1 className="mb-2 text-2xl font-semibold text-slate-900">

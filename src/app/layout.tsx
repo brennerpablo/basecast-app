@@ -14,7 +14,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "basecast",
+  title: "BaseCast",
   description:
     "Forecasts how much of ERCOT's interconnection queues actually gets built, and turns it into peak demand and partnership decisions.",
 };
