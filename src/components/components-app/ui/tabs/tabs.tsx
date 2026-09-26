@@ -4,6 +4,8 @@ import { parseAsString, useQueryState } from "nuqs";
 import { Tabs } from "radix-ui";
 import * as React from "react";
 
+import { LinkMenu } from "@/components/tabs/link-menu";
+import { tabUrl } from "@/lib/tabs/tab-url";
 import { cn } from "@/lib/utils";
 
 type TabsVariant = "line" | "solid";
@@ -50,6 +52,16 @@ const solidActiveClasses: Record<TabsColor, string> = {
   yellow:  "data-[state=active]:bg-yellow-400 data-[state=active]:text-white data-[state=active]:shadow-sm",
   emerald: "data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-sm"};
 
+/**
+ * Where a screen tab leads, by value. With it, a tab is a destination like a
+ * link: the right-click menu ("Open in new tab", "Copy link") and
+ * Cmd/Ctrl+click or middle-click into a browser tab. `null` for tabs that are
+ * not places (a dialog's, a form's, a filter's).
+ */
+type TabHref = (value: string) => string;
+
+const TabsHrefContext = React.createContext<TabHref | null>(null);
+
 type TabsRootProps = React.ComponentProps<typeof Tabs.Root> & {
   /**
    * The search param that holds the active tab (`?tab=`). When set on an
@@ -57,14 +69,34 @@ type TabsRootProps = React.ComponentProps<typeof Tabs.Root> & {
    * and survives a reload.
    */
   urlParam?: string;
+  /**
+   * For tabs that switch pages rather than a URL parameter: the route of each
+   * value. Makes the tabs destinations, like `urlParam` does.
+   */
+  tabHref?: TabHref;
 };
 
-function TabsRoot({ className, urlParam, ...props }: TabsRootProps) {
+function TabsRoot({ className, urlParam, tabHref, ...props }: TabsRootProps) {
   const classes = cn("w-full", className);
-  if (urlParam && props.value === undefined) {
-    return <TabsRootInUrl className={classes} urlParam={urlParam} {...props} />;
-  }
-  return <Tabs.Root className={classes} {...props} />;
+  const defaultValue = props.defaultValue;
+  const href = React.useMemo<TabHref | null>(
+    () =>
+      tabHref ??
+      (urlParam
+        ? // Read from `window.location` at the gesture, not from
+          // `useSearchParams`: the hook would ask for a `<Suspense>` around
+          // every screen with tabs, and the URL only matters on click.
+          (value: string) => tabUrl(window.location.href, urlParam, value, defaultValue)
+        : null),
+    [tabHref, urlParam, defaultValue],
+  );
+  const root =
+    urlParam && props.value === undefined ? (
+      <TabsRootInUrl className={classes} urlParam={urlParam} {...props} />
+    ) : (
+      <Tabs.Root className={classes} {...props} />
+    );
+  return <TabsHrefContext.Provider value={href}>{root}</TabsHrefContext.Provider>;
 }
 
 /**
@@ -128,12 +160,41 @@ function TabsList({
 
 function TabsTrigger({
   className,
+  onMouseDown,
+  onClick,
+  onAuxClick,
   ...props
 }: React.ComponentProps<typeof Tabs.Trigger>) {
   const { variant, color } = React.useContext(TabsListContext);
+  const tabHref = React.useContext(TabsHrefContext);
+  const href = tabHref && !props.disabled ? () => tabHref(props.value) : null;
 
-  return (
+  const trigger = (
     <Tabs.Trigger
+      // Radix activates the tab on `mousedown` of any left button without
+      // Ctrl, Cmd included on the Mac. With a destination, a modified click
+      // belongs to the browser, as on a link: `preventDefault` here stops Radix
+      // (the handlers are composed and it respects `defaultPrevented`).
+      onMouseDown={(e) => {
+        onMouseDown?.(e);
+        if (!href) return;
+        const modified = e.button === 0 && (e.metaKey || e.ctrlKey || e.shiftKey);
+        if (modified || e.button === 1) e.preventDefault();
+      }}
+      onClick={(e) => {
+        onClick?.(e);
+        if (href && e.button === 0 && (e.metaKey || e.ctrlKey || e.shiftKey)) {
+          e.preventDefault();
+          window.open(href(), "_blank", "noopener");
+        }
+      }}
+      onAuxClick={(e) => {
+        onAuxClick?.(e);
+        if (href && e.button === 1) {
+          e.preventDefault();
+          window.open(href(), "_blank", "noopener");
+        }
+      }}
       className={cn(
         "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-sm transition-all outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50",
         variant === "line" &&
@@ -150,6 +211,18 @@ function TabsTrigger({
       )}
       {...props}
     />
+  );
+
+  if (!href) return trigger;
+  // The menu wraps a `<span className="contents">`, not the button: the
+  // `ContextMenu` trigger injects `data-state="open|closed"` into its child,
+  // and Radix Tabs spreads props AFTER its own `data-state="active"`, so the
+  // active tab would lose its style. `contextmenu` bubbles from the button to
+  // the span, and `display: contents` leaves the list's layout alone.
+  return (
+    <LinkMenu href={href}>
+      <span className="contents">{trigger}</span>
+    </LinkMenu>
   );
 }
 

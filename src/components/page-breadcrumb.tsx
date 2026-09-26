@@ -6,6 +6,7 @@ import {
   type BreadcrumbEntry,
   useBreadcrumbContext,
 } from "@/components/breadcrumb-context";
+import { useTabTitle } from "@/components/tabs/use-tabs";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -22,8 +23,12 @@ interface PageBreadcrumbProps {
 
 /**
  * Declares breadcrumb items for the current page.
- * Items are rendered in the layout topbar via BreadcrumbBar.
+ * Items are rendered in the layout via BreadcrumbBar.
  * This component renders nothing itself.
+ *
+ * The last item also names the app tab the page is in (`useTabTitle`): an
+ * account page is called by the account, not "Accounts". A loading label
+ * ("…") does not name it.
  */
 export function PageBreadcrumb({ items }: PageBreadcrumbProps) {
   const { setItems } = useBreadcrumbContext();
@@ -44,6 +49,8 @@ export function PageBreadcrumb({ items }: PageBreadcrumbProps) {
     setItems(trail);
     return () => setItems([]);
   }, [trail, setItems]);
+
+  useTabTitle(trail.at(-1)?.label);
 
   return null;
 }

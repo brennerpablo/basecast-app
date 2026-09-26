@@ -23,6 +23,7 @@ import ReactDOM from "react-dom";
 // gets the real thing (notably the dash glyph for the indeterminate
 // "some rows selected" header state, which the shadcn one draws as a tick).
 import { Checkbox } from "@/components/components-app/ui/checkbox";
+import { useTabState } from "@/components/tabs/tab-screen";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -277,6 +278,11 @@ export function DataTable<TData>({
   }
   const isGhost = tableStyle === "ghost";
   const locale = getLocale(language);
+  // Filters, sorting and visible columns belong to the app TAB, not just to
+  // the component (`useTabState`): two tabs on this screen keep their own, and
+  // a tab that comes back finds them as it left them. `useId` tells two tables
+  // on one screen apart and is stable across mounts.
+  const tabStateKey = `data-table:${tableName ?? ""}:${React.useId()}`;
   const [rowSelection, setRowSelection] = React.useState({});
   const [isFullscreen, setIsFullscreen] = React.useState(false);
   const toggleFullscreen = React.useCallback(() => setIsFullscreen((v) => !v), []);
@@ -385,7 +391,10 @@ export function DataTable<TData>({
   const needsColumnVisibilityControl =
     hasFiltersOnly || enableColumnOptions || Object.keys(defaultColumnVisibility).length > 0;
 
-  const [userColumnVisibility, setUserColumnVisibility] = React.useState<VisibilityState>({});
+  const [userColumnVisibility, setUserColumnVisibility] = useTabState<VisibilityState>(
+    `${tabStateKey}:columns`,
+    {},
+  );
 
   const columnVisibilityForTable = React.useMemo(() => {
     if (!needsColumnVisibilityControl) return undefined;
@@ -498,7 +507,8 @@ export function DataTable<TData>({
     stableOnRowAction,
   ]);
 
-  const [localSorting, setLocalSorting] = React.useState<SortingState>(
+  const [localSorting, setLocalSorting] = useTabState<SortingState>(
+    `${tabStateKey}:sorting`,
     () => initialSorting ?? [],
   );
   const sorting = serverMode ? serverPagination!.sorting : localSorting;
@@ -525,7 +535,8 @@ export function DataTable<TData>({
   // Outside server mode the filters are controlled here as well. The
   // `initialState.columnFilters` stays seeded: it is what
   // `resetColumnFilters()` with no argument restores.
-  const [localColumnFilters, setLocalColumnFilters] = React.useState<ColumnFiltersState>(
+  const [localColumnFilters, setLocalColumnFilters] = useTabState<ColumnFiltersState>(
+    `${tabStateKey}:filters`,
     () => initialColumnFilters ?? [],
   );
   const handleColumnFiltersChange = React.useCallback(
