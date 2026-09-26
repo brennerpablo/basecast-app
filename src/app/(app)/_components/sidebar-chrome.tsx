@@ -2,11 +2,10 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import Logo from "@/components/brand/logo";
-import { ThemeMenu } from "@/components/theme/theme-menu";
 
 /**
  * The sidebar shell: logo, optional toolbar, scrollable content area and the
- * footer with the optional `footer` items (the user menu) and the theme picker.
+ * `footer` (the user menu, which also holds the theme picker).
  * Kept as its own component so every sidebar variant keeps the chrome in the
  * same place.
  */
@@ -31,10 +30,9 @@ export function SidebarChrome({
           <div className="w-full shrink-0 px-2 pb-1">{toolbar}</div>
         ) : null}
         <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
-        <div className="w-full shrink-0 border-t border-sidebar-border p-2">
-          {footer}
-          <ThemeMenu />
-        </div>
+        {footer ? (
+          <div className="w-full shrink-0 border-t border-sidebar-border p-2">{footer}</div>
+        ) : null}
       </div>
     </div>
   );

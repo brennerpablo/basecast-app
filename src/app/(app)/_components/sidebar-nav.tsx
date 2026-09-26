@@ -52,7 +52,7 @@ export function SidebarNav({
 }: {
   /** Expanded groups read from the cookie on the server, so both renders match. */
   initialExpanded?: string[];
-  /** Extra items above the theme picker (the user menu). */
+  /** The sidebar footer (the user menu). */
   footer?: ReactNode;
 }) {
   const pathname = usePathname();

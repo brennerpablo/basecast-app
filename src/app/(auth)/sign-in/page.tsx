@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 
 import { SignInForm } from "./_components/sign-in-form";
 
-/** Only reachable in ACCESS_MODE=login; `proxy.ts` sends it to the app otherwise. */
+/** `proxy.ts` sends visitors who already have a session to the app. */
 export default function SignInPage() {
   return (
     <div className="flex w-full max-w-sm flex-col items-center">

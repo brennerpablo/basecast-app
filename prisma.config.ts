@@ -8,6 +8,6 @@ if (existsSync(".env.local")) loadEnvFile(".env.local");
 if (existsSync(".env")) loadEnvFile(".env");
 
 export default defineConfig({
-  // Unset in ACCESS_MODE=public, where nothing talks to the database; `prisma generate` does not need it.
+  // `prisma generate` (on install) does not need it, so a fresh clone installs without one.
   datasource: { url: process.env.DATABASE_URL ?? "" },
 });

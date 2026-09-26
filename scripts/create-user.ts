@@ -1,5 +1,5 @@
 /**
- * Creates a user for ACCESS_MODE=login. It never overwrites: an existing username or email fails.
+ * Creates a user who can sign in. It never overwrites: an existing username or email fails.
  *
  *   npm run user:create -- --username jane --email jane@example.com [--name "Jane Doe"] [--superadmin]
  *

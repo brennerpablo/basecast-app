@@ -9,8 +9,8 @@ pipeline status. The browser only talks to this app's route handlers (BFF), whic
 `basecast-get-data` with a server-side token.
 
 > **Status:** B0 done. The app shell (sidebar menu, page card, light and dark themes, component library)
-> runs; every page is a placeholder until its data lands (B1–B3). No data access yet. Login
-> (`ACCESS_MODE=login`) works; see [Access](#access).
+> runs; every page is a placeholder until its data lands (B1–B3). No data access yet. Login works;
+> see [Access](#access).
 
 ## Repos
 
@@ -26,9 +26,11 @@ Requires Node 22 or newer (`.nvmrc` pins 24, the version used on Vercel).
 
 ```bash
 npm install
-cp .env.example .env.local   # GET_DATA_URL, GET_DATA_TOKEN (server-only), ACCESS_MODE
+cp .env.example .env.local   # GET_DATA_URL, GET_DATA_TOKEN (server-only), DATABASE_URL, NEXTAUTH_SECRET
 npm run dev                  # http://localhost:3000
 ```
+
+The app needs a session on every page, so running it locally needs the database; see [Access](#access).
 
 | Script | What it does |
 |---|---|
@@ -36,25 +38,21 @@ npm run dev                  # http://localhost:3000
 | `npm run build` | Production build |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | TypeScript, no emit |
-| `npm run db:push` | Applies `prisma/schema.prisma` to the database (login mode) |
-| `npm run user:create` | Creates a user (login mode); see [Access](#access) |
+| `npm run db:push` | Applies `prisma/schema.prisma` to the database |
+| `npm run user:create` | Creates a user; see [Access](#access) |
 | `npm test` | Unit and DOM tests (`node:test` via `tsx`) |
 
 ## Access
 
-`ACCESS_MODE` picks one of two modes:
+Every page needs a session and API routes answer 401 without one. Users sign in with their email or
+username and a password (next-auth v4, Credentials provider, JWT sessions, as in the Fundsys app). Users
+live in Cloud SQL: database `basecast`, schema `app`.
 
-- `public` (the default, also when unset): read-only demo without login, so the judges get in without
-  friction. Nothing touches the database.
-- `login`: every page needs a session and API routes answer 401 without one. Users sign in with their
-  email or username and a password (next-auth v4, Credentials provider, JWT sessions, as in the Fundsys
-  app). Users live in Cloud SQL: database `basecast`, schema `app`.
-
-Running `login` locally:
+Running it locally:
 
 ```bash
 cloud-sql-proxy --port 5439 --quota-project basecast-509812 basecast-509812:us-central1:basecast-pg
-# .env.local: ACCESS_MODE=login, DATABASE_URL, NEXTAUTH_SECRET (see .env.example)
+# .env.local: DATABASE_URL, NEXTAUTH_SECRET (see .env.example)
 npm run db:push   # creates or updates the tables in schema `app`
 npm run dev
 ```
@@ -81,7 +79,7 @@ to Cloud SQL in `us-central1`; see `vercel.json`).
 Cloud SQL only accepts its own connectors and Vercel has no proxy, so production sets
 `CLOUD_SQL_INSTANCE` and the app opens the tunnel with Google's Node connector, as the service account
 `app-vercel` (role `cloudsql.client` only; its JSON key is `GCP_SA_KEY`). `DATABASE_URL` then only supplies
-the user, password and database. Production env: `ACCESS_MODE=login`, `DATABASE_URL`, `NEXTAUTH_SECRET`,
+the user, password and database. Production env: `DATABASE_URL`, `NEXTAUTH_SECRET`,
 `CLOUD_SQL_INSTANCE`, `GCP_SA_KEY`. `NEXTAUTH_URL` stays unset: on Vercel next-auth takes the host from the
 request, so the custom domain and the `*.vercel.app` URLs both work.
 

@@ -9,7 +9,7 @@ import { getDb } from "@/lib/db";
 
 /**
  * next-auth v4, as in the Fundsys app: Credentials only, JWT sessions, no adapter (Credentials never
- * uses the Account/Session tables). Only used in ACCESS_MODE=login.
+ * uses the Account/Session tables).
  */
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,

@@ -27,8 +27,8 @@
  *
  * Module state with a subscription (`useSyncExternalStore`): the strip
  * subscribes to the list, screens only call the operations. Stored in
- * `sessionStorage` (per browser tab, survives F5) under a key per OWNER: today
- * the app is public and the owner is a constant; with login it is the user.
+ * `sessionStorage` (per browser tab, survives F5) under a key per OWNER, the
+ * signed-in user's id.
  *
  * **A pinned tab never leaves the screen it was pinned on.** Its path is
  * fixed; only the query changes (a filter, a sub-tab). Navigating to another

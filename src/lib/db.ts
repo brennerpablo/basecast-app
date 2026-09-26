@@ -40,7 +40,7 @@ async function createPool(): Promise<Pool> {
 }
 
 /**
- * The Prisma client, created on first use (never at import, so ACCESS_MODE=public never connects).
+ * The Prisma client, created on first use (never at import: nothing connects until a query runs).
  * One per process: dev hot reload would otherwise open a new pool on every edit. A failed start is
  * not cached, so the next request tries again.
  */

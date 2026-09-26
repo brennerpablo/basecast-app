@@ -1,4 +1,4 @@
-// Tables the app owns: only the users of ACCESS_MODE=login for now. They live in the `app` schema
+// Tables the app owns: only the login users for now. They live in the `app` schema
 // of the `basecast` database (Cloud SQL), apart from the pipelines' tables in `public`, so
 // `prisma db push` never sees those. Applied with `npm run db:push`; there is no migration history.
 

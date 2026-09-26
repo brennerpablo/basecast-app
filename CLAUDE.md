@@ -80,7 +80,7 @@ Data is the main track), non-obvious insight, usability, performance.
 basecast-app/
 ├── CLAUDE.md
 ├── README.md
-├── .env.example              # GET_DATA_URL, GET_DATA_TOKEN (server-only), ACCESS_MODE, DATABASE_URL, NEXTAUTH_SECRET
+├── .env.example              # GET_DATA_URL, GET_DATA_TOKEN (server-only), DATABASE_URL, NEXTAUTH_SECRET
 ├── src/ (or app/)            # Fundsys base: layout, auth, components-app, theme
 ├── lib/api/                  # TypeScript client generated from get-data's openapi.json
 ├── public/geo/               # Texas counties TopoJSON (generated in task A1)
@@ -95,8 +95,8 @@ basecast-app/
   setup and the BFF pattern in route handlers. **Remove** tenant scoping, RBAC, Prisma and domain modules,
   Fundsys branding and any reference to clients or regulatory logic. No Fundsys data. (Prisma came back
   for the login users only; see `docs/decisions.md`.)
-- **Auth stays simple.** Judges must get in without friction: `ACCESS_MODE=public` is a read-only demo
-  without login; `ACCESS_MODE=login` uses the base's auth. Document it in the README.
+- **Auth stays simple.** The base's login on every page; document it in the README. *Superseded:* the
+  kickoff's `ACCESS_MODE=public` (a read-only demo without login) was removed (`docs/decisions.md`).
 - **Data access:** the BFF calls `basecast-get-data` (running locally with fixtures) through the
   TypeScript client generated from its `openapi.json`. The token stays on the server, never
   `NEXT_PUBLIC_`. No mocks inside the app: the fixtures live in the API, so the app talks to the real
@@ -149,12 +149,14 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
 - Tests: `npm test` (Node's `node:test` run by `tsx`, `jsdom` for DOM tests), next to the code as `*.test.ts(x)`.
 - Some comments in `components/ui`, `components-app` and `fields` are still in Portuguese (pending
   translation pass).
-- Login (`ACCESS_MODE=login`, `src/lib/access-mode.ts`): next-auth v4 in `src/lib/auth.ts`, session helpers
+- Login, required on every page: next-auth v4 in `src/lib/auth.ts`, session helpers
   (`getCachedSession`, `withSession` for BFF route handlers) in `src/lib/auth/session.ts`, the redirect/401
   gate in `src/proxy.ts` plus the check in `src/app/(app)/layout.tsx`, the page in `src/app/(auth)/sign-in/`.
   Users are in Cloud SQL (database `basecast`, schema `app`) through Prisma: `prisma/schema.prisma`,
   `src/lib/db.ts`, client generated to `src/generated/` on install. `npm run user:create` adds a user.
-  Public mode never touches the database.
+- User menu (`src/app/(app)/_components/user-menu.tsx`), the sidebar footer as in the Fundsys app: avatar
+  with initials (`src/components/user-avatar.tsx`), then name and email, the theme submenu
+  (`src/components/theme/theme-menu.tsx`) and sign out.
 
 ## Same-window tabs
 
@@ -181,8 +183,7 @@ strip of app tabs; the breadcrumb moves below as the page title. Hidden on mobil
 - **Traps paid in fundsys/ops**: nothing in `history.state` (nuqs would drop queued URL writes); Back comes
   from `onRouterTransitionStart(url, "traverse")`, never `popstate`; a `<head>` observer keeps our `<title>`.
 - **Storage**: `sessionStorage` `basecast.tabs.<owner>`, pinned tabs also in `localStorage`
-  `basecast.pinned-tabs.<owner>`. `(app)/layout.tsx` passes the owner: the user id in login mode, `public`
-  otherwise. Sign-out (`UserMenu`) calls `clearTabs()`; pinned tabs stay under the user's key.
+  `basecast.pinned-tabs.<owner>`. `(app)/layout.tsx` passes the owner: the user id. Sign-out (`UserMenu`) calls `clearTabs()`; pinned tabs stay under the user's key.
 
 ## Docs
 
