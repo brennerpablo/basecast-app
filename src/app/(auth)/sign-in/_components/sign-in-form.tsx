@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import { PasswordInput } from "@/components/password-input";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -79,7 +80,7 @@ export function SignInForm() {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input type="password" autoComplete="current-password" {...field} />
+                <PasswordInput autoComplete="current-password" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
