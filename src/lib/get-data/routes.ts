@@ -11,6 +11,21 @@ const FORWARDED = [
   /^tables\/[A-Za-z_][A-Za-z0-9_]{0,62}$/,
   /^tables\/[A-Za-z_][A-Za-z0-9_]{0,62}\/(rows|lineage)$/,
   /^pipeline\/runs$/,
+  // Product screens (contract v2).
+  /^caveats$/,
+  /^accounts$/,
+  /^accounts\/export\.csv$/,
+  /^accounts\/[A-Za-z0-9_-]{1,32}$/,
+  /^accounts\/[A-Za-z0-9_-]{1,32}\/events$/,
+  /^geo\/counties$/,
+  /^geo\/counties\/\d{5}$/,
+  /^geo\/zones$/,
+  /^queue\/projects$/,
+  /^forecasts\/(peak|large-load|queue-curves)$/,
+  /^load\/normalized$/,
+  /^four-cp$/,
+  /^backtest\/(peak|official-errors|queue)$/,
+  /^insights$/,
 ];
 
 export function isForwarded(path: string): boolean {

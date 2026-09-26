@@ -3,6 +3,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import type { components } from "@/lib/api/get-data";
+import { dataUrl, type Params } from "@/lib/bff/url";
 
 /** Types of the get-data contract, generated from its openapi.json (`npm run api:generate`). */
 export type Schemas = components["schemas"];
@@ -30,19 +31,6 @@ export class DataApiError extends Error {
   ) {
     super(message);
   }
-}
-
-type Params = Record<string, string | number | boolean | null | undefined | string[]>;
-
-export function dataUrl(path: string, params?: Params): string {
-  const qs = new URLSearchParams();
-  for (const [name, value] of Object.entries(params ?? {})) {
-    if (value === null || value === undefined || value === "") continue;
-    if (Array.isArray(value)) value.forEach((v) => qs.append(name, v));
-    else qs.set(name, String(value));
-  }
-  const query = qs.toString();
-  return `/api/data/${path}${query ? `?${query}` : ""}`;
 }
 
 /** GET a get-data resource through the BFF and return its `data`. */

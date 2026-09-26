@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { isForwarded, passHeaders } from "./routes";
 
-test("forwards only the /data browser's get-data paths", () => {
+test("forwards only the allowlisted get-data paths", () => {
   for (const path of [
     "lake/sources",
     "lake/list",
@@ -15,6 +15,22 @@ test("forwards only the /data browser's get-data paths", () => {
     "tables/open_meteo_hourly/rows",
     "tables/gis_snapshots/lineage",
     "pipeline/runs",
+    "caveats",
+    "accounts",
+    "accounts/export.csv",
+    "accounts/FX001",
+    "accounts/30015/events",
+    "geo/counties",
+    "geo/counties/48453",
+    "geo/zones",
+    "queue/projects",
+    "forecasts/peak",
+    "forecasts/large-load",
+    "load/normalized",
+    "four-cp",
+    "backtest/peak",
+    "backtest/official-errors",
+    "insights",
   ]) {
     assert.equal(isForwarded(path), true, path);
   }
@@ -27,6 +43,13 @@ test("forwards only the /data browser's get-data paths", () => {
     "tables/bad-name/rows",
     "tables/a/b/c",
     "lake/sources/extra",
+    "accounts/export.json",
+    "accounts/../health",
+    "accounts/FX001/events/1",
+    "geo/counties/4845",
+    "geo/counties/48453/extra",
+    "forecasts/county",
+    "backtest",
   ]) {
     assert.equal(isForwarded(path), false, path);
   }
