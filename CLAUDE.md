@@ -133,8 +133,12 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
 - `src/lib/navigation.ts`: the sidebar menu (`MAIN_MENU`). Add a page there to put it in the menu.
 - `src/components/ui/`: shadcn primitives. `src/components/components-app/`: charts, DataTable and product
   components from the Fundsys base. Prefer these before adding a package.
-- `src/app/globals.css`: tokens for light and the two dark themes (Zinc, Deep); brand hex palette is
-  `--basecast-brand-*` (mirrored in `src/lib/brand-tokens.ts`).
+- `src/app/globals.css`: tokens for light and the two dark themes (Zinc, Deep), in Base Power's colors (the
+  `--bpc-color-*` tokens on basepowercompany.com). `--brand` (`bg-brand`) is the lime FILL; the forest INK for
+  text, links and tints is `--basecast-brand-*` (mirrored in `src/lib/brand-tokens.ts`).
+- `docs/brand/`: the brand kit as delivered (logos, mark, favicon). `public/brand/` holds cleaned copies used
+  by `src/components/brand/logo.tsx`: the kit's dark cut and a green recolor of its light cut (the kit's light
+  cut is blue). The favicon is `src/app/icon.svg`.
 - Some comments in `components/ui`, `components-app` and `fields` are still in Portuguese (pending
   translation pass).
 

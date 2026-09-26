@@ -36,11 +36,11 @@ export function ThemeMenu() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:outline-none focus:ring-2 focus:ring-sidebar-ring focus:ring-offset-2 focus:ring-offset-sidebar"
         >
-          <ThemeIcon className="size-4 shrink-0 text-muted-foreground" />
+          <ThemeIcon className="size-4 shrink-0 text-sidebar-foreground/70" />
           <span>Theme</span>
-          <span className="ml-auto text-xs text-muted-foreground">
+          <span className="ml-auto text-xs text-sidebar-foreground/70">
             {THEME_LABEL[theme]}
           </span>
         </button>

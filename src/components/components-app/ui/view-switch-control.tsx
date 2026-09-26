@@ -120,7 +120,7 @@ export function ViewSwitchControl<TValue extends string>({
               "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
               itemSizeClasses[size],
               selected
-                ? "bg-emerald-100 text-emerald-700"
+                ? "bg-basecast-brand-100 text-basecast-brand-700"
                 : "text-muted-foreground hover:bg-accent hover:text-foreground",
               option.disabled && "cursor-not-allowed opacity-40 hover:bg-transparent hover:text-muted-foreground",
               itemClassName,

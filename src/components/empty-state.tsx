@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
  * states and do not go through here.
  *
  * `Icon` is required on purpose: each context picks its glyph. The default
- * color is dark slate; pass `iconClassName` to change it (e.g. `text-brand`).
+ * color is dark slate; pass `iconClassName` to change it (e.g. `text-basecast-brand`).
  *
  * **Punctuation (fixed rule):** `title` has **no** final period,
  * `description` **has** one. The title is a label; the description is a
@@ -21,7 +21,7 @@ export interface EmptyStateProps {
   Icon: LucideIcon;
   title: string;
   description?: string;
-  /** Icon color/size. Default: dark slate. E.g. `"text-brand"`. */
+  /** Icon color/size. Default: dark slate. E.g. `"text-basecast-brand"`. */
   iconClassName?: string;
   /** Smaller padding and icon, for small panels inside a card. */
   compact?: boolean;

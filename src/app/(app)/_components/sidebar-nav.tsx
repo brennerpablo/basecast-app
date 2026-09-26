@@ -117,9 +117,9 @@ export function SidebarNav({
         aria-label={hasAnyExpanded ? "Collapse all menus" : "Expand all menus"}
         className={cn(
           "flex min-h-8 w-full items-center justify-start gap-2 rounded-md px-3 py-2 text-xs font-medium transition-colors",
-          "hover:bg-accent hover:text-accent-foreground",
-          "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-          "text-muted-foreground",
+          "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          "focus:outline-none focus:ring-2 focus:ring-sidebar-ring focus:ring-offset-2 focus:ring-offset-sidebar",
+          "text-sidebar-foreground/70",
         )}
       >
         {hasAnyExpanded ? (
@@ -149,13 +149,12 @@ export function SidebarNav({
                     aria-current={isActive ? "page" : undefined}
                     className={cn(
                       "flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                      "hover:bg-emerald-400 hover:text-white hover:[&_svg]:text-white",
-                      "dark:hover:bg-brand dark:hover:text-brand-foreground dark:hover:[&_svg]:text-brand-foreground",
+                      "hover:bg-brand hover:text-brand-foreground hover:[&_svg]:text-brand-foreground",
                       BADGE_ON_ACCENT_HOVER,
-                      "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                      "focus:outline-none focus:ring-2 focus:ring-sidebar-ring focus:ring-offset-2 focus:ring-offset-sidebar",
                       isActive
-                        ? "bg-emerald-400 text-white dark:bg-brand dark:text-brand-foreground [&_svg]:text-white dark:[&_svg]:text-brand-foreground"
-                        : "text-foreground",
+                        ? "bg-brand text-brand-foreground [&_svg]:text-brand-foreground"
+                        : "text-sidebar-foreground",
                       isActive && BADGE_ON_ACCENT,
                     )}
                   >
@@ -163,7 +162,7 @@ export function SidebarNav({
                       <Icon
                         className={cn(
                           "size-4 shrink-0 transition-colors",
-                          !isActive && "text-muted-foreground",
+                          !isActive && "text-sidebar-foreground/70",
                         )}
                       />
                       <span className="whitespace-nowrap text-left">
@@ -178,21 +177,21 @@ export function SidebarNav({
                     aria-expanded={hasSubItems ? isExpanded : undefined}
                     className={cn(
                       "flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                      "hover:bg-accent hover:text-accent-foreground",
-                      "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                      "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                      "focus:outline-none focus:ring-2 focus:ring-sidebar-ring focus:ring-offset-2 focus:ring-offset-sidebar",
                       hasSubItems ? "cursor-pointer" : "cursor-default",
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <Icon className="size-4 shrink-0 text-muted-foreground" />
-                      <span className="whitespace-nowrap text-left text-foreground">
+                      <Icon className="size-4 shrink-0 text-sidebar-foreground/70" />
+                      <span className="whitespace-nowrap text-left text-sidebar-foreground">
                         {item.label}
                       </span>
                     </div>
                     {hasSubItems && (
                       <ChevronDownIcon
                         className={cn(
-                          "size-4 shrink-0 text-muted-foreground",
+                          "size-4 shrink-0 text-sidebar-foreground/70",
                           shouldAnimate && "transition-transform duration-200",
                           isExpanded && "rotate-180",
                         )}
@@ -210,7 +209,7 @@ export function SidebarNav({
                         : "max-h-0 overflow-hidden opacity-0",
                     )}
                   >
-                    <div className="ml-7 mt-1 space-y-1 border-l border-border pl-3">
+                    <div className="ml-7 mt-1 space-y-1 border-l border-sidebar-border pl-3">
                       {item.subItems?.map((subItem) => {
                         const isSubItemActive = subItem.activeCheck
                           ? subItem.activeCheck(pathname)
@@ -222,13 +221,13 @@ export function SidebarNav({
                             onClick={closeDrawer}
                             aria-current={isSubItemActive ? "page" : undefined}
                             className={cn(
-                              "flex items-center gap-2 rounded-md px-3 py-2 text-[13px] text-muted-foreground transition-colors",
+                              "flex items-center gap-2 rounded-md px-3 py-2 text-[13px] text-sidebar-foreground/70 transition-colors",
                               !isSubItemActive &&
-                                "hover:bg-accent hover:text-accent-foreground",
-                              "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                                "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                              "focus:outline-none focus:ring-2 focus:ring-sidebar-ring focus:ring-offset-2 focus:ring-offset-sidebar",
                               "whitespace-nowrap text-left",
                               isSubItemActive &&
-                                "bg-emerald-400 text-white dark:bg-brand dark:text-brand-foreground",
+                                "bg-brand text-brand-foreground",
                               isSubItemActive && BADGE_ON_ACCENT,
                             )}
                           >

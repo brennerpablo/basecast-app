@@ -1,18 +1,23 @@
 /**
- * TS mirror of the `--basecast-brand-*` palette defined in `src/app/globals.css`.
- * Use `BRAND_CSS` at DOM/CSS runtime; `BRAND` where there is no CSS (SVG, exports).
+ * TS mirror of the `--basecast-brand-*` palette defined in `src/app/globals.css`
+ * (light values): the brand INK, Base Power's forest greens. The lime FILL is
+ * `--brand` (`bg-brand`), which has no hex mirror because it is only used
+ * through Tailwind. Use `BRAND_CSS` at DOM/CSS runtime; `BRAND` where there is
+ * no CSS (SVG, exports).
  */
 
 export const BRAND = {
-  /** emerald-500 · main brand color */
-  DEFAULT: "#10b981",
-  /** emerald-600 · hover */
-  HOVER: "#059669",
+  /** Base green-90 (text-brand / text-link) · main ink color */
+  DEFAULT: "#1e4d2b",
+  /** Base green-100 · hover */
+  HOVER: "#102a17",
   FOREGROUND: "#ffffff",
-  50: "#ecfdf5",
-  100: "#d1fae5",
-  700: "#047857",
-  800: "#065f46",
+  /** Base green-5 (brand-primary-subtle) */
+  50: "#d6f0b4",
+  /** Base green-20 (brand-primary, the lime) */
+  100: "#b2dd79",
+  700: "#1e4d2b",
+  800: "#102a17",
 } as const;
 
 /** CSS references for React components (style/className through the Tailwind theme). */

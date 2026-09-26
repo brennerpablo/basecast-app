@@ -21,12 +21,13 @@
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
 
-  /* Brand color. It is separate from `primary` because shadcn's `--primary`
-     is near-black and serves as the DARK FOREGROUND (`text-primary` is a text
-     color); painting it with the brand would turn that text green. So the
-     brand is its own token, and the controls that carry it (default Button,
-     Switch, Checkbox) use `bg-brand`. Mirrors BRAND in src/lib/brand-tokens.ts,
-     the source for contexts without Tailwind. */
+  /* Brand FILL (Base's lime brand-primary). It is separate from `primary`
+     because shadcn's `--primary` is near-black and serves as the DARK
+     FOREGROUND (`text-primary` is a text color). The controls that carry the
+     brand (default Button, Switch, Checkbox, active menu item) use `bg-brand`
+     with `text-brand-foreground`. It is a FILL only: lime as text on a light
+     surface is unreadable, so brand-colored text uses `text-basecast-brand`
+     (the forest ink, below). */
   --color-brand: hsl(var(--brand));
   --color-brand-hover: hsl(var(--brand-hover));
   --color-brand-foreground: hsl(var(--brand-foreground));
@@ -62,7 +63,8 @@
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
 
-  /* basecast brand palette (hex), used where an HSL channel triplet does not fit */
+  /* Brand INK palette (hex): text, links, tints, the table accent. Mirrors BRAND
+     in src/lib/brand-tokens.ts, the source for contexts without Tailwind. */
   --color-basecast-brand: var(--basecast-brand);
   --color-basecast-brand-hover: var(--basecast-brand-hover);
   --color-basecast-brand-foreground: var(--basecast-brand-foreground);
@@ -104,62 +106,74 @@
        `.dark { color-scheme: only dark }` below, which wins by coming later. */
     color-scheme: only light;
 
-    /* Page background; `--background` is the card surface. See `--color-canvas`
-       in @theme. `210 17% 97.6%` is #F8F9FA. */
-    --canvas: 210 17% 97.6%;
+    /* Colors are Base Power's (the `--bpc-color-*` tokens on
+       basepowercompany.com); the hex next to each line is the source value.
+       Page background; `--background` is the card surface. See `--color-canvas`
+       in @theme. Base's surface-default, #f0eeeb. */
+    --canvas: 36 14.3% 93.1%;
 
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 40 3.8% 15.5%; /* #292826 text-default */
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 40 3.8% 15.5%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 40 3.8% 15.5%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 40 3.8% 15.5%;
+    --primary-foreground: 0 0% 100%;
 
-    /* #10b981 (emerald-500) / #059669 (emerald-600) ; see BRAND. */
-    --brand: 160 84% 39%;
-    --brand-hover: 161 94% 30%;
-    --brand-foreground: 0 0% 100%;
+    /* The FILL brand: Base's brand-primary, lime #b2dd79, hover #77a45a. The
+       ink is green-100 #102a17, not Base's green-90: green-90 on the hover
+       fill is 3.4:1, green-100 is 5.3:1. Lime fails as text on light
+       surfaces (1.6:1); text and tints use `--basecast-brand` below. */
+    --brand: 85.8 59.5% 67.1%;
+    --brand-hover: 96.5 29.1% 49.8%;
+    --brand-foreground: 136.2 44.8% 11.4%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 36 14.3% 93.1%;
+    --secondary-foreground: 40 3.8% 15.5%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 36 14.3% 93.1%;
+    /* #54524f grey-80, not Base's text-muted grey-60: that one is 4.1:1 on
+       white, under AA. */
+    --muted-foreground: 36 3.1% 32%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 36 14.3% 93.1%;
+    --accent-foreground: 40 3.8% 15.5%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 5.1 92.2% 40.2%; /* #c51808 red-80 */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 40 3.7% 84.1%; /* #d8d7d5 border-default */
+    --input: 40 3.7% 84.1%;
+    --ring: 40 3.8% 15.5%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* The sidebar shares the canvas cream, so only the page card lifts off.
+       Hover is Base's surface-subtle grey-20 #d8d7d5; the active item is the
+       lime fill. The focus ring stays dark: lime on cream is 1.4:1. */
+    --sidebar-background: 36 14.3% 93.1%;
+    --sidebar-foreground: 40 3.8% 15.5%;
+    --sidebar-primary: 85.8 59.5% 67.1%;
+    --sidebar-primary-foreground: 136.2 44.8% 11.4%;
+    --sidebar-accent: 40 3.7% 84.1%;
+    --sidebar-accent-foreground: 40 3.8% 15.5%;
+    --sidebar-border: 40 3.7% 84.1%;
+    --sidebar-ring: 40 3.8% 15.5%;
 
-    /* basecast brand palette (emerald-500 base) */
-    --basecast-brand: #10b981;
-    --basecast-brand-hover: #059669;
+    /* The INK brand (hex): Base's text-brand / text-link, forest green-90, for
+       text, links, tints and the table accent. 50 is brand-primary-subtle
+       (Base's green badge), 100 the lime, 700/800 the two dark greens. */
+    --basecast-brand: #1e4d2b;
+    --basecast-brand-hover: #102a17;
     --basecast-brand-foreground: #ffffff;
-    --basecast-brand-50: #ecfdf5;
-    --basecast-brand-100: #d1fae5;
-    --basecast-brand-700: #047857;
-    --basecast-brand-800: #065f46;
+    --basecast-brand-50: #d6f0b4;
+    --basecast-brand-100: #b2dd79;
+    --basecast-brand-700: #1e4d2b;
+    --basecast-brand-800: #102a17;
     --basecast-brand-surface: color-mix(in srgb, var(--basecast-brand) 10%, transparent);
     --basecast-brand-border: color-mix(in srgb, var(--basecast-brand) 35%, transparent);
     --basecast-brand-ring: color-mix(in srgb, var(--basecast-brand) 20%, transparent);
@@ -181,7 +195,8 @@
      stays equal to `--card`: the frozen-cell rules at the end paint
      `hsl(var(--background))` and must match the card surface.
      ───────────────────────────────────────────────────────────────────────── */
-  /* Zinc: pure neutral with no color cast; the brand green is what stands out. */
+  /* Zinc: pure neutral with no color cast; the lime brand is what stands out.
+     Base has no dark theme, so both dark palettes are built from its colors. */
   .dark {
     /* Beats the `only light` on :root by coming later with the same
        specificity. Without it, UA widgets would stay light inside a dark page. */
@@ -192,10 +207,10 @@
     --background: 240 6% 10%;
     --foreground: 0 0% 98%;
 
-    /* In dark the brand lightens one step (emerald-400) to keep contrast. */
-    --brand: 158 64% 52%;
-    --brand-hover: 160 84% 39%;
-    --brand-foreground: 240 6% 10%;
+    /* Same lime fill as light, with the same green-100 ink. */
+    --brand: 85.8 59.5% 67.1%;
+    --brand-hover: 96.5 29.1% 49.8%;
+    --brand-foreground: 136.2 44.8% 11.4%;
 
     --card: 240 6% 10%;
     --card-foreground: 0 0% 98%;
@@ -232,75 +247,66 @@
     --sidebar-border: 240 5% 21%;
     --sidebar-ring: 217 91% 60%;
 
-    /* The hex brand family flips too: 50/100 were light surfaces and become
-       translucent tints; 700/800 were dark ink and become light tones.
-       `--dt-accent` follows on its own. */
-    --basecast-brand: #34d399;
-    --basecast-brand-hover: #10b981;
-    --basecast-brand-foreground: #022c22;
+    /* The hex brand family flips too: on dark surfaces the lime reads as text
+       (11:1 on the card), so it becomes the ink; 50/100 were light surfaces and
+       become translucent tints; 700/800 were dark ink and become light tones
+       (green-5 and grey-5). `--dt-accent` follows on its own. */
+    --basecast-brand: #b2dd79;
+    --basecast-brand-hover: #77a45a;
+    --basecast-brand-foreground: #102a17;
     --basecast-brand-50: color-mix(in srgb, var(--basecast-brand) 12%, transparent);
     --basecast-brand-100: color-mix(in srgb, var(--basecast-brand) 20%, transparent);
-    --basecast-brand-700: #6ee7b7;
-    --basecast-brand-800: #a7f3d0;
+    --basecast-brand-700: #d6f0b4;
+    --basecast-brand-800: #f0eeeb;
     --basecast-brand-surface: color-mix(in srgb, var(--basecast-brand) 14%, transparent);
     --basecast-brand-border: color-mix(in srgb, var(--basecast-brand) 42%, transparent);
     --basecast-brand-ring: color-mix(in srgb, var(--basecast-brand) 28%, transparent);
   }
 
-  /* Deep: an ink background with a green cast (hue 150) instead of grey, and a
-     brighter green brand. Surfaces are resolved as opaque colors because the
-     app stacks card on card and alpha on alpha would accumulate. */
+  /* Deep: Base's forest. The canvas and sidebar are green-100 #102a17 and the
+     card steps up in the same hue (136); text is Base's warm greys (grey-5
+     #f0eeeb, grey-20 #d8d7d5, grey-40 #a9a8a7). The brand is Zinc's, inherited
+     from `.dark`. Surfaces are resolved as opaque colors because the app
+     stacks card on card and alpha on alpha would accumulate. */
   .dark[data-dark-palette="deep"] {
-    --canvas: 150 15% 5%;
+    --canvas: 136.2 44.8% 11.4%;
 
-    --background: 150 9% 9%;
-    --foreground: 0 0% 100%;
+    --background: 136 38% 15%;
+    --foreground: 36 14.3% 93.1%;
 
-    --brand: 125 72% 63%;
-    --brand-hover: 121 45% 48%;
-    --brand-foreground: 140 15% 8%;
+    --card: 136 38% 15%;
+    --card-foreground: 36 14.3% 93.1%;
 
-    --card: 150 9% 9%;
-    --card-foreground: 0 0% 100%;
+    --popover: 136 38% 15%;
+    --popover-foreground: 36 14.3% 93.1%;
 
-    --popover: 150 9% 9%;
-    --popover-foreground: 0 0% 100%;
+    --primary: 36 14.3% 93.1%;
+    --primary-foreground: 136.2 44.8% 11.4%;
 
-    --primary: 0 0% 100%;
-    --primary-foreground: 150 15% 5%;
+    --secondary: 136 30% 20%;
+    --secondary-foreground: 36 14.3% 93.1%;
 
-    --secondary: 150 6% 13%;
-    --secondary-foreground: 0 0% 100%;
+    --muted: 136 30% 20%;
+    --muted-foreground: 30 1.1% 65.9%;
 
-    --muted: 150 6% 13%;
-    --muted-foreground: 150 3% 64%;
-
-    --accent: 150 6% 13%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 136 30% 20%;
+    --accent-foreground: 36 14.3% 93.1%;
 
     --destructive: 0 91% 71%;
-    --destructive-foreground: 140 15% 8%;
+    --destructive-foreground: 136.2 44.8% 11.4%;
 
-    --border: 150 4% 18%;
-    --input: 150 4% 18%;
-    --ring: 125 72% 63%;
+    --border: 136 24% 26%;
+    --input: 136 24% 26%;
+    --ring: 85.8 59.5% 67.1%;
 
-    --sidebar-background: 150 15% 5%;
-    --sidebar-foreground: 150 3% 79%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 150 15% 5%;
-    --sidebar-accent: 150 6% 13%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 150 4% 18%;
-    --sidebar-ring: 125 72% 63%;
-
-    --basecast-brand: #5ee569;
-    --basecast-brand-hover: #44b145;
-    --basecast-brand-foreground: #111713;
-    --basecast-brand-700: #5ee569;
-    --basecast-brand-800: #96ee9e;
-    --basecast-brand-50: color-mix(in srgb, var(--basecast-brand) 15%, transparent);
-    --basecast-brand-border: color-mix(in srgb, var(--basecast-brand) 32%, transparent);
+    --sidebar-background: 136.2 44.8% 11.4%;
+    --sidebar-foreground: 40 3.7% 84.1%;
+    --sidebar-primary: 85.8 59.5% 67.1%;
+    --sidebar-primary-foreground: 136.2 44.8% 11.4%;
+    --sidebar-accent: 136 30% 20%;
+    --sidebar-accent-foreground: 36 14.3% 93.1%;
+    --sidebar-border: 136 24% 26%;
+    --sidebar-ring: 85.8 59.5% 67.1%;
   }
 }
 

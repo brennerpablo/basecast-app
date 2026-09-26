@@ -18,8 +18,8 @@ export function SidebarChrome({
 }) {
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="mb-2 flex h-20 shrink-0 flex-col justify-center px-6 text-[#37373D] dark:text-sidebar-foreground">
-        <Link href="/" className="w-fit rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <div className="mb-2 flex h-20 shrink-0 flex-col justify-center px-6">
+        <Link href="/" className="w-fit rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring">
           <Logo />
         </Link>
       </div>
@@ -28,7 +28,7 @@ export function SidebarChrome({
           <div className="w-full shrink-0 px-2 pb-1">{toolbar}</div>
         ) : null}
         <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
-        <div className="w-full shrink-0 border-t border-border p-2">
+        <div className="w-full shrink-0 border-t border-sidebar-border p-2">
           <ThemeMenu />
         </div>
       </div>

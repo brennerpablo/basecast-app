@@ -165,7 +165,7 @@ export function createMultiColumnTextFilterFn<TData>(extraColumnIds: string[]): 
   return filterFn
 }
 
-const LINK_BASE_CLASSES = "text-xs font-medium text-emerald-700 hover:text-emerald-700 hover:underline"
+const LINK_BASE_CLASSES = "text-xs font-medium text-basecast-brand-700 hover:text-basecast-brand-700 hover:underline"
 
 const LINK_VARIANT_CLASSES: Record<ColumnLinkVariant, string> = {
   primary: "",

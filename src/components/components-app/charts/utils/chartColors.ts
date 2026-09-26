@@ -1,5 +1,3 @@
-import { BRAND } from "@/lib/brand-tokens";
-
 export const CHART_COLORS = [
   "blue",
   "emerald",
@@ -21,7 +19,7 @@ export type ChartColor = (typeof CHART_COLORS)[number]
  */
 export const CHART_COLOR_HEX: Record<ChartColor, string> = {
   blue: "#3b82f6",
-  emerald: BRAND.DEFAULT,
+  emerald: "#10b981",
   red: "#ef4444",
   violet: "#8b5cf6",
   amber: "#f59e0b",

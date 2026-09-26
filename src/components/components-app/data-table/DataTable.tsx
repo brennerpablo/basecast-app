@@ -61,7 +61,7 @@ import {
 const EMPTY_TABLE_DATA: never[] = [];
 
 // The checkbox defaults to slate when active. Bind it to the table accent
-// instead (`--dt-accent`, brand emerald unless overridden) so it matches the
+// instead (`--dt-accent`, the brand color unless overridden) so it matches the
 // selected-row indicator bar. Passing the resolved accent through the
 // component's own `accentColor` prop is not an option — that prop re-wraps
 // bare values in `var(--color-…)`, and `--dt-accent` is already a `var()`.

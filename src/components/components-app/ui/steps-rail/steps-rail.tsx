@@ -32,7 +32,10 @@ export interface StepsRailProps {
 
 /**
  * Rail vertical de etapas (Ações / Processos / sheets em etapas).
- * Tokens: `brand` para atual e concluída — nunca `primary`/`foreground` (quase preto).
+ * Tokens: the `brand` fill for a done step; the `basecast-brand` ink for the
+ * current step's ring and number and the done connector (the lime fill is
+ * unreadable as a line or text on the card). Never `primary`/`foreground`
+ * (near-black).
  */
 export function StepsRail({
   steps,
@@ -75,8 +78,8 @@ export function StepsRail({
                   <Check className="size-3.5 text-brand-foreground" strokeWidth={2.5} />
                 </div>
               ) : isActive ? (
-                <div className="flex size-7 items-center justify-center rounded-full border-2 border-brand bg-card">
-                  <span className="text-[10px] font-semibold tabular-nums text-brand">
+                <div className="flex size-7 items-center justify-center rounded-full border-2 border-basecast-brand bg-card">
+                  <span className="text-[10px] font-semibold tabular-nums text-basecast-brand">
                     {idx + 1}
                   </span>
                 </div>
@@ -93,7 +96,7 @@ export function StepsRail({
                   <div
                     className={cn(
                       "size-full",
-                      isDone ? "bg-brand" : "bg-muted-foreground/20",
+                      isDone ? "bg-basecast-brand" : "bg-muted-foreground/20",
                     )}
                   />
                 </div>

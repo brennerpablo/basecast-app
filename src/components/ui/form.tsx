@@ -150,7 +150,7 @@ const FormLabel = React.forwardRef<
       {children}
       {source ? (
         <span
-          className="rounded-sm bg-emerald-50 px-1.5 py-px text-[10px] font-medium text-emerald-700"
+          className="rounded-sm bg-basecast-brand-50 px-1.5 py-px text-[10px] font-medium text-basecast-brand-700"
           title={source.detail}
         >
           {source.label}
@@ -182,7 +182,7 @@ const FormControl = React.forwardRef<
       aria-invalid={!!error}
       // twMerge (via each control's own cn) lets this win over `border-input`.
       className={cn(
-        highlighted && "border-emerald-500 ring-1 ring-emerald-500/40",
+        highlighted && "border-basecast-brand ring-1 ring-basecast-brand/40",
         className
       )}
       {...props}
