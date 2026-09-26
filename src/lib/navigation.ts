@@ -34,8 +34,15 @@ export const SIDEBAR_EXPANDED_COOKIE = "sidebar-menu-expanded";
 const underPath = (base: string) => (pathname: string) =>
   pathname === base || pathname.startsWith(`${base}/`);
 
-/** The sidebar menu, in display order. */
+/** The sidebar menu, in display order. Accounts leads: commercial intelligence is the core of the product. */
 export const MAIN_MENU: MainMenuItem[] = [
+  {
+    id: "accounts",
+    label: "Accounts",
+    icon: Building2,
+    href: "/accounts",
+    activeCheck: underPath("/accounts"),
+  },
   {
     id: "explorer",
     label: "Explorer",
@@ -56,13 +63,6 @@ export const MAIN_MENU: MainMenuItem[] = [
     icon: History,
     href: "/backtest",
     activeCheck: underPath("/backtest"),
-  },
-  {
-    id: "accounts",
-    label: "Accounts",
-    icon: Building2,
-    href: "/accounts",
-    activeCheck: underPath("/accounts"),
   },
   {
     id: "data",
