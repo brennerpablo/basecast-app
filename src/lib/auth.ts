@@ -7,6 +7,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { avatarUrl } from "@/lib/account/profile";
 import { DUMMY_PASSWORD_HASH, normalizeIdentifier } from "@/lib/auth/credentials";
 import { getDb } from "@/lib/db";
+import { log } from "@/lib/observability";
 
 /**
  * next-auth v4, as in the Fundsys app: Credentials only, JWT sessions, no adapter (Credentials never
@@ -35,7 +36,11 @@ export const authOptions: NextAuthOptions = {
           include: { avatar: { select: { updatedAt: true } } },
         });
         const valid = await compare(password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
-        if (!user || !valid) return null;
+        if (!user || !valid) {
+          // The identifier stays out of the log: it may be an email.
+          log.warn("auth.sign_in_failed", "Sign-in rejected: unknown user or wrong password");
+          return null;
+        }
 
         return {
           id: user.id,
@@ -80,6 +85,7 @@ export const authOptions: NextAuthOptions = {
   },
   events: {
     async signIn({ user }) {
+      log.info("auth.sign_in", "Signed in", { userId: user.id });
       const db = await getDb();
       await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
     },

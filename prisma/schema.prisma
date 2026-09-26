@@ -1,6 +1,7 @@
-// Tables the app owns: the login users and their photos. They live in the `app` schema
-// of the `basecast` database (Cloud SQL), apart from the pipelines' tables in `public`, so
-// `prisma db push` never sees those. Applied with `npm run db:push`; there is no migration history.
+// Tables the app owns, in the `basecast` database (Cloud SQL), apart from the pipelines' tables in
+// `public`, so `prisma db push` never sees those: the login users and their photos in `app`, and the
+// log every service writes in `ops`. Applied with `npm run db:push`; there is no migration history.
+// The grants that let the pipelines (and later the API) write `ops.log` are in `prisma/ops-grants.sql`.
 
 generator client {
   provider = "prisma-client"
@@ -9,7 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["app"]
+  schemas  = ["app", "ops"]
 }
 
 model User {
@@ -42,4 +43,53 @@ model UserAvatar {
   updatedAt   DateTime @updatedAt
 
   @@schema("app")
+}
+
+/// The one log of BaseCast: app, get-data and airflow write the same row shape here, and /ops reads
+/// it. The format is the contract in basecast-get-data `docs/data-contract.md` ("ops.log"); columns
+/// are snake_case because the Python services insert with plain SQL. Rows are info and above; debug
+/// stays on stdout. Kept 30 days.
+model OpsLog {
+  id          BigInt   @id @default(autoincrement())
+  /// When it happened, UTC.
+  ts          DateTime @default(now()) @db.Timestamptz(3)
+  /// `app` | `get-data` | `airflow`.
+  service     String
+  /// `production` | `preview` | `development`.
+  env         String
+  /// `info` | `warn` | `error`.
+  level       String
+  /// Stable dotted name: `http.request`, `server.error`, `auth.sign_in`, `etl_run.failed`…
+  event       String
+  message     String
+  /// One user action, from the app's BFF down to get-data (`x-request-id`).
+  requestId   String?  @map("request_id")
+  /// `etl_run.run_id`, on every line of a pipeline run.
+  runId       String?  @map("run_id")
+  userId      String?  @map("user_id")
+  method      String?
+  /// The route template (`/api/accounts/:id`), never the raw URL or its query string.
+  route       String?
+  status      Int?
+  durationMs  Int?     @map("duration_ms")
+  errorClass  String?  @map("error_class")
+  /// At most 15 lines.
+  errorStack  String?  @map("error_stack")
+  /// `service:error_class:route-or-source`, to group the same error.
+  fingerprint String?
+  /// Commit or revision that produced the line.
+  version     String?
+  /// Vercel region, Cloud Run instance or machine.
+  host        String?
+  /// Everything else, scrubbed of secrets.
+  context     Json?
+
+  @@index([ts(sort: Desc)])
+  @@index([service, ts(sort: Desc)])
+  @@index([event, ts(sort: Desc)])
+  @@index([requestId])
+  @@index([runId])
+  @@index([fingerprint, ts(sort: Desc)])
+  @@map("log")
+  @@schema("ops")
 }
