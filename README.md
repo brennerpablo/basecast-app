@@ -71,9 +71,18 @@ The first superadmin is `pablo`; its password is in Secret Manager:
 gcloud secrets versions access latest --secret app-superadmin-password --project basecast-509812
 ```
 
-Not done yet: `login` on Vercel. Cloud SQL only accepts its own connectors, so the deployed app needs the
-Cloud SQL Node connector and a service account. `public` needs no database, so the demo deploy does not
-wait on this.
+## Deploy
+
+Vercel (personal scope `brennerpablos-projects`, project `basecast-app`), production at
+https://basecast.pbrenner.com, deployed from `main`. Functions run in `cle1` (Cleveland, the closest region
+to Cloud SQL in `us-central1`; see `vercel.json`).
+
+Cloud SQL only accepts its own connectors and Vercel has no proxy, so production sets
+`CLOUD_SQL_INSTANCE` and the app opens the tunnel with Google's Node connector, as the service account
+`app-vercel` (role `cloudsql.client` only; its JSON key is `GCP_SA_KEY`). `DATABASE_URL` then only supplies
+the user, password and database. Production env: `ACCESS_MODE=login`, `DATABASE_URL`, `NEXTAUTH_SECRET`,
+`CLOUD_SQL_INSTANCE`, `GCP_SA_KEY`. `NEXTAUTH_URL` stays unset: on Vercel next-auth takes the host from the
+request, so the custom domain and the `*.vercel.app` URLs both work.
 
 ## Stack
 

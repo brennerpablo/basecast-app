@@ -5,7 +5,7 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 import { DUMMY_PASSWORD_HASH, normalizeIdentifier } from "@/lib/auth/credentials";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 /**
  * next-auth v4, as in the Fundsys app: Credentials only, JWT sessions, no adapter (Credentials never
@@ -28,6 +28,7 @@ export const authOptions: NextAuthOptions = {
         if (!identifier || !password) return null;
 
         // Usernames cannot contain "@", so the identifier's shape says which column to look in.
+        const db = await getDb();
         const user = await db.user.findUnique({
           where: identifier.includes("@") ? { email: identifier } : { username: identifier },
         });
@@ -62,6 +63,7 @@ export const authOptions: NextAuthOptions = {
   },
   events: {
     async signIn({ user }) {
+      const db = await getDb();
       await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
     },
   },
