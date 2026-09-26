@@ -16,6 +16,9 @@ their done criteria (B0–B4) stay only in `docs/KICKOFF.md` §5.
 - Anything not confirmed at the source stays marked "not verified".
 - Log decisions in `docs/decisions.md`, one line each: date, decision, reason. Decisions that affect more
   than one repo go to `basecast-get-data`, which owns the contract.
+- Work on `main` only, in all three repos: no feature branches, no worktrees. Small commits pushed straight
+  to `main`. A push to `main` deploys to production (Vercel for this repo), so typecheck, lint, test and
+  build pass before every push.
 
 ## Product context (KICKOFF §1)
 
