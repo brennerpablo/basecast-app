@@ -157,7 +157,9 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   tables → derived from `/lake/sources`, `/tables` and `/pipeline/runs` (pure, tested); `health.ts` is the
   freshness rule (latest run, then `schedule_cron` + 6 h grace; its own small cron reader); `layout.ts` is dagre;
   `flow-view.tsx` renders it with `@xyflow/react` (state in the URL: `node`, `group`, `steps`, `derived`).
-  Derived tables link to their input tables only when get-data sends `inputs` on a table (not yet).
+  A table is derived when built by SQL or when it declares `inputs` (the marts, `mode = replace`), and links to its
+  input tables once get-data sends `inputs` (with C-2). The marts are a source outside the lake (`marts`) whose
+  runs are `stage = model`; outside the lake the step reads the newer of its `process` and `model` runs.
 - Product screens (accounts, explorer, forecast, backtest) read get-data's v2 envelope `{data, meta}` through the same
   BFF catch-all (add each path to the allowlist in `src/lib/get-data/routes.ts`). Client side in `src/lib/bff/`:
   `fetchEnvelope`, `BffError` (its `mart` is set on a 503 `mart_not_built`), `useProductQuery` (other failures go to

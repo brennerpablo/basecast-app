@@ -42,6 +42,8 @@ export type FlowSource = {
   formats: string[];
   /** False for a pipeline that tables name but the lake index does not know (no raw files). */
   inLake: boolean;
+  /** The stage that writes its tables: `process` for the parsers, `model` for the marts (outside the lake). */
+  writeStage: "process" | "model";
   latestRaw: LatestRun | null;
   latestProcess: LatestRun | null;
   ingest: HealthVerdict;
@@ -70,11 +72,14 @@ export type FlowGraph = {
   down: Map<string, string[]>;
 };
 
-/** The input tables of a derived table; get-data does not send them yet (`inputs`, contract §6). */
+/** The input tables of a derived table: SQL-derived tables and the marts (`inputs`, contract §6). */
 export function tableInputs(table: TableSummary): string[] | null {
   const inputs = (table as TableSummary & { inputs?: string[] | null }).inputs;
   return Array.isArray(inputs) && inputs.length > 0 ? inputs : null;
 }
+
+/** Derived from other tables: built by SQL, or declaring its input tables whatever its write mode (the marts). */
+const isDerived = (table: TableSummary) => table.mode === "sql" || tableInputs(table) !== null;
 
 type StageRuns = { latest: LatestRun | null; lastSuccessAt: string | null };
 
@@ -126,6 +131,7 @@ export function collectSources(
       fetchedAt: s.last_fetched_at ?? null,
       formats: s.formats.map((f) => f.extension),
       inLake: true,
+      writeStage: "process",
       latestRaw: raw.latest,
       latestProcess: process.latest,
       ingest: stageHealth({
@@ -141,7 +147,11 @@ export function collectSources(
   const known = new Set(out.map((s) => s.id));
   const extra = [...new Set(tables.flatMap((t) => t.sources))].filter((id) => !known.has(id)).sort();
   for (const id of extra) {
-    const process = stage(id, "process");
+    // Outside the lake a pipeline either parses files kept elsewhere (`process`) or builds the marts (`model`).
+    const parse = stage(id, "process");
+    const model = stage(id, "model");
+    const writeStage = (model.latest?.started_at ?? "") > (parse.latest?.started_at ?? "") ? "model" : "process";
+    const process = writeStage === "model" ? model : parse;
     const health = stageHealth({ cron: null, latest: process.latest, lastSuccessAt: process.lastSuccessAt, now });
     out.push({
       id,
@@ -160,6 +170,7 @@ export function collectSources(
       fetchedAt: null,
       formats: [],
       inLake: false,
+      writeStage,
       latestRaw: null,
       latestProcess: process.latest,
       ingest: health,
@@ -255,7 +266,7 @@ export function buildFlow(sources: FlowSource[], tables: TableSummary[], options
     if (nodes.has(id)) return;
     nodes.set(id, {
       id,
-      kind: t.mode === "sql" ? "derived" : "table",
+      kind: isDerived(t) ? "derived" : "table",
       table: t,
       inputs: tableInputs(t),
       external,
@@ -265,11 +276,11 @@ export function buildFlow(sources: FlowSource[], tables: TableSummary[], options
 
   const shown = tables
     .filter((t) => t.kind === "dataset" && t.sources.some((id) => bySource.has(id)))
-    .sort((a, b) => Number(a.mode === "sql") - Number(b.mode === "sql") || a.name.localeCompare(b.name));
+    .sort((a, b) => Number(isDerived(a)) - Number(isDerived(b)) || a.name.localeCompare(b.name));
   for (const t of shown) addTable(t, false);
   for (const t of shown) {
     const inputs = tableInputs(t);
-    if (t.mode === "sql" && options.derived === "inputs" && inputs) {
+    if (inputs && options.derived === "inputs") {
       for (const name of inputs) {
         const input = tableByName.get(name);
         if (!input) continue;

@@ -76,7 +76,7 @@ function body(node: FlowNode): { tag?: string; title: string; titleMono?: boolea
       const s = node.source;
       const run = s.latestProcess;
       return {
-        tag: s.inLake ? undefined : "no raw files",
+        tag: s.inLake ? undefined : s.writeStage === "model" ? "model" : "no raw files",
         title: s.id,
         titleMono: true,
         rows: [
@@ -90,7 +90,7 @@ function body(node: FlowNode): { tag?: string; title: string; titleMono?: boolea
     case "pipeline": {
       const s = node.source;
       return {
-        tag: s.inLake ? s.formats[0] : "no raw files",
+        tag: s.inLake ? s.formats[0] : s.writeStage === "model" ? "model" : "no raw files",
         title: s.name,
         sub: s.id,
         rows: [
@@ -100,6 +100,8 @@ function body(node: FlowNode): { tag?: string; title: string; titleMono?: boolea
               <>
                 <span className="font-medium text-foreground">{plural(s.files, "file")}</span> · {formatBytes(s.bytes)}
               </>
+            ) : s.writeStage === "model" ? (
+              "Builds from the processed tables"
             ) : (
               "Reads files kept outside the lake"
             )}

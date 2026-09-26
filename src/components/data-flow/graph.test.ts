@@ -124,6 +124,29 @@ test("buildFlow: split steps, derived tables linked to their inputs", () => {
   assert.ok(g.edges.find((e) => e.source === "process:ercot_large_load_decks")?.running);
 });
 
+test("the marts: model runs outside the lake, tables derived from their inputs whatever the mode", () => {
+  const tables = [
+    ...TABLES,
+    table("mart_accounts", ["marts"], "replace", { inputs: ["puct_ccn_territories", "county_iso_share"] }),
+  ];
+  const runs = [...RUNS, { ...run("marts", "success", "2026-09-26T16:10:00Z"), stage: "model" }];
+  const sources = collectSources(SOURCES, tables, runs, NOW);
+  const marts = sources.find((s) => s.id === "marts");
+  assert.equal(marts?.inLake, false);
+  assert.equal(marts?.writeStage, "model");
+  assert.equal(marts?.process.status, "healthy");
+  assert.equal(marts?.process.updatedAt, "2026-09-26T16:10:00Z");
+  assert.equal(sources.find((s) => s.id === "config_facts")?.writeStage, "process");
+
+  const byInputs = buildFlow(sources, tables, { group: null, steps: "split", derived: "inputs" });
+  const has = (g: typeof byInputs, a: string, b: string) => g.edges.some((e) => e.source === a && e.target === b);
+  assert.equal(byInputs.byId.get("table:mart_accounts")?.kind, "derived");
+  assert.ok(has(byInputs, "table:county_iso_share", "table:mart_accounts"));
+  assert.ok(!has(byInputs, "process:marts", "table:mart_accounts"));
+  const byPipeline = buildFlow(sources, tables, { group: null, steps: "split", derived: "pipeline" });
+  assert.ok(has(byPipeline, "process:marts", "table:mart_accounts"));
+});
+
 test("buildFlow: merged steps and derived tables linked to their pipeline", () => {
   const g = buildFlow(FLOW_SOURCES, TABLES, { group: null, steps: "merged", derived: "pipeline" });
   const has = (a: string, b: string) => g.edges.some((e) => e.source === a && e.target === b);
