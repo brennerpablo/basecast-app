@@ -20,7 +20,7 @@ const ACTION_STATE: Record<NextAction, AppBadgeState> = {
 export const ACTION_ORDER: NextAction[] = ["call_now", "nurture", "watch", "hold"];
 
 /** A glossary code as a badge: the label on it, the glossary's text in the tooltip. */
-function CodeBadge({ kind, code, state }: { kind: CodeKind; code: string; state: AppBadgeState }) {
+export function CodeBadge({ kind, code, state }: { kind: CodeKind; code: string; state: AppBadgeState }) {
   const { entry } = useCodeLabels();
   const item = entry(kind, code);
   const badge = (

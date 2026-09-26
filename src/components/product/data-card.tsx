@@ -4,14 +4,11 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import { CircleAlert, Hammer, Inbox, type LucideIcon } from "lucide-react";
 import type * as React from "react";
 
-import { Card } from "@/components/components-app/ui/card";
 import EmptyState from "@/components/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type CaveatCode, type Envelope, isMartNotBuilt, type Meta } from "@/lib/bff/envelope";
-import { cn } from "@/lib/utils";
 
-import { CaveatBadges } from "./caveat-badges";
-import { Provenance } from "./provenance";
+import { SectionCard } from "./section-card";
 
 /** The empty state of a view whose mart is not built yet (503 `mart_not_built`): the rest of the page stays. */
 export function MartNotBuiltState({ mart, compact = true }: { mart: string; compact?: boolean }) {
@@ -83,20 +80,15 @@ export function DataCard<T>({
   }
 
   return (
-    <Card className={cn("flex flex-col", className)}>
-      <div className="mb-4 flex items-start gap-3">
-        <div className="min-w-0">
-          <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-          {subtitle && <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>}
-        </div>
-        {action && <div className="ml-auto shrink-0">{action}</div>}
-      </div>
-      <CaveatBadges
-        caveats={envelope?.meta.caveats?.filter((caveat) => !omitCaveats?.includes(caveat.code))}
-        className="-mt-1 mb-4"
-      />
-      <div className="min-w-0 flex-1">{body}</div>
-      {envelope && <Provenance meta={envelope.meta} className="mt-4 border-t border-border pt-3" />}
-    </Card>
+    <SectionCard
+      title={title}
+      subtitle={subtitle}
+      action={action}
+      caveats={envelope?.meta.caveats?.filter((caveat) => !omitCaveats?.includes(caveat.code))}
+      meta={envelope?.meta}
+      className={className}
+    >
+      {body}
+    </SectionCard>
   );
 }

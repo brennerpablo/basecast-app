@@ -7,6 +7,9 @@ export type AccountSummary = components["schemas"]["AccountSummary"];
 export type AccountsData = components["schemas"]["AccountsData"];
 export type NextAction = AccountSummary["next_action"];
 export type AccountFlag = AccountSummary["flags"][number];
+export type AccountDetail = components["schemas"]["AccountDetail"];
+export type AccountEvent = components["schemas"]["Event"];
+export type EventsPage = components["schemas"]["EventsPage"];
 
 /** The kinds of code whose label and definition come from get-data's glossary. */
 export type CodeKind = GlossaryItem["kind"];

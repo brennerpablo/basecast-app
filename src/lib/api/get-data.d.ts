@@ -251,6 +251,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Insights
+         * @description The video's numbers (lines graded A and B), in page order, each with its caveat and a link to the
+         *     screen that shows the evidence.
+         */
+        get: operations["insights_insights_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/caveats": {
         parameters: {
             query?: never;
@@ -1631,6 +1652,95 @@ export interface components {
              * @default false
              */
             verified: boolean;
+        };
+        /** InsightCard */
+        InsightCard: {
+            /**
+             * Id
+             * @description The line of video-candidates.md (A1, B3…)
+             */
+            id: string;
+            /**
+             * Grade
+             * @description A: every number verified; B: the headline is a model result
+             * @enum {string}
+             */
+            grade: "A" | "B";
+            /**
+             * Rank
+             * @description Order on the page, 1 first
+             */
+            rank: number;
+            /** Title */
+            title: string;
+            /**
+             * Caption
+             * @description The line, built from the mart values
+             */
+            caption: string;
+            /**
+             * Value
+             * @description The headline number
+             */
+            value: number;
+            /** Unit */
+            unit: string;
+            /**
+             * Figures
+             * @description The line's other numbers
+             */
+            figures?: components["schemas"]["InsightFigure"][];
+            /**
+             * Caveat
+             * @description The caveat the line requires; always shown with the card
+             */
+            caveat: string;
+            /** Caveats */
+            caveats?: components["schemas"]["Caveat"][];
+            /**
+             * Queue
+             * @description Which queue a queue number is about; never null on a queue card
+             */
+            queue?: ("generation" | "large_load") | null;
+            /**
+             * Verified
+             * @description Every number re-derived from the raw files (X6)
+             */
+            verified: boolean;
+            /**
+             * Depends On
+             * @description Pending review items (R3, R13…)
+             */
+            depends_on?: string[];
+            /**
+             * Source Doc
+             * @description The analysis doc and section behind the numbers
+             */
+            source_doc: string;
+            /**
+             * Link
+             * @description The app screen that shows the evidence
+             */
+            link?: string | null;
+        };
+        /** InsightFigure */
+        InsightFigure: {
+            /** Label */
+            label: string;
+            /** Value */
+            value: number;
+            /** Unit */
+            unit: string;
+        };
+        /** InsightsData */
+        InsightsData: {
+            /** Cards */
+            cards: components["schemas"]["InsightCard"][];
+        };
+        /** InsightsResponse */
+        InsightsResponse: {
+            meta: components["schemas"]["Meta"];
+            data: components["schemas"]["InsightsData"];
         };
         /**
          * InvalidAsOf
@@ -3631,6 +3741,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["QueueBacktestResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The mart behind this resource is not built yet */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MartNotBuilt"];
+                };
+            };
+        };
+    };
+    insights_insights_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InsightsResponse"];
                 };
             };
             /** @description Validation Error */

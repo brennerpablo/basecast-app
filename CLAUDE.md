@@ -164,14 +164,18 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   BFF catch-all (add each path to the allowlist in `src/lib/get-data/routes.ts`). Client side in `src/lib/bff/`:
   `fetchEnvelope`, `BffError` (its `mart` is set on a 503 `mart_not_built`), `useProductQuery` (other failures go to
   `error.tsx`), `useCaveatCatalog` (`GET /caveats`, a bare `{items}`, not an envelope). `Meta`, `Caveat` and `Fact`
-  are the generated contract types. Shared UI in `src/components/product/`: `DataCard` (loading, "being rebuilt", empty, caveats on top,
-  `Provenance` below), `StatCard`, `FactValue` (a null is a gap, never a zero), `CaveatBadges`, `VerifiedBadge`,
+  are the generated contract types. Shared UI in `src/components/product/`: `SectionCard` (title, caveats, body,
+  `Provenance` below), `DataCard` (a `SectionCard` over one query: loading, "being rebuilt", empty), `FactGrid`, `StatCard`, `FactValue` (a null is a gap, never a zero), `CaveatBadges`, `VerifiedBadge`,
   `SimulatedBadge`, formatters in `format.ts`. Caveat labels and texts come only from the API.
 - `/accounts` (`src/app/(app)/accounts/`): the ranked co-ops and munis in a DataTable. The filters live in the URL
   (`src/lib/accounts/filters.ts`: repeated keys, `county` from the Explorer, `rank=within_type`), go to get-data as
   they are, and the Export CSV link carries the same params; the chips' choices come from the unfiltered list.
   Trigger, flag and next-action labels and texts come from `GET /glossary` (`useCodeLabels` in
   `src/lib/accounts/labels.ts`); a code the glossary lacks shows raw.
+- `/accounts/[id]` (`src/app/(app)/accounts/[id]/`): one account's diagnosis from `GET /accounts/{id}` in the X9
+  order (header facts, next action with its lapse date, why now with the event timeline and the paged full history
+  from `/events`, score breakdown, gaps and coverage, territory, EIA series). A 404 (unknown or held-back id) is
+  "Account not found". Facts render through `FactGrid`/`FactValue`; `formatValue` knows get-data's units.
 - `public/geo/`: `tx-counties.geojson` (254 counties; `county_fips` for `promoteId`, `county_name`, `weather_zone`,
   `in_ercot`) and `ercot-weather-zones.geojson` (`weather_zone`), from basecast-airflow `basecast export-geo`.
 - `src/components/data-grid/` is the DataGrid (virtualized, server blocks through `src/lib/hooks/use-grid-window-query.ts`

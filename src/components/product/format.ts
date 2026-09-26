@@ -64,14 +64,58 @@ export function formatDate(value: string | null | undefined): string {
   return Number.isNaN(date.getTime()) ? value : DAY_CT.format(date);
 }
 
-/** A Fact's value with its unit: power and percents by the rules above, other numbers with two decimals at most. */
+/** `16:59` for a local hour given as a decimal (16.98). */
+export function formatHour(value: number | null | undefined): string {
+  if (missing(value)) return GAP;
+  const minutes = Math.round(value * 60);
+  return `${String(Math.floor(minutes / 60) % 24).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+}
+
+const USD_COMPACT = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
+const TWO = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+/** Units that count whole things: shown without decimals. */
+const WHOLE_UNITS = new Set(["customers", "meters", "homes", "people", "MWh", "projects"]);
+
+/**
+ * A Fact's value by the unit get-data sends: power and percents by the rules above, `share` as a percent,
+ * `per year` as a signed yearly rate, prices in ¢/kWh, `thousand USD` in dollars, `hour` as a clock time,
+ * counts whole, anything else with two decimals at most and its unit.
+ */
 export function formatValue(value: number | string | boolean | null | undefined, unit?: string | null): string {
   if (value === null || value === undefined) return GAP;
   if (typeof value === "boolean") return value ? "Yes" : "No";
   if (typeof value === "string") return unit ? `${value} ${unit}` : value;
   if (!Number.isFinite(value)) return GAP;
-  if (unit === "MW") return formatPower(value);
-  if (unit === "GW") return formatPower(value * 1_000);
-  if (unit === "%") return formatPercent(value);
-  return unit ? `${formatNumber(value)} ${unit}` : formatNumber(value);
+  switch (unit) {
+    case "MW":
+      return formatPower(value);
+    case "GW":
+      return formatPower(value * 1_000);
+    case "%":
+      return formatPercent(value);
+    case "share":
+      return formatPercent(value, { ratio: true });
+    case "per year":
+      return `${formatPercent(value, { ratio: true, signed: true })}/yr`;
+    case "USD/kWh":
+      return `${TWO.format(value * 100)} ¢/kWh`;
+    case "thousand USD":
+      return USD_COMPACT.format(value * 1_000);
+    case "hour":
+      return formatHour(value);
+    case "ratio":
+      return TWO.format(value);
+    case null:
+    case undefined:
+    case "":
+      return formatNumber(value);
+    default:
+      return `${WHOLE_UNITS.has(unit) ? formatWhole(value) : formatNumber(value)} ${unit}`;
+  }
 }
