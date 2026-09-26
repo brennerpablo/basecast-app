@@ -65,7 +65,7 @@ existing username or email, and reads the password from stdin (a hidden prompt i
 npm run user:create -- --username jane --email jane@example.com --name "Jane Doe" [--superadmin]
 ```
 
-The first superadmin is `pablo`; its password is in Secret Manager:
+The superadmin is `admin`; its password is in Secret Manager:
 
 ```bash
 gcloud secrets versions access latest --secret app-superadmin-password --project basecast-509812
