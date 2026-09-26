@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { clearTabs } from "@/lib/tabs/tabs-store";
 
 interface Props {
   name?: string | null;
@@ -37,7 +38,15 @@ export function UserMenu({ name, username, email }: Props) {
           <div className="truncate text-xs text-muted-foreground">{email ?? username}</div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => signOut({ callbackUrl: "/sign-in" })}>
+        <DropdownMenuItem
+          onSelect={() => {
+            // The tab list leaves sessionStorage, so whoever signs in next in
+            // this browser starts with one tab; pinned tabs stay under this
+            // user's key and come back with them.
+            clearTabs();
+            void signOut({ callbackUrl: "/sign-in" });
+          }}
+        >
           <LogOut />
           Sign out
         </DropdownMenuItem>

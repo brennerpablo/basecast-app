@@ -15,9 +15,10 @@ import { AppSidebar } from "./_components/app-sidebar";
 import { TabStrip } from "./_components/tabs/tab-strip";
 import { UserMenu } from "./_components/user-menu";
 
-/** Whose tab list this is. There is no login (ACCESS_MODE=public), so one
- *  list per browser; with login it becomes the user id. */
-const TABS_OWNER = "public";
+/** Whose tab list this is in ACCESS_MODE=public: there is no user, so one
+ *  list per browser. With login it is the user id, so two people on one
+ *  browser never share tabs or pinned tabs. */
+const PUBLIC_TABS_OWNER = "public";
 
 /**
  * The app shell: sidebar, then the page card. On desktop the card's first row
@@ -62,7 +63,7 @@ const AppLayout = async ({ children }: { children: React.ReactNode }) => {
               <div className="flex min-w-0 items-center gap-2 md:hidden">
                 <BreadcrumbBar />
               </div>
-              <TabStrip owner={TABS_OWNER} className="max-md:hidden" />
+              <TabStrip owner={session?.user.id ?? PUBLIC_TABS_OWNER} className="max-md:hidden" />
             </div>
             <Separator className="my-4 md:hidden" />
             <div className="pt-5 max-md:hidden">

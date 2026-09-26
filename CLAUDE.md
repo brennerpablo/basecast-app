@@ -178,7 +178,8 @@ strip of app tabs; the breadcrumb moves below as the page title. Hidden on mobil
 - **Traps paid in fundsys/ops**: nothing in `history.state` (nuqs would drop queued URL writes); Back comes
   from `onRouterTransitionStart(url, "traverse")`, never `popstate`; a `<head>` observer keeps our `<title>`.
 - **Storage**: `sessionStorage` `basecast.tabs.<owner>`, pinned tabs also in `localStorage`
-  `basecast.pinned-tabs.<owner>`; `owner` is passed to `TabStrip` by `(app)/layout.tsx`.
+  `basecast.pinned-tabs.<owner>`. `(app)/layout.tsx` passes the owner: the user id in login mode, `public`
+  otherwise. Sign-out (`UserMenu`) calls `clearTabs()`; pinned tabs stay under the user's key.
 
 ## Docs
 
