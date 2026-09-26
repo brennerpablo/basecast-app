@@ -40,6 +40,7 @@ The app needs a session on every page, so running it locally needs the database;
 | `npm run typecheck` | TypeScript, no emit |
 | `npm run db:push` | Applies `prisma/schema.prisma` to the database |
 | `npm run user:create` | Creates a user; see [Access](#access) |
+| `npm run email:test` | Sends a test email; see [Email](#email) |
 | `npm test` | Unit and DOM tests (`node:test` via `tsx`) |
 
 ## Access
@@ -70,6 +71,17 @@ The superadmin is `admin`; its password is in Secret Manager:
 gcloud secrets versions access latest --secret app-superadmin-password --project basecast-509812
 ```
 
+## Email
+
+The app sends email through [Resend](https://resend.com), from `BaseCast <noreply@basecast.pbrenner.com>`.
+Server code calls `sendEmail()` from `src/lib/email.ts`, which rejects with `EmailError` when Resend refuses
+the email. `RESEND_API_KEY` is a sending-only key restricted to `basecast.pbrenner.com` (Secret Manager
+`app-resend-api-key`). No product email exists yet. To check the key and the domain:
+
+```bash
+npm run email:test -- --to jane@example.com
+```
+
 ## Deploy
 
 Vercel (personal scope `brennerpablos-projects`, project `basecast-app`), production at
@@ -80,8 +92,8 @@ Cloud SQL only accepts its own connectors and Vercel has no proxy, so production
 `CLOUD_SQL_INSTANCE` and the app opens the tunnel with Google's Node connector, as the service account
 `app-vercel` (role `cloudsql.client` only; its JSON key is `GCP_SA_KEY`). `DATABASE_URL` then only supplies
 the user, password and database. Production env: `DATABASE_URL`, `NEXTAUTH_SECRET`,
-`CLOUD_SQL_INSTANCE`, `GCP_SA_KEY`. `NEXTAUTH_URL` stays unset: on Vercel next-auth takes the host from the
-request, so the custom domain and the `*.vercel.app` URLs both work.
+`CLOUD_SQL_INSTANCE`, `GCP_SA_KEY`, `RESEND_API_KEY`. `NEXTAUTH_URL` stays unset: on Vercel next-auth takes
+the host from the request, so the custom domain and the `*.vercel.app` URLs both work.
 
 ## Stack
 

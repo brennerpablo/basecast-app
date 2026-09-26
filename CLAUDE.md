@@ -157,6 +157,9 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
 - User menu (`src/app/(app)/_components/user-menu.tsx`), the sidebar footer as in the Fundsys app: avatar
   with initials (`src/components/user-avatar.tsx`), then name and email, the theme submenu
   (`src/components/theme/theme-menu.tsx`) and sign out.
+- Email: `sendEmail()` in `src/lib/email.ts` (server-only; Resend, from `noreply@basecast.pbrenner.com`). The
+  check of Resend's `{ data, error }` lives in `src/lib/email/send.ts`, shared with `npm run email:test`.
+  `RESEND_API_KEY` only sends from `basecast.pbrenner.com`.
 
 ## Same-window tabs
 
