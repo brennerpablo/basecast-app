@@ -6,14 +6,17 @@ import { ThemeMenu } from "@/components/theme/theme-menu";
 
 /**
  * The sidebar shell: logo, optional toolbar, scrollable content area and the
- * footer with the theme picker. Kept as its own component so every sidebar
- * variant keeps the chrome in the same place.
+ * footer with the optional `footer` items (the user menu) and the theme picker.
+ * Kept as its own component so every sidebar variant keeps the chrome in the
+ * same place.
  */
 export function SidebarChrome({
   toolbar,
+  footer,
   children,
 }: {
   toolbar?: ReactNode;
+  footer?: ReactNode;
   children?: ReactNode;
 }) {
   return (
@@ -29,6 +32,7 @@ export function SidebarChrome({
         ) : null}
         <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
         <div className="w-full shrink-0 border-t border-sidebar-border p-2">
+          {footer}
           <ThemeMenu />
         </div>
       </div>

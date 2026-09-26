@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 
 import {
   BADGE_ON_ACCENT,
@@ -48,9 +48,12 @@ function groupsWithActiveChild(pathname: string) {
 
 export function SidebarNav({
   initialExpanded,
+  footer,
 }: {
   /** Expanded groups read from the cookie on the server, so both renders match. */
   initialExpanded?: string[];
+  /** Extra items above the theme picker (the user menu). */
+  footer?: ReactNode;
 }) {
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
@@ -131,7 +134,7 @@ export function SidebarNav({
     ) : null;
 
   return (
-    <SidebarChrome toolbar={toggleAllButton}>
+    <SidebarChrome toolbar={toggleAllButton} footer={footer}>
       <nav className="w-full p-2">
         <div className="space-y-1">
           {MAIN_MENU.map((item) => {

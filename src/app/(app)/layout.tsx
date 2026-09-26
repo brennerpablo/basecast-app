@@ -1,25 +1,43 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 import { BreadcrumbProvider } from "@/components/breadcrumb-context";
 import { BreadcrumbBar } from "@/components/page-breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { getAccessMode } from "@/lib/access-mode";
+import { getCachedSession } from "@/lib/auth/session";
 
 import { AppCardWrapper } from "./_components/app-card-wrapper";
 import { AppSidebar } from "./_components/app-sidebar";
+import { UserMenu } from "./_components/user-menu";
 
 /**
  * The app shell: sidebar, then the page card with a top bar (sidebar trigger +
- * breadcrumb). There is no login for now (ACCESS_MODE=public), so the shell
- * reads no session.
+ * breadcrumb). In ACCESS_MODE=login it also checks the session (`proxy.ts`
+ * already redirected visitors without one) and shows the user menu; in public
+ * mode it reads no session.
  */
 const AppLayout = async ({ children }: { children: React.ReactNode }) => {
+  const session = await getCachedSession();
+  if (getAccessMode() === "login" && !session) redirect("/sign-in");
+
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
-      <AppSidebar />
+      <AppSidebar
+        footer={
+          session ? (
+            <UserMenu
+              name={session.user.name}
+              username={session.user.username}
+              email={session.user.email}
+            />
+          ) : null
+        }
+      />
       <main className="flex-1 overflow-auto p-4 max-md:bg-card">
         <BreadcrumbProvider>
           <AppCardWrapper>
