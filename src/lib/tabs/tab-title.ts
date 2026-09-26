@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 
-import { MAIN_MENU } from "@/lib/navigation";
+import { MAIN_MENU, OTHER_ROUTES } from "@/lib/navigation";
 
 import { pathOf, type Tab } from "./tabs-store";
 
@@ -14,7 +14,8 @@ export const APP_NAME = "BaseCast";
 
 /**
  * A tab's default name, without help from the screen: **the label of the menu
- * item that lights up on it**, the name the person clicked. A sub-item wins
+ * item that lights up on it**, the name the person clicked (or of the screen in
+ * `OTHER_ROUTES`, for the ones outside the menu). A sub-item wins
  * over its group; the icon is the item's (a sub-item inherits its group's).
  * The screen can do better through the breadcrumb (see `setTabTitle`): an
  * account page names the tab after the account.
@@ -31,6 +32,8 @@ export function urlTitle(url: string): UrlTitle {
       return { title: item.label, icon: item.icon };
     }
   }
+  const other = OTHER_ROUTES.find((route) => route.href === path);
+  if (other) return { title: other.label, icon: other.icon };
   return { title: APP_NAME };
 }
 

@@ -4,6 +4,7 @@ import { compare } from "bcrypt";
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
+import { avatarUrl } from "@/lib/account/profile";
 import { DUMMY_PASSWORD_HASH, normalizeIdentifier } from "@/lib/auth/credentials";
 import { getDb } from "@/lib/db";
 
@@ -31,6 +32,7 @@ export const authOptions: NextAuthOptions = {
         const db = await getDb();
         const user = await db.user.findUnique({
           where: identifier.includes("@") ? { email: identifier } : { username: identifier },
+          include: { avatar: { select: { updatedAt: true } } },
         });
         const valid = await compare(password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
         if (!user || !valid) return null;
@@ -39,6 +41,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           name: user.name,
           email: user.email,
+          image: user.avatar ? avatarUrl(user.id, user.avatar.updatedAt) : null,
           username: user.username,
           isSuperAdmin: user.isSuperAdmin,
         };
@@ -46,11 +49,25 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
-      // `user` is only there on sign-in; afterwards the token carries the fields.
+    async jwt({ token, user, trigger }) {
+      // `user` is only there on sign-in (next-auth copies its name and image into the token);
+      // afterwards the token carries the fields.
       if (user) {
         token.username = user.username;
         token.isSuperAdmin = user.isSuperAdmin;
+      }
+      // /account calls `update()` after an edit. The new name and photo come from the database,
+      // never from what the browser sent.
+      if (trigger === "update" && token.sub) {
+        const db = await getDb();
+        const fresh = await db.user.findUnique({
+          where: { id: token.sub },
+          select: { name: true, avatar: { select: { updatedAt: true } } },
+        });
+        if (fresh) {
+          token.name = fresh.name;
+          token.picture = fresh.avatar ? avatarUrl(token.sub, fresh.avatar.updatedAt) : null;
+        }
       }
       return token;
     },

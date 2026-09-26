@@ -5,6 +5,7 @@ import {
   type LucideIcon,
   Map,
   TrendingUp,
+  UserRound,
 } from "lucide-react";
 
 export type MainMenuSubItem = {
@@ -70,3 +71,10 @@ export const MAIN_MENU: MainMenuItem[] = [
     activeCheck: underPath("/data"),
   },
 ];
+
+/** Screens outside the sidebar menu, reached from the user menu: their tab name and icon. */
+export const OTHER_ROUTES = [
+  { id: "account", label: "Account", icon: UserRound, href: "/account" },
+] satisfies (MainMenuItem & { href: string })[];
+
+export const ACCOUNT_ROUTE = OTHER_ROUTES[0];

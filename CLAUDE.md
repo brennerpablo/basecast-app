@@ -154,9 +154,15 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   gate in `src/proxy.ts` plus the check in `src/app/(app)/layout.tsx`, the page in `src/app/(auth)/sign-in/`.
   Users are in Cloud SQL (database `basecast`, schema `app`) through Prisma: `prisma/schema.prisma`,
   `src/lib/db.ts`, client generated to `src/generated/` on install. `npm run user:create` adds a user.
-- User menu (`src/app/(app)/_components/user-menu.tsx`), the sidebar footer as in the Fundsys app: avatar
-  with initials (`src/components/user-avatar.tsx`), then name and email, the theme submenu
-  (`src/components/theme/theme-menu.tsx`) and sign out.
+- User menu (`src/app/(app)/_components/user-menu.tsx`), the sidebar footer as in the Fundsys app: the photo,
+  or the initials (`src/components/user-avatar.tsx`), then name and email, Account, the theme submenu
+  (`src/components/theme/theme-menu.tsx`) and sign out. It reads `useSession()` (`AuthSessionProvider`, seeded
+  in `(app)/layout.tsx`).
+- Account (`/account`, `src/app/(app)/account/`): display name and photo. Routes `PATCH /api/account`,
+  `PUT`/`DELETE /api/account/avatar`, `GET /api/users/[id]/avatar`; rules in `src/lib/account/profile.ts`;
+  photos in `app."UserAvatar"`; crop dialog in `src/components/avatar-upload/`. After an edit the page calls
+  `update()`, and the `jwt` callback re-reads name and photo from the database. `withSession` hands the
+  session to the handler. Screens outside the sidebar get their tab name and icon from `OTHER_ROUTES`.
 - Email: `sendEmail()` in `src/lib/email.ts` (server-only; Resend, from `noreply@basecast.pbrenner.com`). The
   check of Resend's `{ data, error }` lives in `src/lib/email/send.ts`, shared with `npm run email:test`.
   `RESEND_API_KEY` only sends from `basecast.pbrenner.com`.

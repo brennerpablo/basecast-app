@@ -58,6 +58,9 @@ npm run db:push   # creates or updates the tables in schema `app`
 npm run dev
 ```
 
+Users change their own display name and photo on `/account` (user menu → Account); photos are stored in
+the same database (`app."UserAvatar"`).
+
 There is no sign-up screen: users are created from the command line. The script never overwrites an
 existing username or email, and reads the password from stdin (a hidden prompt in a terminal):
 
