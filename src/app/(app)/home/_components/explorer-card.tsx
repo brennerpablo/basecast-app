@@ -59,7 +59,7 @@ function AcquisitionMap({ data, mode }: { data: CountiesData; mode: Mode }) {
 }
 
 /**
- * Where to go: the Explorer's acquisition layer as a small map, the count of scored and top-class counties,
+ * The counties to go after: the Explorer's acquisition layer as a small map, the count of scored and top-class counties,
  * and the five counties first in the ranking, each opening in the Explorer.
  */
 export function ExplorerCard() {
@@ -69,8 +69,8 @@ export function ExplorerCard() {
   return (
     <HomeCard<CountiesData>
       icon={MapIcon}
-      title="Where to go"
-      subtitle="Counties by acquisition priority: hue by channel, darker by priority."
+      title="Counties"
+      subtitle="By acquisition priority"
       href="/explorer"
       linkLabel="Open Explorer"
       query={query}
@@ -93,8 +93,8 @@ export function ExplorerCard() {
               ))}
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <KpiItem label="ERCOT counties scored" value={formatWhole(summary.scored)} />
-              <KpiItem label="In the top priority class" value={formatWhole(summary.topClass)} />
+              <KpiItem label="Counties scored" value={formatWhole(summary.scored)} />
+              <KpiItem label="Top class" value={formatWhole(summary.topClass)} />
             </div>
             <ol className="divide-y divide-border">
               {top.map((row) => (

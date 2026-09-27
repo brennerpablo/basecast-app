@@ -56,8 +56,8 @@ export function AccountsCard() {
   return (
     <HomeCard<AccountsData>
       icon={Building2}
-      title="Who to call"
-      subtitle={total === undefined ? "Co-ops and munis ranked by priority." : `${formatWhole(total)} co-ops and munis ranked by priority.`}
+      title="Accounts"
+      subtitle={total === undefined ? undefined : `${formatWhole(total)} accounts`}
       href="/accounts"
       linkLabel="Open Accounts"
       query={query}
@@ -113,7 +113,7 @@ export function AccountsCard() {
             </section>
             {lapses.length > 0 && (
               <section>
-                <Heading>Next actions to lapse</Heading>
+                <Heading>Lapsing soon</Heading>
                 <ul className="divide-y divide-border">
                   {lapses.map((account) => (
                     <li key={account.account_id} className="flex items-center gap-3 py-2">

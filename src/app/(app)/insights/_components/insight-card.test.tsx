@@ -1,6 +1,7 @@
 /**
- * The insight card mounted in JSDOM: the caveat line is always on screen, the figures read by their units,
- * only a headline card carries the accent, and the link is named for the screen behind it.
+ * The insight card mounted in JSDOM: the line's caveat is always reachable (a badge, its text in the tooltip
+ * and for screen readers), the figures read by their units, only a headline card carries the accent, the
+ * screen's caveats are not repeated, and the link is named for the screen behind it.
  */
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
@@ -51,6 +52,14 @@ const CARD: Insight = {
   source_doc: "docs/analysis/q5_large_load.md §3",
 };
 
+/** The line's caveat: a "Caveat" badge that carries the full text for screen readers (and in its tooltip). */
+function assertCaveatBadge(root: HTMLElement) {
+  const badge = root.querySelector("[data-slot='insight-caveat']");
+  assert.ok(badge, "the caveat badge is on the card");
+  assert.equal(badge.textContent, `Caveat: ${CARD.caveat}`);
+  assert.equal(badge.querySelector(".sr-only")?.textContent, `: ${CARD.caveat}`);
+}
+
 function mount(node: React.ReactNode): { root: HTMLElement; unmount: () => void } {
   const container = document.createElement("div");
   document.body.appendChild(container);
@@ -71,9 +80,11 @@ test("a headline card shows its value, figures, caveat, badges and the link to i
   assert.ok(card);
   assert.ok(card.style.borderLeftColor, "a headline card carries the accent");
   assert.ok(root.textContent?.includes("26.8 GW"));
-  assert.ok(root.textContent?.includes("A1 · Large-load queue"));
+  assert.ok(root.textContent?.includes("Large-load queue"));
+  assert.ok(!root.textContent?.includes("A1"), "the id is internal, never on screen");
   assert.ok(root.textContent?.includes("8,786 MW"));
-  assert.equal(root.querySelector("[data-slot='insight-caveat']")?.textContent, CARD.caveat);
+  assertCaveatBadge(root);
+  assert.ok(!root.textContent?.includes(CARD.source_doc as string), "no doc path on screen");
   assert.deepEqual([...root.querySelectorAll("[data-caveat]")].map((b) => b.textContent), ["Machine-read, not verified"]);
   assert.ok(root.textContent?.includes("Re-derived"));
   const link = root.querySelector("a");
@@ -90,7 +101,14 @@ test("a supporting card has no accent, and a card without figures, link or badge
   assert.equal(card.style.borderLeftColor, "");
   assert.equal(root.querySelector("a"), null);
   assert.ok(!root.textContent?.includes("Re-derived"));
-  assert.equal(root.querySelector("[data-slot='insight-caveat']")?.textContent, CARD.caveat);
+  assertCaveatBadge(root);
+  unmount();
+});
+
+test("a caveat the screen already shows over the same response is left off the card", () => {
+  const { root, unmount } = mount(React.createElement(InsightCard, { card: CARD, omitCaveats: ["machine_read_unverified"] }));
+  assert.equal(root.querySelectorAll("[data-caveat]").length, 0);
+  assertCaveatBadge(root);
   unmount();
 });
 

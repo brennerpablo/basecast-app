@@ -17,8 +17,8 @@ type InsightsData = components["schemas"]["InsightsData"];
 
 /** The two tabs: grade A as the headline, the rest as the supporting findings. */
 const TABS: { value: string; label: string; icon: LucideIcon; pick: (card: Insight) => boolean; headline?: boolean }[] = [
-  { value: "headline", label: "Headline findings", icon: Star, pick: (card) => card.grade === "A", headline: true },
-  { value: "supporting", label: "Supporting findings", icon: Layers, pick: (card) => card.grade !== "A" },
+  { value: "headline", label: "Headline", icon: Star, pick: (card) => card.grade === "A", headline: true },
+  { value: "supporting", label: "Supporting", icon: Layers, pick: (card) => card.grade !== "A" },
 ];
 
 function InsightsSkeleton() {
@@ -34,24 +34,23 @@ function InsightsSkeleton() {
 /**
  * /insights: the headline numbers of the video as a dashboard, each finding a full-width card with its
  * caveat and the screen that backs it, in two line tabs (`?tab=`): grade A as the headline findings, the rest
- * as the supporting ones. The response's caveats sit under the page title and its provenance at the foot.
+ * as the supporting ones. The response's caveats sit under the page title (and not again on a card) and its
+ * provenance at the foot.
  */
 export function InsightsScreen() {
   const query = useProductQuery<InsightsData>("insights");
   const meta = query.data?.meta;
+  const pageCaveats = meta?.caveats?.map((caveat) => caveat.code);
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Insights"
-        subtitle="The findings in one place, strongest first. Every number comes from the marts, with the caveat it needs."
-      >
+      <PageHeader title="Insights">
         <CaveatBadges caveats={meta?.caveats} />
       </PageHeader>
       <QueryBody<InsightsData>
         query={query}
         compact={false}
         isEmpty={(d) => d.cards.length === 0}
-        empty={{ title: "No insight yet", description: "They appear once the insights mart is built." }}
+        empty={{ title: "No insight yet" }}
         skeleton={<InsightsSkeleton />}
       >
         {(data) => (
@@ -71,7 +70,7 @@ export function InsightsScreen() {
               return (
                 <TabsContent key={value} value={value} className="space-y-4">
                   {cards.length ? (
-                    cards.map((card) => <InsightCard key={card.id} card={card} headline={headline} />)
+                    cards.map((card) => <InsightCard key={card.id} card={card} headline={headline} omitCaveats={pageCaveats} />)
                   ) : (
                     <p className="text-sm text-muted-foreground">No finding here yet.</p>
                   )}

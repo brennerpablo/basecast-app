@@ -10,6 +10,7 @@ import { formatValue } from "@/components/product/format";
 import { KpiItem } from "@/components/product/kpi-item";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { components } from "@/lib/api/get-data";
+import type { CaveatCode } from "@/lib/bff/envelope";
 import { cn } from "@/lib/utils";
 
 export type Insight = components["schemas"]["InsightsData"]["cards"][number];
@@ -59,13 +60,33 @@ function TopicIcon({ card }: { card: Insight }) {
 }
 
 /**
- * One finding as a full-width dashboard card: the header (icon, title, id and queue, "Re-derived" when
- * `verified`, the link to the screen that backs it), the value and caption beside the companion figures,
- * and a footer with the caveat its line must always carry, the caveat badges and the source doc. A
- * headline (grade A) card carries the brand accent on its left edge.
+ * The caveat the finding's line must always carry, as an amber badge (the look of a machine-read
+ * `CaveatBadge`) with the text in its tooltip, and for screen readers in the badge itself.
  */
-export function InsightCard({ card, headline }: { card: Insight; headline?: boolean }) {
+function LineCaveat({ text }: { text: string }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <AppBadge state="alert" data-slot="insight-caveat" tabIndex={0} className="cursor-help gap-1">
+          <TriangleAlert aria-hidden />
+          Caveat
+          <span className="sr-only">: {text}</span>
+        </AppBadge>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-sm text-xs">{text}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+/**
+ * One finding as a full-width dashboard card: the header (icon, title, queue, "Re-derived" when `verified`,
+ * the link to the screen that backs it), the value and caption beside the companion figures, and a footer
+ * with the line's caveat and the caveat badges (less `omitCaveats`, the codes the screen already shows over
+ * the same response). A headline (grade A) card carries the brand accent on its left edge.
+ */
+export function InsightCard({ card, headline, omitCaveats }: { card: Insight; headline?: boolean; omitCaveats?: CaveatCode[] }) {
   const figures = card.figures ?? [];
+  const caveats = (card.caveats ?? []).filter((caveat) => !omitCaveats?.includes(caveat.code));
   return (
     <Card
       data-insight={card.id}
@@ -76,7 +97,7 @@ export function InsightCard({ card, headline }: { card: Insight; headline?: bool
       <DashboardCardHeader
         icon={<TopicIcon card={card} />}
         title={card.title}
-        subtitle={card.queue ? `${card.id} · ${QUEUE_LABEL[card.queue]}` : card.id}
+        subtitle={card.queue ? QUEUE_LABEL[card.queue] : undefined}
         trailing={
           (card.verified || card.link) && (
             <>
@@ -89,7 +110,7 @@ export function InsightCard({ card, headline }: { card: Insight; headline?: bool
                       <span className="max-sm:sr-only">Re-derived</span>
                     </AppBadge>
                   </TooltipTrigger>
-                  <TooltipContent className="max-w-xs text-xs">Re-derived from the source data by an independent check (X6).</TooltipContent>
+                  <TooltipContent className="max-w-xs text-xs">Re-derived from the source data by an independent check.</TooltipContent>
                 </Tooltip>
               )}
               {card.link && <CardOpenLink href={card.link} label={destination(card.link)} />}
@@ -112,18 +133,12 @@ export function InsightCard({ card, headline }: { card: Insight; headline?: bool
           </div>
         )}
       </div>
-      <div className="mt-6 flex flex-col gap-3 border-t border-border pt-4 md:flex-row md:items-start md:gap-6">
-        <p data-slot="insight-caveat" className="flex min-w-0 flex-1 items-start gap-2 text-xs text-foreground/80">
-          <TriangleAlert className="mt-px size-3.5 shrink-0 text-yellow-700 dark:text-yellow-300" aria-hidden />
-          <span>{card.caveat}</span>
-        </p>
-        {(card.caveats?.length || card.source_doc) && (
-          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 md:max-w-[40%] md:justify-end">
-            <CaveatBadges caveats={card.caveats} />
-            {card.source_doc && <span className="text-xs text-muted-foreground">{card.source_doc}</span>}
-          </div>
-        )}
-      </div>
+      {(card.caveat || caveats.length > 0) && (
+        <div className="mt-6 flex flex-wrap items-center gap-1.5 border-t border-border pt-4">
+          {card.caveat && <LineCaveat text={card.caveat} />}
+          <CaveatBadges caveats={caveats} className="contents" />
+        </div>
+      )}
     </Card>
   );
 }

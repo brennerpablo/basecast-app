@@ -75,7 +75,7 @@ function PeakMiniChart({ data, mode, officialLabel }: { data: PeakData; mode: Ch
       <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <span className="h-0.5 w-4 rounded-full" style={{ background: ours }} />
-          Our P50, P10–P90 shaded
+          Our P50 and P10–P90
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-4" style={{ borderTop: `2px dashed ${ink.secondary}` }} />
@@ -99,8 +99,8 @@ export function ForecastCard() {
   return (
     <HomeCard<PeakData>
       icon={TrendingUp}
-      title="How high the peak goes"
-      subtitle={data ? `ERCOT summer peak${variant ? `, ${variant}` : ""}.` : "ERCOT summer peak."}
+      title="Summer peak"
+      subtitle={variant}
       href="/forecast"
       linkLabel="Open Forecast"
       query={query}
@@ -128,7 +128,7 @@ export function ForecastCard() {
               </div>
               <div className="col-span-2 grid grid-cols-2 content-start gap-4 sm:col-span-1 sm:grid-cols-1">
                 <KpiItem label={official ? official.label : "ERCOT's line"} value={official ? formatPower(official.mw) : GAP} />
-                <KpiItem label="Ours against ERCOT's line" value={gapMw == null ? GAP : signedPower(gapMw)} />
+                <KpiItem label="Gap to ERCOT" value={gapMw == null ? GAP : signedPower(gapMw)} />
               </div>
             </div>
             <PeakMiniChart data={peak} mode={mode} officialLabel={official?.label ?? "ERCOT, adjusted"} />

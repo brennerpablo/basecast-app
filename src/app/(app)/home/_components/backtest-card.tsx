@@ -3,6 +3,7 @@
 import { History } from "lucide-react";
 
 import { formatPercent } from "@/components/product/format";
+import { InfoTip } from "@/components/product/info-tip";
 import { KpiItem } from "@/components/product/kpi-item";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { components } from "@/lib/api/get-data";
@@ -10,23 +11,25 @@ import { useProductQuery } from "@/lib/bff/queries";
 import { backtestEdge } from "@/lib/home/highlights";
 import { cn } from "@/lib/utils";
 
-import { sourceLabel } from "../../backtest/_components/backtest-data";
+import { ORGANIC, sourceLabel } from "../../backtest/_components/backtest-data";
 import { HomeCard } from "./home-card";
 
 type BacktestData = components["schemas"]["PeakBacktestData"];
 
+/** The ablation's run by what it leaves out; our model by its name. */
+const ablationLabel = (source: string) => (source === ORGANIC ? "Without large loads" : sourceLabel(source));
+
 /**
- * How far to trust the numbers: our peak model rerun at past dates against ERCOT's forecasts of the same
- * summers, paired on the same dates, era by era. The headline is the latest era; the table keeps the eras
- * where ERCOT did better.
+ * The backtest: our peak model rerun at past dates against ERCOT's forecasts of the same summers, paired on
+ * the same dates, era by era, as MAPE (the lower of each pair in bold). The headline is the latest era; the
+ * table keeps the eras where ERCOT did better.
  */
 export function BacktestCard() {
   const query = useProductQuery<BacktestData>("backtest/peak", undefined, { throwOnError: false });
   return (
     <HomeCard<BacktestData>
       icon={History}
-      title="How far to trust it"
-      subtitle="Our peak model rerun at past dates, scored against ERCOT's own forecasts."
+      title="Backtest"
       href="/backtest"
       linkLabel="Open Backtest"
       query={query}
@@ -41,8 +44,9 @@ export function BacktestCard() {
           <div className="space-y-5">
             {headline && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground">
-                  Mean absolute error · {eraLabel.get(headline.era) ?? headline.era} ({headline.n} dates)
+                <p className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                  MAPE · {eraLabel.get(headline.era) ?? headline.era} ({headline.n} dates)
+                  <InfoTip label="About MAPE">Mean absolute percent error, ours and ERCOT&apos;s on the same dates.</InfoTip>
                 </p>
                 <div className="mt-2 grid grid-cols-2 gap-6">
                   <div>
@@ -99,14 +103,13 @@ export function BacktestCard() {
                   );
                 })}
               </table>
-              <p className="mt-2 text-xs text-muted-foreground">Mean absolute percent error on the same dates; the lower of each pair in bold.</p>
             </div>
             {data.ablation.length > 1 && (
               <div className="grid grid-cols-2 gap-4 border-t border-border pt-4">
                 {data.ablation.map((score) => (
                   <KpiItem
                     key={score.source}
-                    label={`Ablation: ${sourceLabel(score.source)}`}
+                    label={ablationLabel(score.source)}
                     value={`${formatPercent(score.mape)} MAPE`}
                   />
                 ))}
