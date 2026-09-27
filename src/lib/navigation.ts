@@ -20,8 +20,8 @@ export type MainMenuSubItem = {
   activeCheck?: (pathname: string) => boolean;
 };
 
-/** The menu's blocks, drawn apart by a divider: Home, the analytics screens, the data and ops tools, admin. */
-export type MainMenuSection = "home" | "analytics" | "system" | "admin";
+/** The menu's blocks, drawn apart by a divider: Home, the analytics screens, the data and ops tools. */
+export type MainMenuSection = "home" | "analytics" | "system";
 
 export type MainMenuItem = {
   id: string;
@@ -32,8 +32,6 @@ export type MainMenuItem = {
   href?: string;
   activeCheck?: (pathname: string) => boolean;
   subItems?: MainMenuSubItem[];
-  /** Shown to superadmins only. Hiding is cosmetic: `/admin`'s layout is the check. */
-  superAdminOnly?: boolean;
 };
 
 /** Cookie with the expanded menu groups, read on the server so both renders match. */
@@ -111,24 +109,13 @@ export const MAIN_MENU: MainMenuItem[] = [
     href: "/ops",
     activeCheck: underPath("/ops"),
   },
-  {
-    id: "admin-users",
-    section: "admin",
-    label: "Users",
-    icon: UsersRound,
-    href: "/admin/users",
-    activeCheck: underPath("/admin/users"),
-    superAdminOnly: true,
-  },
 ];
-
-/** The menu one user sees: the admin items only for a superadmin. */
-export const menuFor = (isSuperAdmin: boolean) =>
-  MAIN_MENU.filter((item) => isSuperAdmin || !item.superAdminOnly);
 
 /** Screens outside the sidebar menu, reached from the user menu: their tab name and icon. */
 export const OTHER_ROUTES = [
   { id: "account", label: "Account", icon: UserRound, href: "/account" },
+  // Superadmins only; hiding it is cosmetic, `/admin`'s layout is the check.
+  { id: "admin-users", label: "Users", icon: UsersRound, href: "/admin/users" },
 ] satisfies (MainMenuItem & { href: string })[];
 
-export const ACCOUNT_ROUTE = OTHER_ROUTES[0];
+export const [ACCOUNT_ROUTE, ADMIN_USERS_ROUTE] = OTHER_ROUTES;

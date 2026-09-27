@@ -7,7 +7,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { type ReactNode, useEffect, useState } from "react";
 
 import {
@@ -18,7 +17,6 @@ import { useSidebar } from "@/components/ui/sidebar";
 import {
   MAIN_MENU,
   type MainMenuItem,
-  menuFor,
   SIDEBAR_EXPANDED_COOKIE,
 } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
@@ -58,7 +56,6 @@ export function SidebarNav({
   footer?: ReactNode;
 }) {
   const pathname = usePathname();
-  const menu = menuFor(useSession().data?.user.isSuperAdmin === true);
   const { isMobile, setOpenMobile } = useSidebar();
   // On mobile the menu is a drawer over the page: close it once a link is
   // chosen, or it keeps covering the page the user just opened.
@@ -105,7 +102,7 @@ export function SidebarNav({
     });
   };
 
-  const groups = menu.filter((item) => item.subItems?.length);
+  const groups = MAIN_MENU.filter((item) => item.subItems?.length);
   const hasAnyExpanded = groups.some((item) => expandedItems.has(item.id));
 
   const toggleAllMenus = () => {
@@ -140,10 +137,10 @@ export function SidebarNav({
     <SidebarChrome toolbar={toggleAllButton} footer={footer}>
       <nav className="w-full p-2">
         <div className="space-y-1">
-          {menu.map((item, index) => {
+          {MAIN_MENU.map((item, index) => {
             const Icon = item.icon;
             const startsSection =
-              index > 0 && item.section !== menu[index - 1].section;
+              index > 0 && item.section !== MAIN_MENU[index - 1].section;
             const isExpanded = expandedItems.has(item.id);
             const hasSubItems = Boolean(item.subItems?.length);
             const isActive = isItemActive(item, pathname);

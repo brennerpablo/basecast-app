@@ -14,12 +14,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSidebar } from "@/components/ui/sidebar";
 import { UserAvatar } from "@/components/user-avatar";
-import { ACCOUNT_ROUTE } from "@/lib/navigation";
+import { ACCOUNT_ROUTE, ADMIN_USERS_ROUTE } from "@/lib/navigation";
 import { clearTabs } from "@/lib/tabs/tabs-store";
 
 /**
- * The signed-in user, their account, the theme and sign out, in the sidebar
- * footer, as in the Fundsys app. Reads the live session, so an edit on
+ * Fundsys's orange for an item only a superadmin sees: the whole item is the mark. The shadcn item sets
+ * `focus:bg-accent`, `data-[highlighted]:bg-accent` and a muted icon, so each state is overridden.
+ */
+const superAdminItemClass =
+  "bg-orange-100 text-orange-900 focus:bg-orange-200 focus:text-orange-900 data-[highlighted]:bg-orange-200 data-[highlighted]:text-orange-900 [&_svg]:text-orange-700 data-[highlighted]:[&_svg]:text-orange-700 dark:bg-orange-950/45 dark:text-orange-200 dark:focus:bg-orange-950/70 dark:focus:text-orange-200 dark:data-[highlighted]:bg-orange-950/70 dark:data-[highlighted]:text-orange-200 dark:[&_svg]:text-orange-300 dark:data-[highlighted]:[&_svg]:text-orange-300";
+
+/**
+ * The signed-in user, the admin screens (superadmins only), their account,
+ * the theme and sign out, in the sidebar footer, as in the Fundsys app. Reads the live session, so an edit on
  * /account shows here at once.
  */
 export function UserMenu() {
@@ -27,8 +34,9 @@ export function UserMenu() {
   const { isMobile, setOpenMobile } = useSidebar();
   if (!session) return null;
 
-  const { name, username, email, image } = session.user;
+  const { name, username, email, image, isSuperAdmin } = session.user;
   const displayName = name || username;
+  const closeDrawer = () => isMobile && setOpenMobile(false);
 
   return (
     <DropdownMenu>
@@ -49,8 +57,23 @@ export function UserMenu() {
         <DropdownMenuSeparator />
         {/* On mobile the sidebar is a drawer over the page: close it, as the
             menu links do. */}
+        {isSuperAdmin && (
+          <>
+            <DropdownMenuItem
+              asChild
+              className={`cursor-pointer ${superAdminItemClass}`}
+              title="Superadmins only"
+            >
+              <Link href={ADMIN_USERS_ROUTE.href} onClick={closeDrawer}>
+                <ADMIN_USERS_ROUTE.icon />
+                {ADMIN_USERS_ROUTE.label}
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
         <DropdownMenuItem asChild className="cursor-pointer">
-          <Link href={ACCOUNT_ROUTE.href} onClick={() => isMobile && setOpenMobile(false)}>
+          <Link href={ACCOUNT_ROUTE.href} onClick={closeDrawer}>
             <ACCOUNT_ROUTE.icon />
             {ACCOUNT_ROUTE.label}
           </Link>
