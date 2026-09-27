@@ -1,6 +1,6 @@
 "use client";
 
-import { AppWindow, ChevronRight, CircleCheck, Server, TriangleAlert, Workflow } from "lucide-react";
+import { Activity, AppWindow, Bug, ChevronRight, CircleCheck, Server, Timer, TriangleAlert, Workflow } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 
@@ -141,7 +141,7 @@ export function OverviewTab({ range }: { range: OpsRange }) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-stretch">
-        <SectionCard title="Requests over time" subtitle="app + get-data, by status class">
+        <SectionCard title="Requests over time" icon={Activity} subtitle="app + get-data, by status class">
           <div className="h-72 min-h-0">
             {charts ? (
               <AreaChart
@@ -160,7 +160,7 @@ export function OverviewTab({ range }: { range: OpsRange }) {
             )}
           </div>
         </SectionCard>
-        <SectionCard title="Latency over time" subtitle="p95 per service; the app line includes its wait for get-data">
+        <SectionCard title="Latency over time" icon={Timer} subtitle="p95 per service; the app line includes its wait for get-data">
           <div className="h-72 min-h-0">
             {charts ? (
               <AreaChart
@@ -183,6 +183,7 @@ export function OverviewTab({ range }: { range: OpsRange }) {
 
       <SectionCard
         title="Pipeline runs"
+        icon={Workflow}
         subtitle="Last 14 days, one cell per source per day (CT)"
         action={
           <Link href={`/ops?tab=pipelines&range=${range}`} className="inline-flex items-center text-xs font-medium text-basecast-brand hover:underline">
@@ -199,7 +200,7 @@ export function OverviewTab({ range }: { range: OpsRange }) {
         )}
       </SectionCard>
 
-      <SectionCard title="Top errors" subtitle={`Grouped by error and place, ${RANGE_LABEL[range]}. Open one to see its log lines.`}>
+      <SectionCard title="Top errors" icon={Bug} subtitle={`Grouped by error and place, ${RANGE_LABEL[range]}. Open one to see its log lines.`}>
         {!data ? (
           <TableSkeleton />
         ) : data.topErrors.length === 0 ? (

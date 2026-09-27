@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, CircleAlert, CircleCheck, Loader2, TriangleAlert, Workflow } from "lucide-react";
+import { Activity, CircleAlert, CircleCheck, Database, ListOrdered, Loader2, TriangleAlert, Workflow } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
 import { useMemo } from "react";
 
@@ -308,8 +308,8 @@ export function PipelinesTab({ range }: { range: OpsRange }) {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-stretch">
-        <SectionCard title="Runs over time" subtitle={`Runs per bucket, ${RANGE_LABEL[range]}`}>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5 lg:items-stretch">
+        <SectionCard className="lg:col-span-2" title="Runs over time" icon={Activity} subtitle={`Runs per bucket, ${RANGE_LABEL[range]}`}>
           <div className="h-72 min-h-0">
             {!data ? (
               <ChartSkeleton className="h-full" />
@@ -330,7 +330,7 @@ export function PipelinesTab({ range }: { range: OpsRange }) {
             )}
           </div>
         </SectionCard>
-        <SectionCard title="By source" subtitle="Click a source to filter the runs">
+        <SectionCard className="lg:col-span-3" title="By source" icon={Database} subtitle="Click a source to filter the runs">
           <div className="h-72 min-h-0 overflow-y-auto">
             {!data ? (
               <div className="space-y-2">{[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-6 w-full" />)}</div>
@@ -338,7 +338,7 @@ export function PipelinesTab({ range }: { range: OpsRange }) {
               <EmptyState compact className="h-full" Icon={Workflow} title="No source ran in the period" />
             ) : (
               <div className="rounded-md border border-border">
-                <table className="w-full text-xs">
+                <table className="w-full text-xs whitespace-nowrap">
                   <thead className="sticky top-0 z-10 bg-muted/50">
                     <tr>
                       <th className="px-3 py-2 text-left font-medium text-muted-foreground">Source</th>
@@ -392,6 +392,7 @@ export function PipelinesTab({ range }: { range: OpsRange }) {
 
       <SectionCard
         title="Runs"
+        icon={ListOrdered}
         subtitle={isLoading ? "—" : `${fmtInt(runs.length)} runs in the period; a duration over ${SLOW_RATIO}× the source's median is in amber. Open a run by its start time.`}
         action={
           source && (

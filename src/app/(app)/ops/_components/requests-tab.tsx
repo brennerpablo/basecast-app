@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, Gauge, Timer, TriangleAlert } from "lucide-react";
+import { Activity, Gauge, Route, Timer, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 
 import { type ColumnMetadata, DataTable } from "@/components/components-app/data-table";
@@ -126,6 +126,7 @@ export function RequestsTab({ range }: { range: OpsRange }) {
 
       <SectionCard
         title="By route"
+        icon={Route}
         subtitle={`${fmtInt(rows.length)} routes; templates, never raw URLs. p95 over ${fmtInt(SLOW_REQUEST_MS)} ms in amber, any 5xx in red; open a route for its logs.`}
       >
         {isLoading ? (

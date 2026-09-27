@@ -1,10 +1,12 @@
 "use client";
 
+import { ScrollText } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
 import { useMemo } from "react";
 
 import { type ColumnMetadata, DataTable } from "@/components/components-app/data-table";
 import { FilterSearchInput } from "@/components/components-app/url-filters";
+import { Filter, FilterRow } from "@/components/product/filter";
 import SkeletonDatatable from "@/components/skeleton-datatable";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -252,13 +254,15 @@ export function LogsTab({ range }: { range: OpsRange }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <FilterSearchInput
-          value={q}
-          onValueChange={(v) => void setQ(v)}
-          placeholder="Search message, event, route, error, request or run id"
-          className="w-full max-w-md"
-        />
+      <FilterRow>
+        <Filter label="Search">
+          <FilterSearchInput
+            value={q}
+            onValueChange={(v) => void setQ(v)}
+            placeholder="Message, event, route, error, request or run id"
+            className="w-full sm:w-md"
+          />
+        </Filter>
         {scope && (
           <button
             type="button"
@@ -270,13 +274,14 @@ export function LogsTab({ range }: { range: OpsRange }) {
             <span className="text-muted-foreground">×</span>
           </button>
         )}
-      </div>
+      </FilterRow>
 
       {error && !data ? (
         <LoadError error={error} />
       ) : (
         <SectionCard
           title="Log lines"
+          icon={ScrollText}
           subtitle={
             isLoading
               ? "—"

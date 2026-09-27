@@ -124,7 +124,7 @@ export const RANGE_LABEL: Record<OpsRange, string> = {
 
 const RANGE_BUTTON: Record<OpsRange, string> = { "1h": "1 h", "24h": "24 h", "7d": "7 days", "30d": "30 days" };
 
-/** The Fundsys range toggle: a bordered strip, the chosen range in solid foreground. */
+/** The Fundsys range toggle: a bordered strip, the chosen range in the brand's lime fill. */
 export function RangeToggle({ value, onChange }: { value: OpsRange; onChange: (range: OpsRange) => void }) {
   return (
     <div role="group" aria-label="Time range" className="inline-flex items-center gap-1 rounded-md border border-border bg-card p-1">
@@ -136,7 +136,7 @@ export function RangeToggle({ value, onChange }: { value: OpsRange; onChange: (r
           onClick={() => onChange(r)}
           className={cn(
             "rounded px-2.5 py-1 text-xs font-medium transition-colors",
-            value === r ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+            value === r ? "bg-brand text-brand-foreground shadow-xs" : "text-muted-foreground hover:text-foreground",
           )}
         >
           {RANGE_BUTTON[r]}
@@ -187,15 +187,17 @@ export function KpiCard({
   );
 }
 
-/** A titled section, as the Fundsys admin screens frame their charts and tables. */
+/** A titled section, as the Fundsys admin screens frame their charts and tables: the icon in a brand-tinted square. */
 export function SectionCard({
   title,
+  icon: SectionIcon,
   subtitle,
   action,
   className,
   children,
 }: {
   title: string;
+  icon: LucideIcon;
   subtitle?: React.ReactNode;
   action?: React.ReactNode;
   className?: string;
@@ -205,8 +207,13 @@ export function SectionCard({
     <Card className={cn("flex flex-col", className)}>
       <div className="mb-4 flex items-start gap-3">
         <div className="min-w-0">
-          <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-          {subtitle && <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>}
+          <div className="flex items-center gap-2">
+            <span className="shrink-0 rounded-md bg-basecast-brand-surface p-1.5">
+              <SectionIcon className="size-4 text-basecast-brand" aria-hidden />
+            </span>
+            <h2 className="text-base font-semibold text-foreground">{title}</h2>
+          </div>
+          {subtitle && <p className="mt-1.5 text-xs text-muted-foreground">{subtitle}</p>}
         </div>
         {action && <div className="ml-auto shrink-0">{action}</div>}
       </div>
