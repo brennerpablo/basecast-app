@@ -1,4 +1,4 @@
-export const HOME = "/insights";
+export const HOME = "/home";
 export const SIGN_IN = "/sign-in";
 
 /** The landing pages: static files in `public/landing/`, served at these paths. */

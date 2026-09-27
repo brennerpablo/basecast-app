@@ -238,8 +238,9 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   "Supporting", one full-width `InsightCard` per finding stacked in each, the provenance at the foot. Each card: the icon tile header (icon by queue, else by
   the screen behind it), value and caption beside the figures (`KpiItem`), the line's required caveat as an amber "Caveat"
   badge (the text in its tooltip), the caveat badges the header doesn't already show, "Re-derived" when `verified`, and the
-  open link to the screen behind it. First in
-  the menu and the home (`/` for a signed-in user, "Exit Data"); cards keep the API's order.
+  open link to the screen behind it. First of the analytics screens in the menu; cards keep the API's order.
+- `/home` (`src/app/(app)/home/`): one highlight per module, first in the menu. It is the home (`HOME` in
+  `src/lib/auth/gate.ts`): after sign-in, `/` for a signed-in user, "Exit Data".
 - `public/geo/`: `tx-counties.geojson` (254 counties; `county_fips` for `promoteId`, `county_name`, `weather_zone`,
   `in_ercot`) and `ercot-weather-zones.geojson` (`weather_zone`), from basecast-airflow `basecast export-geo`.
 - `src/components/data-grid/` is the DataGrid (virtualized, server blocks through `src/lib/hooks/use-grid-window-query.ts`

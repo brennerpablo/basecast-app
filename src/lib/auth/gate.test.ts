@@ -8,7 +8,7 @@ test("a visitor at the root sees the product landing page", () => {
 });
 
 test("a signed-in user at the root goes to the app", () => {
-  assert.deepEqual(gate("/", "", true), { kind: "redirect", to: "/insights" });
+  assert.deepEqual(gate("/", "", true), { kind: "redirect", to: "/home" });
 });
 
 test("the engineering landing page is open to everyone", () => {
@@ -22,7 +22,7 @@ test("the engineering landing page is open to everyone", () => {
 
 test("sign-in is open to visitors and sends users to the app", () => {
   assert.deepEqual(gate("/sign-in", "", false), { kind: "next" });
-  assert.deepEqual(gate("/sign-in", "", true), { kind: "redirect", to: "/insights" });
+  assert.deepEqual(gate("/sign-in", "", true), { kind: "redirect", to: "/home" });
 });
 
 test("app pages need a session and keep where the visitor was going", () => {

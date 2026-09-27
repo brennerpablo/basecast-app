@@ -16,6 +16,7 @@ import { type ReactNode, useState } from "react";
 
 import { SidebarChrome } from "@/app/(app)/_components/sidebar-chrome";
 import { useSidebar } from "@/components/ui/sidebar";
+import { HOME } from "@/lib/auth/gate";
 import { cn } from "@/lib/utils";
 
 import { useLakeList, useLakeSources, useTables } from "./api";
@@ -173,7 +174,7 @@ export function DataSidebar({ footer }: { footer?: ReactNode }) {
       footer={footer}
       toolbar={
         <Link
-          href="/insights"
+          href={HOME}
           onClick={onNavigate}
           className="flex h-8 w-full items-center gap-2 rounded-md border border-sidebar-border px-3 text-xs font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
         >
