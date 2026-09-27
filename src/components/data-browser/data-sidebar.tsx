@@ -173,7 +173,7 @@ export function DataSidebar({ footer }: { footer?: ReactNode }) {
       footer={footer}
       toolbar={
         <Link
-          href="/accounts"
+          href="/insights"
           onClick={onNavigate}
           className="flex h-8 w-full items-center gap-2 rounded-md border border-sidebar-border px-3 text-xs font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
         >

@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-const HOME = "/accounts";
+const HOME = "/insights";
 const SIGN_IN = "/sign-in";
 
 /**

@@ -13,6 +13,7 @@ import { useProductQuery } from "@/lib/bff/queries";
 import { AccountHeader } from "./account-header";
 import { EiaCard, GapsCard } from "./eia-card";
 import { NextActionCard } from "./next-action-card";
+import { CityCard, FourCpCard, SupplierCards } from "./p1-cards";
 import { ScoreCard } from "./score-card";
 import { TerritoryCard } from "./territory-card";
 import { WhyNowCard } from "./why-now-card";
@@ -68,6 +69,15 @@ export function AccountScreen({ id }: { id: string }) {
         <ScoreCard account={account} meta={meta} caveats={only("weights_pending_review")} />
         <GapsCard account={account} meta={meta} />
       </div>
+      {((account.suppliers?.length ?? 0) > 0 || account.four_cp_offer || account.city) && (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {account.suppliers && account.suppliers.length > 0 && (
+            <SupplierCards suppliers={account.suppliers} meta={meta} caveats={only("requests_not_forecasts")} />
+          )}
+          {account.four_cp_offer && <FourCpCard offer={account.four_cp_offer} meta={meta} caveats={only("optimistic_weather")} />}
+          {account.city && <CityCard city={account.city} meta={meta} />}
+        </div>
+      )}
       <TerritoryCard account={account} meta={meta} caveats={only("by_county_not_point")} />
       <EiaCard account={account} meta={meta} />
     </div>

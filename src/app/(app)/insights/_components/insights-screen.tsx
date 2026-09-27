@@ -102,9 +102,9 @@ export function InsightsScreen() {
       skeleton={<Skeleton className="h-96 w-full" />}
     >
       {(data) => {
-        const cards = [...data.cards].sort((a, b) => a.rank - b.rank);
-        const heroes = cards.filter((c) => c.grade === "A");
-        const rest = cards.filter((c) => c.grade !== "A");
+        // The API's order: it changes as marts land, so the app never re-sorts or numbers the cards.
+        const heroes = data.cards.filter((c) => c.grade === "A");
+        const rest = data.cards.filter((c) => c.grade !== "A");
         return (
           <div className="space-y-6">
             {heroes.length > 0 && (

@@ -175,7 +175,8 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
 - `/accounts/[id]` (`src/app/(app)/accounts/[id]/`): one account's diagnosis from `GET /accounts/{id}` in the X9
   order (header facts, next action with its lapse date, why now with the event timeline and the paged full history
   from `/events`, score breakdown, gaps and coverage, territory, EIA series). A 404 (unknown or held-back id) is
-  "Account not found". Facts render through `FactGrid`/`FactValue`; `formatValue` knows get-data's units.
+  "Account not found". Facts render through `FactGrid`/`FactValue`; `formatValue` knows get-data's units. The P1
+  cards (`p1-cards.tsx`) show when the API sends them: wholesale supplier (X13), 4CP offer (X3 + X15), city facts (X10).
 - `/explorer` (`src/app/(app)/explorer/`): the county map in MapLibre GL (`maplibre-gl`, pinned), polygons only, no basemap
   or token. `county-map.tsx` loads `public/geo/*.geojson`, keys counties by `county_fips` (`promoteId`) and takes each
   county's fill and fade as `feature-state`; the worker is copied to `public/maplibre/` on install
@@ -187,12 +188,14 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   layers at P50 with the total's band as whiskers, labeled by `band_kind`; ERCOT's official lines in ink told apart by
   dash; variant and region in the URL; the numbers again as a table; the large-load inputs) and `large-loads`
   (promised × approved by deck, the ratio band with the API's definition, the monthly stock against the observed
-  peak with the dated annotations). P1 tabs (`queue`, `normalized`, `4cp`) come later. Chart colors and ink:
+  peak with the dated annotations), then the P1 tabs `queue` (survival curves cut where the API nulls them),
+  `normalized` (actual × normal-weather load, summer peak against the normal band) and `4cp` (intervals against the
+  window, dispatch curve, peak-hour shift, rates); a mart not built shows "being rebuilt". Chart colors and ink:
   `src/lib/charts/palette.ts` (dataviz slots, light and dark steps).
 - `/insights` (`src/app/(app)/insights/`): the cards of `GET /insights`, grade A first; each shows value, caption,
   companion figures, the line's required caveat (always visible), caveat badges, which queue it speaks of, "Re-derived"
-  when `verified` (X6), and a link to the screen behind it. First in the menu; the landing page stays `/accounts` until
-  `mart_insights` is real.
+  when `verified` (X6), and a link to the screen behind it. First in the menu and the landing page (`/`, after sign-in, "Exit
+  Data"); cards keep the API's order.
 - `public/geo/`: `tx-counties.geojson` (254 counties; `county_fips` for `promoteId`, `county_name`, `weather_zone`,
   `in_ercot`) and `ercot-weather-zones.geojson` (`weather_zone`), from basecast-airflow `basecast export-geo`.
 - `src/components/data-grid/` is the DataGrid (virtualized, server blocks through `src/lib/hooks/use-grid-window-query.ts`
