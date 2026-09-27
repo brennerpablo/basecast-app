@@ -250,7 +250,8 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
 - Landing pages (`public/landing/`, static HTML from Claude Design, 1440px wide, own tokens and fonts, no app code):
   `product.html` at `/` for visitors, `internal.html` at `/how-its-built` for everyone, with the same header (logo, Sign in;
   sticky, turning to blurred glass on scroll through a CSS scroll-driven animation) and a floating toggle
-  between them (plain links and CSS, repeated in each file). The proxy rewrites to them (`LANDING_PAGES` in
+  between them (plain links and CSS, repeated in each file). Switching is a cross-document view transition
+  (`@view-transition`): header and toggle stay, the toggle's pill slides, the page slides the way of the click. The proxy rewrites to them (`LANDING_PAGES` in
   `src/lib/auth/gate.ts`); the lake numbers in `internal.html` are fixed as of Sep 26, 2026.
 - Login, required on every page but the landing pages: next-auth v4 in `src/lib/auth.ts` (password, and "Continue with Google" where
   anyone signs up: `src/lib/auth/google.ts` pure rules, `google-user.ts` the upsert and the superadmins' email),
