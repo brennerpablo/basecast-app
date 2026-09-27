@@ -5,13 +5,17 @@ import { type Channel, channelColor, DIVERGING, type Mode, NO_DATA, OUTSIDE, SEQ
 export type CountyRow = components["schemas"]["CountyRow"];
 export type CountiesData = components["schemas"]["CountiesData"];
 
-export const LAYERS = ["acquisition", "queue", "data-centers"] as const;
+export const LAYERS = ["acquisition", "queue", "data-centers", "zones"] as const;
 export type Layer = (typeof LAYERS)[number];
 export const LAYER_LABEL: Record<Layer, string> = {
   acquisition: "Acquisition priority",
   queue: "Generation queue",
   "data-centers": "New data centers",
+  zones: "Grid layers by zone",
 };
+
+export type ZonesData = components["schemas"]["ZonesData"];
+export type ZoneLayer = ZonesData["layers"][number];
 
 export const LISTS = ["all", "retail", "partnership"] as const;
 export type ChannelList = (typeof LISTS)[number];
@@ -45,7 +49,7 @@ export type LayerOptions = {
 };
 
 /** How one county is drawn: its fill, and whether it is faded (outside the chosen channel list). */
-export type CountyStyle = { color: string; dim: boolean };
+export type CountyStyle = { color: string; dim: boolean; named?: boolean };
 
 /** A legend entry: a swatch and what it stands for. */
 export type LegendItem = { color: string; label: string };
@@ -193,6 +197,46 @@ export function paintLayer(rows: CountyRow[], options: LayerOptions, mode: Mode)
           : `${edges[i]}–${edges[i + 1] - 1} sites`,
   }));
   return { styles, legend: [...legend, { color: NO_DATA[mode], label: "None since 2025" }] };
+}
+
+/**
+ * A zone measure painted on the counties: each ERCOT county takes its weather zone's central value (nothing
+ * is spread below the zone), and the counties ERCOT names in its large-load reports are outlined.
+ */
+export function paintZones(
+  rows: CountyRow[],
+  layer: ZoneLayer,
+  named: Set<string>,
+  format: (value: number) => string,
+  mode: Mode,
+): LayerPaint {
+  const styles = new Map<string, CountyStyle>();
+  const byZone = new Map(layer.zones.map((z) => [z.weather_zone, z.central ?? null]));
+  const values = [...byZone.values()].filter((v): v is number => v !== null);
+  const breaks = quantileBreaks(values, 5);
+  const ramp = rampSteps(SEQUENTIAL[mode], breaks.length + 1);
+  for (const row of rows) {
+    if (!row.in_ercot) {
+      styles.set(row.county_fips, { color: OUTSIDE[mode], dim: false, named: false });
+      continue;
+    }
+    const value = row.weather_zone ? byZone.get(row.weather_zone) : null;
+    styles.set(row.county_fips, {
+      color: value === null || value === undefined ? NO_DATA[mode] : ramp[classOf(value, breaks)],
+      dim: false,
+      named: named.has(row.county_fips),
+    });
+  }
+  const legend = ramp.map((color, i) => ({
+    color,
+    label:
+      i === 0
+        ? `< ${format(breaks[0] ?? 0)}`
+        : i === ramp.length - 1
+          ? `≥ ${format(breaks[i - 1])}`
+          : `${format(breaks[i - 1])} – ${format(breaks[i])}`,
+  }));
+  return { styles, legend: breaks.length ? legend : [{ color: ramp[0], label: format(values[0] ?? 0) }] };
 }
 
 function metricText(value: number, metric: QueueMetric): string {

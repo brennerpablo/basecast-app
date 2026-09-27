@@ -181,7 +181,9 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   or token. `county-map.tsx` loads `public/geo/*.geojson`, keys counties by `county_fips` (`promoteId`) and takes each
   county's fill and fade as `feature-state`; the worker is copied to `public/maplibre/` on install
   (`scripts/copy-workers.mjs`) and set with `setWorkerUrl`. One `GET /geo/counties` feeds the three layers
-  (`layer=acquisition|queue|data-centers`, with `list`, `metric`, `horizon`, `stratum`, `naics`, all in the URL); the
+  (`layer=acquisition|queue|data-centers`, with `list`, `metric`, `horizon`, `stratum`, `naics`, all in the URL); P1
+  `layer=zones` (`measure=`) reads `GET /geo/zones` and paints each county with its weather zone's value, the counties
+  ERCOT names dashed, with a zone table (allocation range, machine-read); the
   colors and legends are pure in `src/lib/explorer/` (dataviz palette: channel hue × priority class, one-hue blue
   ramp, blue ↔ red for rank change). `county=<fips>` opens the county panel (`GET /geo/counties/{fips}`).
 - `/forecast` (`src/app/(app)/forecast/`): `<Tabs urlParam="tab">` with `peak` (the summer peak in three stacked

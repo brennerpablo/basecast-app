@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { CHANNEL_HUE, channelColor, mix, NO_DATA, OUTSIDE, SURFACE } from "./colors";
-import { classOf, type CountyRow, dataCenterCount, paintLayer, quantileBreaks, queueValue } from "./layers";
+import { classOf, type CountyRow, dataCenterCount, paintLayer, paintZones, quantileBreaks, queueValue } from "./layers";
 
 const row = (fips: string, extra: Partial<CountyRow> = {}): CountyRow => ({
   county_fips: fips,
@@ -100,4 +100,29 @@ test("quantile breaks and classes", () => {
   assert.equal(classOf(0, [3, 5]), 0);
   assert.equal(classOf(3, [3, 5]), 1);
   assert.equal(classOf(9, [3, 5]), 2);
+});
+
+test("zones: a county takes its zone's value, named counties are flagged, outside ERCOT apart", () => {
+  const rows = [
+    row("48001", { weather_zone: "COAST" }),
+    row("48003", { weather_zone: "WEST" }),
+    row("48005", { weather_zone: "NORTH" }),
+    row("35001", { in_ercot: false, weather_zone: null }),
+  ];
+  const layer = {
+    measure: "a2e_stock",
+    label: "Approved large load",
+    unit: "MW",
+    method: "allocated",
+    zones: [
+      { weather_zone: "COAST", central: 2800, low: 1900, high: 3600, verified: false },
+      { weather_zone: "WEST", central: 5200, low: null, high: null, verified: false },
+    ],
+  } as unknown as Parameters<typeof paintZones>[1];
+  const paint = paintZones(rows, layer, new Set(["48003"]), (v) => String(v), "light");
+  assert.notEqual(paint.styles.get("48001")?.color, paint.styles.get("48003")?.color);
+  assert.equal(paint.styles.get("48003")?.named, true);
+  assert.equal(paint.styles.get("48001")?.named, false);
+  assert.equal(paint.styles.get("48005")?.color, NO_DATA.light);
+  assert.equal(paint.styles.get("35001")?.color, OUTSIDE.light);
 });

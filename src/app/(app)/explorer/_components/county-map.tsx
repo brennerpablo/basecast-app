@@ -149,6 +149,16 @@ export function CountyMap({
           paint: { "line-color": ZONE_LINE[initialMode], "line-width": 1.4 },
         });
         map.addLayer({
+          id: "county-named",
+          type: "line",
+          source: "counties",
+          paint: {
+            "line-color": ZONE_LINE[initialMode],
+            "line-width": ["case", ["boolean", ["feature-state", "named"], false], 2.2, 0],
+            "line-dasharray": [2, 1],
+          },
+        });
+        map.addLayer({
           id: "county-highlight",
           type: "line",
           source: "counties",
@@ -210,6 +220,7 @@ export function CountyMap({
     map.updateImage("hatch", hatch(mode));
     map.setPaintProperty("county-line", "line-color", BORDER[mode]);
     map.setPaintProperty("zone-line", "line-color", ZONE_LINE[mode]);
+    map.setPaintProperty("county-named", "line-color", ZONE_LINE[mode]);
     map.setPaintProperty("county-highlight", "line-color", HIGHLIGHT[mode]);
     map.setPaintProperty("county-fill", "fill-color", ["coalesce", ["feature-state", "color"], NO_DATA[mode]]);
   }, [ready, mode]);
@@ -219,7 +230,7 @@ export function CountyMap({
     const map = mapRef.current;
     if (!ready || !map) return;
     for (const [fips, style] of styles) {
-      map.setFeatureState({ source: "counties", id: fips }, { color: style.color, dim: style.dim });
+      map.setFeatureState({ source: "counties", id: fips }, { color: style.color, dim: style.dim, named: style.named ?? false });
     }
   }, [ready, styles]);
 
