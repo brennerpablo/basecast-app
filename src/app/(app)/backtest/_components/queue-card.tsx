@@ -2,6 +2,7 @@
 
 import { AppBadge } from "@/components/components-app/ui/badge";
 import { formatDate, formatNumber, formatPercent, formatPower, GAP } from "@/components/product/format";
+import { InfoTip } from "@/components/product/info-tip";
 import { cn } from "@/lib/utils";
 
 import { type QueueData, queueLayout, type QueueRow, stratumLabel } from "./backtest-data";
@@ -14,7 +15,7 @@ type Measure = { key: string; label: string; value: (row: QueueRow) => number | 
 
 const MEASURES: Measure[] = [
   { key: "raw", label: "Raw generation queue", value: (r) => r.raw_mw, color: (m) => CONTEXT[m][0] },
-  { key: "developer", label: "Developers' own COD dates", value: (r) => r.developer_projected_mw, color: (m) => CONTEXT[m][1] },
+  { key: "developer", label: "Developer CODs", value: (r) => r.developer_projected_mw, color: (m) => CONTEXT[m][1] },
   { key: "pred", label: "basecast predicted", value: (r) => r.pred_mw, color: (m) => SERIES.basecast[m] },
   { key: "actual", label: "Built", value: (r) => r.actual_mw, color: (m) => ACTUAL[m] },
 ];
@@ -143,16 +144,14 @@ export function QueueBody({ data }: { data: QueueData }) {
     <div className="space-y-6">
       <section className="min-w-0 space-y-3">
         <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">
-            Megawatts reaching commercial operation within {windows.length === 1 ? `${windows[0]} months` : "the window"} of each
-            queue report. The bars share one scale.
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span>MW in operation within {windows.length === 1 ? `${windows[0]} months` : "the window"} of report</span>
             {variants.length === 1 && (
-              <>
-                {" "}
-                Model variant <span className="font-mono">{variants[0]}</span>.
-              </>
+              <AppBadge state="metadata" className="font-mono">
+                {variants[0]}
+              </AppBadge>
             )}
-          </p>
+          </div>
           <ChartLegend items={legend} />
         </div>
         {statewide.length ? (
@@ -171,8 +170,10 @@ export function QueueBody({ data }: { data: QueueData }) {
           <ByStratum items={data.items} months={months} strata={strata} />
         </section>
         <section className="min-w-0 space-y-2 xl:col-span-2">
-          <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">County ranking vs what was built</h3>
-          <p className="text-xs text-muted-foreground">Spearman correlation across counties; 1 is the same order.</p>
+          <h3 className="flex items-center gap-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            County rank vs built · Spearman <span className="normal-case">ρ</span>
+            <InfoTip label="About Spearman ρ">Rank correlation across counties; 1 = same order</InfoTip>
+          </h3>
           <CountyRanks data={data} />
         </section>
       </div>

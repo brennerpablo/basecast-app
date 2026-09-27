@@ -90,7 +90,7 @@ function ScaleLegend({ mode }: { mode: Mode }) {
   );
 }
 
-/** Mean absolute error, bias and vintage count by horizon, for the products in view. */
+/** Mean absolute percent error, bias and vintage count by horizon, for the products in view. */
 function HorizonSummaryTable({ data, view }: { data: OfficialErrorsData; view: string }) {
   const rows = data.summary.filter((s) => inView(s.product, view));
   const products = [...new Set(rows.map((r) => r.product))];
@@ -98,7 +98,7 @@ function HorizonSummaryTable({ data, view }: { data: OfficialErrorsData; view: s
   if (!rows.length) return null;
   const at = (product: string, h: number) => rows.find((r) => r.product === product && r.horizon === h);
   const metrics: { key: string; label: string; value: (r: (typeof rows)[number]) => string }[] = [
-    { key: "mape", label: "Mean absolute error", value: (r) => formatPercent(r.mape) },
+    { key: "mape", label: "MAPE", value: (r) => formatPercent(r.mape) },
     { key: "bias", label: "Bias", value: (r) => formatPercent(r.bias_pct, { signed: true }) },
     { key: "n", label: "Vintages", value: (r) => formatWhole(r.n) },
   ];
@@ -157,9 +157,9 @@ export function OfficialStats({ data, view }: { data: OfficialErrorsData; view: 
             key={h}
             layout="stacked"
             icon={<Target className="size-4" aria-hidden />}
-            title={`${sourceLabel(view)}, ${h} ${h === 1 ? "summer" : "summers"} ahead`}
+            title={`${sourceLabel(view)} MAPE, ${h} ${h === 1 ? "summer" : "summers"} ahead`}
             value={r ? formatPercent(r.mape) : GAP}
-            hint={r ? `Mean absolute error · bias ${formatPercent(r.bias_pct, { signed: true })} · ${formatWhole(r.n)} vintages` : "Not scored"}
+            hint={r ? `Bias ${formatPercent(r.bias_pct, { signed: true })} · ${formatWhole(r.n)} vintages` : "Not scored"}
           />
         );
       })}
@@ -168,7 +168,6 @@ export function OfficialStats({ data, view }: { data: OfficialErrorsData; view: 
         icon={<Files className="size-4" aria-hidden />}
         title="Vintages scored"
         value={formatWhole(vintages)}
-        hint={`${sourceLabel(view)} vintages against every summer they forecast`}
       />
     </div>
   );

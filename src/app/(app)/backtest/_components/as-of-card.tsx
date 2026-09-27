@@ -6,6 +6,7 @@ import { MeasuredResponsiveContainer } from "@/components/components-app/charts/
 import { AppBadge } from "@/components/components-app/ui/badge";
 import { VerifiedBadge } from "@/components/product/caveat-badges";
 import { formatPercent, formatPower, GAP } from "@/components/product/format";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Caveat, Meta } from "@/lib/bff/envelope";
 import { cn } from "@/lib/utils";
 
@@ -54,7 +55,8 @@ function cellMark(cell: Cell): { shape: "dot" | "square" | "diamond" | "hollow";
   return { shape: "dot", swatch: "dot" };
 }
 
-const horizonText = (h: number) => (h === 1 ? "1 summer ahead" : `${h} summers ahead`);
+/** How far ahead of the backtest date a summer is: `+1`, `+2`. */
+const horizonText = (h: number) => `+${h}`;
 
 function cellReadout(cell: Cell, mode: Mode, unverified: Caveat | undefined): Readout {
   const { swatch } = cellMark(cell);
@@ -67,7 +69,7 @@ function cellReadout(cell: Cell, mode: Mode, unverified: Caveat | undefined): Re
   const notes: string[] = [];
   if (PRODUCT_NAME[cell.source]) notes.push(PRODUCT_NAME[cell.source]);
   if (cell.leak_note) notes.push(`Leak note: ${cell.leak_note}`);
-  if (cell.verified === false && unverified) notes.push(`${unverified.label}: ${unverified.text}`);
+  if (cell.verified === false && unverified) notes.push(unverified.label);
   return { title: `${cellName(cell)} · summer ${cell.target_year}`, rows, notes };
 }
 
@@ -247,7 +249,24 @@ function AsOfChart({ groups, unverified }: { groups: TargetGroup[]; unverified: 
   );
 }
 
-/** The selected date's cells as rows, with each row's leak note in view. */
+/** A row whose model run took an input from after its date: an amber badge, the API's note in its tooltip. */
+function LeakBadge({ note }: { note: string }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span tabIndex={0} className="cursor-help">
+          <AppBadge state="alert">Leak</AppBadge>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs text-xs">
+        <p className="font-medium">Input from after this date</p>
+        <p>{note}</p>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+/** The selected date's cells as rows, a leak note one hover away on its badge. */
 function CellsTable({ groups }: { groups: TargetGroup[] }) {
   const th = "py-2 pr-3 font-medium";
   const num = "py-2 pr-3 text-right tabular-nums whitespace-nowrap align-top";
@@ -263,7 +282,7 @@ function CellsTable({ groups }: { groups: TargetGroup[] }) {
             <th className={cn(th, "text-right")}>Actual</th>
             <th className={cn(th, "text-right")}>Error</th>
             <th className={cn(th, "text-left")}>In band</th>
-            <th className={cn(th, "text-left")}>Leak note</th>
+            <th className={cn(th, "w-px text-left")}>Leak</th>
           </tr>
         </thead>
         <tbody>
@@ -299,7 +318,9 @@ function CellsTable({ groups }: { groups: TargetGroup[] }) {
                     <AppBadge state={cell.in_band ? "active" : "inactive"}>{cell.in_band ? "Inside" : "Outside"}</AppBadge>
                   )}
                 </td>
-                <td className="max-w-80 py-2 pr-3 align-top text-muted-foreground">{cell.leak_note ?? GAP}</td>
+                <td className="py-2 pr-3 align-top">
+                  {cell.leak_note ? <LeakBadge note={cell.leak_note} /> : <span className="text-muted-foreground">{GAP}</span>}
+                </td>
               </tr>
             )),
           )}
@@ -324,11 +345,11 @@ export function AsOfBody({ data, meta }: { data: PeakData; meta: Meta }) {
 
   const legend: LegendItem[] = [
     { key: "model", label: "basecast P50 and P10–P90", swatch: "bar", color: SERIES.basecast[mode] },
-    ...(hasOrganic ? [{ key: "organic", label: "basecast, organic only (ablation)", swatch: "hollow" as const, color: SERIES.organic[mode] }] : []),
+    ...(hasOrganic ? [{ key: "organic", label: "basecast, organic only", swatch: "hollow" as const, color: SERIES.organic[mode] }] : []),
     { key: "ltlf", label: "LTLF", swatch: "dot", color: SERIES.LTLF[mode] },
     ...(hasCdr ? [{ key: "cdr", label: "CDR", swatch: "square" as const, color: SERIES.CDR[mode] }] : []),
     ...(hasPrelim ? [{ key: "prelim", label: "Preliminary LTLF", swatch: "diamond" as const, color: SERIES.LTLF[mode] }] : []),
-    { key: "actual", label: anyPreliminary ? "Actual (dashed while preliminary)" : "Actual", swatch: anyPreliminary ? "dashed" : "line", color: ACTUAL[mode] },
+    { key: "actual", label: anyPreliminary ? "Actual (preliminary)" : "Actual", swatch: anyPreliminary ? "dashed" : "line", color: ACTUAL[mode] },
   ];
 
   return (

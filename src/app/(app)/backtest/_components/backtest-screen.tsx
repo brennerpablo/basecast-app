@@ -94,6 +94,7 @@ export function BacktestScreen() {
       pending={pending}
     />
   );
+  // The provenance once per tab, at its foot: each tab reads one response, and only one tab shows at a time.
   const foot = (meta: Meta) => <Provenance meta={meta} className="border-t border-border pt-3" />;
 
   const tabs: { value: string; label: string; icon: LucideIcon; content: React.ReactNode }[] = [
@@ -108,16 +109,15 @@ export function BacktestScreen() {
             query={peak}
             compact={false}
             isEmpty={(d) => d.fan.length === 0}
-            empty={{ title: "No forecast of the latest summer", description: "The fan mart has no rows yet." }}
+            empty={{ title: "No forecast of the latest summer" }}
             skeleton={<Skeleton className="h-120 w-full" />}
           >
             {(d, meta) => (
               <div className={cn("space-y-4 transition-opacity", pending && "opacity-60")}>
                 <FanStats data={d} meta={meta} asOf={selected ?? d.as_of} />
                 <SectionCard
-                  title={`Every forecast of the summer ${d.fan_target_year} peak`}
+                  title={`Summer ${d.fan_target_year} peak forecasts`}
                   icon={Target}
-                  subtitle="The official vintages by publication date, ERCOT's own range, and basecast at each backtest date."
                   action={
                     <SegmentedControl
                       label="Fan view"
@@ -156,9 +156,8 @@ export function BacktestScreen() {
             {(d, meta) => (
               <div className={cn("space-y-4 transition-opacity", pending && "opacity-60")}>
                 <SectionCard
-                  title={selected ? `As of ${formatDate(selected)}: basecast against the official vintages` : "One backtest date"}
+                  title={selected ? `As of ${formatDate(selected)}` : "Backtest date"}
                   icon={CalendarRange}
-                  subtitle="Every summer the date could forecast, the official vintage published by then, and the actual."
                 >
                   <AsOfBody data={d} meta={meta} />
                 </SectionCard>
@@ -183,7 +182,7 @@ export function BacktestScreen() {
         >
           {(d, meta) => (
             <div className="space-y-4">
-              <ScoresBody data={d} meta={meta} />
+              <ScoresBody data={d} />
               {foot(meta)}
             </div>
           )}
@@ -220,9 +219,8 @@ export function BacktestScreen() {
                 <div className="space-y-4">
                   <OfficialStats data={d} view={view} />
                   <SectionCard
-                    title="How far off the official forecasts were"
+                    title="Official forecast error (% of actual peak)"
                     icon={Grid3x3}
-                    subtitle="Every official vintage against every summer it forecast, as the error in % of the actual peak."
                     caveats={meta.caveats}
                   >
                     <OfficialErrorsBody data={d} meta={meta} view={view} />
@@ -252,7 +250,6 @@ export function BacktestScreen() {
               <SectionCard
                 title="Generation queue backtest"
                 icon={Factory}
-                subtitle="The adjusted generation queue rerun on past queue reports: predicted against built, the raw queue and the developers' own dates."
                 caveats={meta.caveats}
                 action={
                   <Link
@@ -276,10 +273,7 @@ export function BacktestScreen() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Backtest"
-        subtitle="How our peak model would have done at each past date, against ERCOT's official forecasts and the actual, and how the adjusted generation queue did against what was built."
-      >
+      <PageHeader title="Backtest">
         <CaveatBadges caveats={peak.data?.meta.caveats} />
       </PageHeader>
       <Tabs urlParam="tab" defaultValue="summer" className="space-y-6">

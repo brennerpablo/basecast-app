@@ -3,8 +3,8 @@
 import * as SliderPrimitive from "@radix-ui/react-slider";
 
 import { AppBadge } from "@/components/components-app/ui/badge";
-import { Filter } from "@/components/product/filter";
 import { formatDate } from "@/components/product/format";
+import { InfoTip } from "@/components/product/info-tip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -35,7 +35,12 @@ export function AsOfBar({
   const index = dates && value ? dates.indexOf(value) : -1;
   const last = (dates?.length ?? 1) - 1;
   return (
-    <Filter label="Backtest date">
+    // `Filter`'s markup, with the label's InfoTip beside it (`Filter` takes a plain string label).
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+        Backtest date
+        <InfoTip label="About the backtest date">The model rerun at each date; leak notes flag any input it took from later.</InfoTip>
+      </span>
       <div className="flex flex-col gap-3 rounded-md border border-border bg-card px-4 py-3 lg:flex-row lg:items-center">
       {!dates || index < 0 ? (
         <Skeleton className="h-10 flex-1" />
@@ -94,7 +99,6 @@ export function AsOfBar({
         )}
       </div>
       </div>
-      <p className="text-xs text-muted-foreground">The model rerun at each date; leak notes flag any input it took from later.</p>
-    </Filter>
+    </div>
   );
 }

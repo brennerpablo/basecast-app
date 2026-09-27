@@ -5,9 +5,9 @@ import { FlaskConical, Landmark, Scale, Table2, Target } from "lucide-react";
 import { AppBadge } from "@/components/components-app/ui/badge";
 import { DashboardStatCard } from "@/components/product/dashboard-stat-card";
 import { formatPercent, formatWhole, GAP } from "@/components/product/format";
+import { InfoTip } from "@/components/product/info-tip";
 import { SectionCard } from "@/components/product/section-card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { Meta } from "@/lib/bff/envelope";
 import { cn } from "@/lib/utils";
 
 import {
@@ -27,6 +27,9 @@ import { useMode } from "./chart-bits";
 import { type Mode, SERIES } from "./palette";
 
 const th = "py-2 pr-3 font-medium";
+/** How the error and its bias are read, one hover away from the comparison. */
+const ERROR_DEFINITION = "Error = (forecast − actual) ÷ actual; positive bias = ran high.";
+const COVERAGE_DEFINITION = "Share of cells whose actual fell inside our P10–P90";
 const num = "py-2 pr-3 text-right tabular-nums whitespace-nowrap";
 
 function EraName({ era, eras }: { era: string; eras: Era[] }) {
@@ -94,7 +97,7 @@ function Comparisons({ data, mode }: { data: PeakData; mode: Mode }) {
             <th className={cn(th, "text-left")}>Against</th>
             <th className={cn(th, "text-left")}>Era</th>
             <th className={cn(th, "text-right")}>Cells</th>
-            <th className={cn(th, "text-left")}>Mean absolute error (basecast, then official)</th>
+            <th className={cn(th, "text-left")}>MAPE</th>
             <th className={cn(th, "text-right")}>Bias, basecast</th>
             <th className={cn(th, "text-right")}>Bias, official</th>
             <th className={cn(th, "text-left")}>Lower error</th>
@@ -155,9 +158,19 @@ function AllScores({ data }: { data: PeakData }) {
             <th className={cn(th, "text-left")}>Era</th>
             <th className={cn(th, "text-left")}>Source</th>
             <th className={cn(th, "text-right")}>Cells</th>
-            <th className={cn(th, "text-right")}>Mean absolute error</th>
-            <th className={cn(th, "text-right")}>Bias</th>
-            <th className={cn(th, "text-right")}>Band coverage</th>
+            <th className={cn(th, "text-right")}>MAPE</th>
+            <th className={cn(th, "text-right")}>
+              <span className="inline-flex items-center justify-end gap-1">
+                Bias
+                <InfoTip label="About bias">{ERROR_DEFINITION}</InfoTip>
+              </span>
+            </th>
+            <th className={cn(th, "text-right")}>
+              <span className="inline-flex items-center justify-end gap-1">
+                Band coverage
+                <InfoTip label="About band coverage">{COVERAGE_DEFINITION}</InfoTip>
+              </span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -192,7 +205,7 @@ function ScoreStats({ data }: { data: PeakData }) {
     { source: MODEL, icon: Target, note: (s: Score) => `Bias ${formatPercent(s.bias_pct, { signed: true })} · band coverage ${s.coverage == null ? GAP : formatPercent(s.coverage, { ratio: true })} · ${formatWhole(s.n)} cells` },
     { source: "LTLF", icon: Landmark, note: (s: Score) => `Bias ${formatPercent(s.bias_pct, { signed: true })} · ${formatWhole(s.n)} cells` },
     { source: "CDR", icon: Landmark, note: (s: Score) => `Bias ${formatPercent(s.bias_pct, { signed: true })} · ${formatWhole(s.n)} cells` },
-    { source: ORGANIC, icon: FlaskConical, note: (s: Score) => `No large-load layer (ablation) · ${formatWhole(s.n)} cells` },
+    { source: ORGANIC, icon: FlaskConical, note: (s: Score) => `No large-load layer · ${formatWhole(s.n)} cells` },
   ];
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
@@ -203,7 +216,7 @@ function ScoreStats({ data }: { data: PeakData }) {
             key={source}
             layout="stacked"
             icon={<Icon className="size-4" aria-hidden />}
-            title={`${sourceLabel(source)}, mean absolute error`}
+            title={`${sourceLabel(source)} MAPE`}
             value={score ? formatPercent(score.mape) : GAP}
             hint={score ? note(score) : "Not scored in this build"}
           />
@@ -217,7 +230,7 @@ function ScoreStats({ data }: { data: PeakData }) {
  * The scores over every backtest date: the four numbers on top, then basecast against each official source on
  * the same cells, split by era (including the one where ERCOT did better), and every source's own score.
  */
-export function ScoresBody({ data, meta }: { data: PeakData; meta: Meta }) {
+export function ScoresBody({ data }: { data: PeakData }) {
   const mode = useMode();
   return (
     <div className="space-y-4">
@@ -225,12 +238,12 @@ export function ScoresBody({ data, meta }: { data: PeakData; meta: Meta }) {
       <SectionCard
         title="basecast against the official forecasts"
         icon={Scale}
-        subtitle="Paired on the same cells (backtest date and target summer), by era; hover an era for where it starts and why. Error = (forecast − actual) ÷ actual; a positive bias ran high."
-        caveats={meta.caveats}
+        subtitle="Paired on the same cells, by era"
+        info={ERROR_DEFINITION}
       >
         <Comparisons data={data} mode={mode} />
       </SectionCard>
-      <SectionCard title="Every source by era" icon={Table2} subtitle="Band coverage is the share of cells whose actual fell inside our P10–P90.">
+      <SectionCard title="Every source by era" icon={Table2}>
         <AllScores data={data} />
       </SectionCard>
     </div>

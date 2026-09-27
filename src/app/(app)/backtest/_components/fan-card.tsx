@@ -210,7 +210,7 @@ function FanLayer({
             textAnchor="end"
             className="fill-foreground text-[11px] font-medium"
           >
-            Preliminary long-term forecast · {formatPower(preliminary.value_mw)}
+            Prelim · {formatPower(preliminary.value_mw)}
           </text>
         </Mark>
       )}
@@ -263,14 +263,14 @@ function SelectedRing({ x, y, r = 8.5 }: { x: number; y: number; r?: number }) {
 
 function rangeVerdict(range: FanPoint, actual: number): string {
   if (range.low_mw == null || range.high_mw == null) return "";
-  if (actual < range.low_mw) return "The actual landed below this range.";
-  if (actual > range.high_mw) return "The actual landed above this range.";
-  return "The actual landed inside this range.";
+  if (actual < range.low_mw) return "Actual below";
+  if (actual > range.high_mw) return "Actual above";
+  return "Actual inside";
 }
 
 function officialReadout(point: FanPoint, targetYear: number, actual: number | null, mode: Mode, usedAt: string | null): Readout {
   const notes = [PRODUCT_NAME[point.product ?? ""]].filter(Boolean) as string[];
-  if (usedAt) notes.push(`The official vintage the backtest as of ${formatDate(usedAt)} scores against.`);
+  if (usedAt) notes.push(`Used at ${formatDate(usedAt)}`);
   return {
     title: point.label,
     rows: [
@@ -288,7 +288,7 @@ function officialReadout(point: FanPoint, targetYear: number, actual: number | n
 }
 
 function modelReadout(point: FanPoint, targetYear: number, actual: number | null, mode: Mode, unverified: Caveat | undefined): Readout {
-  const notes = point.verified === false && unverified ? [`${unverified.label}: ${unverified.text}`] : [];
+  const notes = point.verified === false && unverified ? [unverified.label] : [];
   return {
     title: point.label,
     rows: [
@@ -441,12 +441,13 @@ export function FanBody({
   const inUse = officialsInUse(data.fan, data.cells, targetYear);
 
   const legend: LegendItem[] = [
-    { key: "model", label: "basecast P50, P10–P90 at each backtest date", swatch: "whisker", color: SERIES.basecast[mode] },
+    { key: "model", label: "basecast P50 (P10–P90)", swatch: "whisker", color: SERIES.basecast[mode] },
     { key: "ltlf", label: "LTLF vintages", swatch: "dot", color: SERIES.LTLF[mode] },
     { key: "cdr", label: "CDR vintages", swatch: "square", color: SERIES.CDR[mode] },
     { key: "prelim", label: "Preliminary long-term forecast", swatch: "diamond", color: SERIES.LTLF[mode] },
     { key: "range", label: "ERCOT's projected range", swatch: "bar", color: SERIES.LTLF[mode] },
     { key: "actual", label: parts.actual?.final === false ? "Actual (preliminary)" : "Actual", swatch: parts.actual?.final === false ? "dashed" : "line", color: ACTUAL[mode] },
+    { key: "used", label: "Used at selected date", swatch: "hollow", color: ACTUAL[mode] },
   ];
 
   return (
@@ -462,11 +463,6 @@ export function FanBody({
             preliminaryCaveat={preliminaryCaveat}
             unverifiedCaveat={unverifiedCaveat}
           />
-          <p className="text-xs text-muted-foreground">
-            Each mark is a forecast of the summer {targetYear} peak at the date it was published. The ringed marks are
-            what the backtest date selected above used: our model then, and the official vintages it is scored
-            against.
-          </p>
         </>
       ) : (
         <FanTable fan={data.fan} targetYear={targetYear} actual={actualMw} />
@@ -496,7 +492,6 @@ export function FanStats({
   const preliminaryCaveat = meta.caveats?.find((c) => c.code === "preliminary_actuals");
   const model = modelAt(parts.models, asOf);
   const { preliminary, range } = parts;
-  const miss = preliminary?.value_mw != null && actualMw != null ? preliminary.value_mw - actualMw : null;
 
   return (
   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
@@ -535,14 +530,8 @@ export function FanStats({
         caption={
           preliminary && (
             <>
-              {preliminary.vintage}, {formatDate(preliminary.vintage_date)}.
-              {miss != null && (
-                <>
-                  {" "}
-                  About {Math.abs(Math.round(miss / 1_000))} GW {miss >= 0 ? "above" : "below"} the actual (
-                  {vsActual(preliminary.value_mw, actualMw)}).
-                </>
-              )}
+              {preliminary.vintage} · {formatDate(preliminary.vintage_date)}
+              {actualMw != null && <> · {vsActual(preliminary.value_mw, actualMw)} vs actual</>}
             </>
           )
         }
@@ -562,7 +551,8 @@ export function FanStats({
         caption={
           range && (
             <>
-              {range.vintage}, {formatDate(range.vintage_date)}.{actualMw != null && <> {rangeVerdict(range, actualMw)}</>}
+              {range.vintage} · {formatDate(range.vintage_date)}
+              {actualMw != null && <> · {rangeVerdict(range, actualMw)}</>}
             </>
           )
         }
@@ -582,7 +572,7 @@ export function FanStats({
         caption={
           model && (
             <>
-              P10–P90 {fmtRange(model.low_mw, model.high_mw)} · {vsActual(model.value_mw, actualMw)} vs the actual.
+              P10–P90 {fmtRange(model.low_mw, model.high_mw)} · {vsActual(model.value_mw, actualMw)} vs the actual
             </>
           )
         }
