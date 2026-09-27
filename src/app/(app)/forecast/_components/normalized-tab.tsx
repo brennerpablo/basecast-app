@@ -14,6 +14,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { ChartTooltipCard } from "@/components/product/chart-tooltip";
 import { DataCard } from "@/components/product/data-card";
 import { formatDate, formatPercent, formatPower, GAP } from "@/components/product/format";
 import { SectionCard } from "@/components/product/section-card";
@@ -23,8 +24,6 @@ import type { components } from "@/lib/api/get-data";
 import { useProductQuery } from "@/lib/bff/queries";
 import { type ChartMode, gwTick, INK, SERIES } from "@/lib/charts/palette";
 import { useTheme } from "@/lib/hooks/use-theme";
-
-import { ChartTooltipCard } from "./chart-tooltip";
 
 type Normalized = components["schemas"]["NormalizedLoadData"];
 

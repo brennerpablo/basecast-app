@@ -3,6 +3,7 @@
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { AppBadge } from "@/components/components-app/ui/badge";
+import { ChartTooltipCard } from "@/components/product/chart-tooltip";
 import { DataCard } from "@/components/product/data-card";
 import { formatPercent, formatWhole, GAP } from "@/components/product/format";
 import { SectionCard } from "@/components/product/section-card";
@@ -12,8 +13,6 @@ import { useProductQuery } from "@/lib/bff/queries";
 import { type ChartMode, INK, SERIES } from "@/lib/charts/palette";
 import { useTheme } from "@/lib/hooks/use-theme";
 import { cn } from "@/lib/utils";
-
-import { ChartTooltipCard } from "./chart-tooltip";
 
 type FourCp = components["schemas"]["FourCpData"];
 type Meta = components["schemas"]["Meta"];

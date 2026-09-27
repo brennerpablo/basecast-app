@@ -1,18 +1,22 @@
 "use client";
 
+import { CalendarCheck, Factory } from "lucide-react";
 import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { DataCard } from "@/components/product/data-card";
+import { ChartTooltipCard } from "@/components/product/chart-tooltip";
+import { DashboardStatCard } from "@/components/product/dashboard-stat-card";
+import { QueryBody } from "@/components/product/data-card";
+import { Filter, FilterRow } from "@/components/product/filter";
 import { formatDate, formatPercent, formatWhole, GAP } from "@/components/product/format";
+import { Provenance } from "@/components/product/provenance";
+import { SectionCard } from "@/components/product/section-card";
 import { SegmentedControl } from "@/components/product/segmented-control";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { components } from "@/lib/api/get-data";
 import { useProductQuery } from "@/lib/bff/queries";
 import { type ChartMode, INK, SERIES } from "@/lib/charts/palette";
 import { useTheme } from "@/lib/hooks/use-theme";
-
-import { ChartTooltipCard } from "./chart-tooltip";
 
 type Curves = components["schemas"]["QueueCurvesData"];
 
@@ -44,110 +48,125 @@ export function QueueTab() {
   return (
     <div className="space-y-4">
       {data && (
-        <div className="flex flex-wrap items-center gap-2">
-          <SegmentedControl
-            label="Stage"
-            options={(["entry", "ia"] as const).map((v) => ({ value: v, label: STAGE_LABEL[v] }))}
-            value={state.stage}
-            onChange={(stage) => void setState({ stage: stage === "entry" ? null : stage })}
-          />
-          <SegmentedControl
-            label="Stratum"
-            options={strata.map((v) => ({ value: v, label: STRATUM_LABEL[v] ?? v }))}
-            value={state.stratum}
-            onChange={(stratum) => void setState({ stratum: stratum === "all" ? null : stratum })}
-          />
-          {weightings.length > 1 && (
+        <FilterRow>
+          <Filter label="Stage">
             <SegmentedControl
-              label="Weighting"
-              options={(["mw", "count"] as const).filter((w) => weightings.includes(w)).map((v) => ({ value: v, label: v === "mw" ? "By MW" : "By project count" }))}
-              value={state.weighting}
-              onChange={(weighting) => void setState({ weighting: weighting === "mw" ? null : weighting })}
+              label="Stage"
+              options={(["entry", "ia"] as const).map((v) => ({ value: v, label: STAGE_LABEL[v] }))}
+              value={state.stage}
+              onChange={(stage) => void setState({ stage: stage === "entry" ? null : stage })}
             />
+          </Filter>
+          <Filter label="Fuel">
+            <SegmentedControl
+              label="Fuel"
+              options={strata.map((v) => ({ value: v, label: STRATUM_LABEL[v] ?? v }))}
+              value={state.stratum}
+              onChange={(stratum) => void setState({ stratum: stratum === "all" ? null : stratum })}
+            />
+          </Filter>
+          {weightings.length > 1 && (
+            <Filter label="Measure">
+              <SegmentedControl
+                label="Measure"
+                options={(["mw", "count"] as const).filter((w) => weightings.includes(w)).map((v) => ({ value: v, label: v === "mw" ? "By MW" : "By project count" }))}
+                value={state.weighting}
+                onChange={(weighting) => void setState({ weighting: weighting === "mw" ? null : weighting })}
+              />
+            </Filter>
           )}
-        </div>
+        </FilterRow>
       )}
-      <DataCard<Curves>
-        title={`Generation queue: what reaches COD, what withdraws · ${STRATUM_LABEL[state.stratum] ?? state.stratum}`}
-        subtitle={data?.as_of_month ? `Cumulative shares since the stage began · ${formatDate(data.as_of_month)} report.` : undefined}
-        query={query}
-        isEmpty={(d) => d.curves.length === 0}
-        skeleton={<Skeleton className="h-80 w-full" />}
-      >
-        {(d) => {
+      <QueryBody<Curves> query={query} compact={false} isEmpty={(d) => d.curves.length === 0} skeleton={<Skeleton className="h-96 w-full" />}>
+        {(d, meta) => {
           const curve = d.curves.find((c) => c.stage === state.stage && c.stratum === state.stratum && c.weighting === state.weighting);
-          if (!curve) return <p className="text-sm text-muted-foreground">No curve for this combination.</p>;
           const milestones = d.milestones.filter(
             (m) => m.stage === state.stage && m.stratum === state.stratum && m.weighting === state.weighting,
           );
-          const points = curve.points.map((p) => ({
+          const points = (curve?.points ?? []).map((p) => ({
             ...p,
             cod: p.supported && p.cif_cod != null ? p.cif_cod * 100 : null,
             withdrawn: p.supported && p.cif_withdrawn != null ? p.cif_withdrawn * 100 : null,
           }));
-          const cut = curve.points.find((p) => !p.supported);
+          const cut = curve?.points.find((p) => !p.supported);
           return (
             <div className="space-y-4">
-              <div className="h-80 w-full">
-                <ResponsiveContainer>
-                  <LineChart data={points} margin={{ top: 8, right: 16, bottom: 12, left: 8 }}>
-                    <CartesianGrid vertical={false} stroke={ink.grid} />
-                    <XAxis
-                      dataKey="month"
-                      type="number"
-                      domain={[0, "dataMax"]}
-                      tickLine={false}
-                      axisLine={{ stroke: ink.axis }}
-                      tick={{ fill: ink.muted, fontSize: 12 }}
-                      label={{ value: "Months since the stage began", position: "insideBottom", offset: -8, fill: ink.muted, fontSize: 11 }}
-                    />
-                    <YAxis tickFormatter={(v: number) => `${v}%`} tickLine={false} axisLine={false} width={44} tick={{ fill: ink.muted, fontSize: 12 }} />
-                    <Tooltip
-                      content={({ active, payload }) => {
-                        if (!active || !payload?.length) return null;
-                        const p = payload[0].payload as (typeof points)[number];
-                        return (
-                          <ChartTooltipCard
-                            title={`Month ${p.month}`}
-                            rows={[
-                              { label: "Reached COD", value: p.cod == null ? "Too few at risk" : formatPercent(p.cod), color: codColor },
-                              { label: "Withdrawn", value: p.withdrawn == null ? "Too few at risk" : formatPercent(p.withdrawn), color: withdrawnColor },
-                              { label: "Still at risk", value: formatWhole(p.at_risk) },
-                            ]}
-                          />
-                        );
-                      }}
-                    />
-                    <Line dataKey="cod" stroke={codColor} strokeWidth={2} dot={false} isAnimationActive={false} />
-                    <Line dataKey="withdrawn" stroke={withdrawnColor} strokeWidth={2} dot={false} isAnimationActive={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <span className="h-0.5 w-4" style={{ background: codColor }} /> Reached commercial operation
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="h-0.5 w-4" style={{ background: withdrawnColor }} /> Withdrawn
-                </span>
-                {cut && <span>Lines stop at month {cut.month}: fewer than 10 projects left at risk.</span>}
-              </div>
               {milestones.length > 0 && (
-                <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
                   {milestones.map((m) => (
-                    <div key={m.month}>
-                      <dt className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">COD within {m.month} months</dt>
-                      <dd className="mt-0.5 text-xl font-semibold tabular-nums">
-                        {m.supported && m.cif_cod != null ? formatPercent(m.cif_cod, { ratio: true }) : GAP}
-                      </dd>
-                    </div>
+                    <DashboardStatCard
+                      key={m.month}
+                      layout="stacked"
+                      icon={<CalendarCheck className="size-4" aria-hidden />}
+                      title={`COD within ${m.month} months`}
+                      value={m.supported && m.cif_cod != null ? formatPercent(m.cif_cod, { ratio: true }) : GAP}
+                      hint={state.weighting === "mw" ? "Share of the MW" : "Share of the projects"}
+                    />
                   ))}
-                </dl>
+                </div>
               )}
+              <SectionCard
+                title={`What reaches COD, what withdraws · ${STRATUM_LABEL[state.stratum] ?? state.stratum}`}
+                icon={Factory}
+                subtitle={d.as_of_month ? `Cumulative shares since the stage began · ${formatDate(d.as_of_month)} report.` : undefined}
+                caveats={meta.caveats}
+              >
+                {!curve ? (
+                  <p className="text-sm text-muted-foreground">No curve for this combination.</p>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="h-80 w-full">
+                      <ResponsiveContainer>
+                        <LineChart data={points} margin={{ top: 8, right: 16, bottom: 12, left: 8 }}>
+                          <CartesianGrid vertical={false} stroke={ink.grid} />
+                          <XAxis
+                            dataKey="month"
+                            type="number"
+                            domain={[0, "dataMax"]}
+                            tickLine={false}
+                            axisLine={{ stroke: ink.axis }}
+                            tick={{ fill: ink.muted, fontSize: 12 }}
+                            label={{ value: "Months since the stage began", position: "insideBottom", offset: -8, fill: ink.muted, fontSize: 11 }}
+                          />
+                          <YAxis tickFormatter={(v: number) => `${v}%`} tickLine={false} axisLine={false} width={44} tick={{ fill: ink.muted, fontSize: 12 }} />
+                          <Tooltip
+                            content={({ active, payload }) => {
+                              if (!active || !payload?.length) return null;
+                              const p = payload[0].payload as (typeof points)[number];
+                              return (
+                                <ChartTooltipCard
+                                  title={`Month ${p.month}`}
+                                  rows={[
+                                    { label: "Reached COD", value: p.cod == null ? "Too few at risk" : formatPercent(p.cod), color: codColor },
+                                    { label: "Withdrawn", value: p.withdrawn == null ? "Too few at risk" : formatPercent(p.withdrawn), color: withdrawnColor },
+                                    { label: "Still at risk", value: formatWhole(p.at_risk) },
+                                  ]}
+                                />
+                              );
+                            }}
+                          />
+                          <Line dataKey="cod" stroke={codColor} strokeWidth={2} dot={false} isAnimationActive={false} />
+                          <Line dataKey="withdrawn" stroke={withdrawnColor} strokeWidth={2} dot={false} isAnimationActive={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <span className="h-0.5 w-4" style={{ background: codColor }} /> Reached commercial operation
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="h-0.5 w-4" style={{ background: withdrawnColor }} /> Withdrawn
+                      </span>
+                      {cut && <span>Lines stop at month {cut.month}: fewer than 10 projects left at risk.</span>}
+                    </div>
+                  </div>
+                )}
+              </SectionCard>
+              <Provenance meta={meta} className="border-t border-border pt-3" />
             </div>
           );
         }}
-      </DataCard>
+      </QueryBody>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { ChartColumn, Files, Info, LineChart as LineChartIcon, Percent } from "lucide-react";
 import { parseAsInteger, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import {
@@ -17,18 +18,20 @@ import {
 } from "recharts";
 
 import { VerifiedBadge } from "@/components/product/caveat-badges";
-import { DataCard } from "@/components/product/data-card";
-import { formatDate, formatPercent, formatPower, GAP } from "@/components/product/format";
+import { ChartTooltipCard } from "@/components/product/chart-tooltip";
+import { DashboardStatCard } from "@/components/product/dashboard-stat-card";
+import { QueryBody } from "@/components/product/data-card";
+import { formatDate, formatPercent, formatPower, formatWhole, GAP } from "@/components/product/format";
+import { Provenance } from "@/components/product/provenance";
 import { SectionCard } from "@/components/product/section-card";
 import { SegmentedControl } from "@/components/product/segmented-control";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { components } from "@/lib/api/get-data";
-import type { Meta } from "@/lib/bff/envelope";
+import type { Caveat } from "@/lib/bff/envelope";
 import { useProductQuery } from "@/lib/bff/queries";
 import { type ChartMode, gwTick, INK, SERIES } from "@/lib/charts/palette";
 import { useTheme } from "@/lib/hooks/use-theme";
-
-import { ChartTooltipCard } from "./chart-tooltip";
+import { cn } from "@/lib/utils";
 
 type LargeLoad = components["schemas"]["LargeLoadData"];
 
@@ -36,7 +39,7 @@ const MONTH = new Intl.DateTimeFormat("en-US", { timeZone: "UTC", month: "short"
 const monthLabel = (iso: string) => MONTH.format(new Date(`${iso.slice(0, 10)}T00:00:00Z`));
 
 /** Promised × approved: for one target year, what each monthly deck promised and what got approved by then. */
-function Realization({ data, meta, mode }: { data: LargeLoad; meta: Meta; mode: ChartMode }) {
+function Realization({ data, mode, caveats }: { data: LargeLoad; mode: ChartMode; caveats?: Caveat[] }) {
   const years = useMemo(() => [...new Set(data.realization.map((r) => r.target_year))].sort(), [data]);
   const [{ target }, setState] = useQueryStates({ target: parseAsInteger });
   const year = target && years.includes(target) ? target : years[0];
@@ -47,6 +50,8 @@ function Realization({ data, meta, mode }: { data: LargeLoad; meta: Meta; mode: 
   return (
     <SectionCard
       title="Promised × approved, by deck"
+      icon={ChartColumn}
+      caveats={caveats}
       subtitle={`What each ERCOT large-load deck promised for December ${year}, and the MW approved to energize by then.`}
       action={
         years.length > 1 && (
@@ -58,7 +63,6 @@ function Realization({ data, meta, mode }: { data: LargeLoad; meta: Meta; mode: 
           />
         )
       }
-      meta={meta}
     >
       <div className="h-72 w-full">
         <ResponsiveContainer>
@@ -122,34 +126,45 @@ function Realization({ data, meta, mode }: { data: LargeLoad; meta: Meta; mode: 
   );
 }
 
-/** The realization ratio band the forecast uses, with the API's definition. */
-function RatioBand({ data, meta }: { data: LargeLoad; meta: Meta }) {
+/** The decks read and the realization ratio band the forecast uses, as stat cards, with the API's definition below. */
+function LargeLoadStats({ data }: { data: LargeLoad }) {
+  const decks = data.deck_vintages ?? [];
   const band = data.ratio_band;
-  if (!band) return null;
+  const ratio = (v: number | null | undefined) => (v == null ? GAP : formatPercent(v, { ratio: true }));
   return (
-    <SectionCard title="Realization ratio" action={<VerifiedBadge verified={band.verified} />} meta={meta}>
-      <dl className="grid grid-cols-3 gap-4">
-        {(
-          [
-            ["P10", band.p10],
-            ["P50", band.p50],
-            ["P90", band.p90],
-          ] as const
-        ).map(([label, value]) => (
-          <div key={label}>
-            <dt className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">{label}</dt>
-            <dd className="mt-0.5 text-2xl font-semibold tabular-nums">{value == null ? GAP : formatPercent(value, { ratio: true })}</dd>
-          </div>
-        ))}
-      </dl>
-      <p className="mt-3 text-xs text-muted-foreground">{band.definition}</p>
-      <p className="mt-2 text-xs text-muted-foreground">From the deck of {formatDate(band.deck_vintage)}, the one the default forecast variant reads.</p>
-    </SectionCard>
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        <DashboardStatCard
+          layout="stacked"
+          icon={<Files className="size-4" aria-hidden />}
+          title="Decks read"
+          value={formatWhole(decks.length)}
+          hint={decks.length ? `${formatDate(decks[0])} – ${formatDate(decks.at(-1))}` : undefined}
+        />
+        <DashboardStatCard layout="stacked" icon={<Percent className="size-4" aria-hidden />} title="Realization ratio, P10" value={ratio(band?.p10)} />
+        <DashboardStatCard
+          layout="stacked"
+          icon={<Percent className="size-4" aria-hidden />}
+          title="Realization ratio, P50"
+          value={ratio(band?.p50)}
+          hint={band ? `Deck of ${formatDate(band.deck_vintage)}` : undefined}
+        />
+        <DashboardStatCard layout="stacked" icon={<Percent className="size-4" aria-hidden />} title="Realization ratio, P90" value={ratio(band?.p90)} />
+      </div>
+      {band?.definition && (
+        <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+          <Info className="mt-px size-3.5 shrink-0" aria-hidden />
+          <span>
+            {band.definition} <VerifiedBadge verified={band.verified} />
+          </span>
+        </p>
+      )}
+    </div>
   );
 }
 
 /** The approved stock month by month against the observed large-load peak, with the dated annotations. */
-function Monthly({ data, meta, mode }: { data: LargeLoad; meta: Meta; mode: ChartMode }) {
+function Monthly({ data, mode }: { data: LargeLoad; mode: ChartMode }) {
   const ink = INK[mode];
   const [stockColor, peakColor] = SERIES[mode];
   const months = data.monthly;
@@ -162,8 +177,8 @@ function Monthly({ data, meta, mode }: { data: LargeLoad; meta: Meta; mode: Char
   return (
     <SectionCard
       title="Approved stock and observed peak"
-      subtitle="MW approved to energize, month by month, against the large loads' observed peak."
-      meta={meta}
+      icon={LineChartIcon}
+      subtitle="MW approved to energize, month by month, against the large loads' observed peak; numbered lines mark the events below."
     >
       <div className="h-72 w-full">
         <ResponsiveContainer>
@@ -216,27 +231,35 @@ function Monthly({ data, meta, mode }: { data: LargeLoad; meta: Meta; mode: Char
         <VerifiedBadge verified={months.every((m) => m.verified !== false)} />
       </div>
       {data.annotations.length > 0 && (
-        <ol className="mt-4 space-y-1.5 text-xs">
+        <ol className="mt-5 divide-y divide-border border-t border-border">
           {data.annotations.map((a) => {
             const n = notes.find((note) => note.date === a.date && note.title === a.title)?.n;
             return (
-              <li key={`${a.date}-${a.title}`} className="flex gap-2">
-                <span className="w-4 shrink-0 text-right font-medium text-muted-foreground tabular-nums">{n ?? "·"}</span>
-                <span>
-                  <span className="font-medium tabular-nums">{formatDate(a.date)}</span> · {a.title}
-                  {a.detail && <span className="text-muted-foreground"> — {a.detail}</span>}
-                  <span className="text-muted-foreground">
-                    {" "}
-                    ·{" "}
+              <li key={`${a.date}-${a.title}`} className="flex gap-3 py-3 text-sm">
+                <span
+                  className={cn(
+                    "flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums",
+                    n ? "bg-muted text-foreground" : "text-muted-foreground",
+                  )}
+                  aria-label={n ? `Marker ${n}` : undefined}
+                >
+                  {n ?? "·"}
+                </span>
+                <div className="min-w-0 space-y-0.5">
+                  <p>
+                    <span className="font-medium tabular-nums">{formatDate(a.date)}</span> · <span className="font-medium">{a.title}</span>
+                  </p>
+                  {a.detail && <p className="text-xs text-muted-foreground">{a.detail}</p>}
+                  <p className="text-xs">
                     {a.source_url ? (
-                      <a href={a.source_url} target="_blank" rel="noreferrer" className="underline hover:text-foreground">
-                        source
+                      <a href={a.source_url} target="_blank" rel="noreferrer" className="text-basecast-brand hover:underline">
+                        Source
                       </a>
                     ) : (
-                      "source not verified"
+                      <span className="text-muted-foreground">Source not verified</span>
                     )}
-                  </span>
-                </span>
+                  </p>
+                </div>
               </li>
             );
           })}
@@ -246,38 +269,26 @@ function Monthly({ data, meta, mode }: { data: LargeLoad; meta: Meta; mode: Char
   );
 }
 
-/** The Large loads tab: promised × approved by deck, the ratio band, the monthly stock and the annotations. */
+/** The Large loads tab: the decks and the ratio band in stat cards, promised × approved by deck, the monthly stock and the annotations. */
 export function LargeLoadsTab() {
   const { resolvedTheme } = useTheme();
   const mode: ChartMode = resolvedTheme === "dark" ? "dark" : "light";
   const query = useProductQuery<LargeLoad>("forecasts/large-load");
-  const envelope = query.data;
   return (
-    <div className="space-y-4">
-      <DataCard<LargeLoad>
-        title="Large loads: promised, approved, energized"
-        subtitle="ERCOT's large-load decks, read month by month: what was promised and what got approved."
-        query={query}
-        isEmpty={(d) => d.realization.length === 0 && d.monthly.length === 0}
-        skeleton={<Skeleton className="h-24 w-full" />}
-      >
-        {() => (
-          <p className="text-sm text-muted-foreground">
-            {envelope?.data.deck_vintages?.length
-              ? `${envelope.data.deck_vintages.length} decks, from ${formatDate(envelope.data.deck_vintages[0])} to ${formatDate(envelope.data.deck_vintages.at(-1))}.`
-              : GAP}
-          </p>
-        )}
-      </DataCard>
-      {envelope && (
-        <>
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-            <Realization data={envelope.data} meta={envelope.meta} mode={mode} />
-            <RatioBand data={envelope.data} meta={envelope.meta} />
-          </div>
-          <Monthly data={envelope.data} meta={envelope.meta} mode={mode} />
-        </>
+    <QueryBody<LargeLoad>
+      query={query}
+      compact={false}
+      isEmpty={(d) => d.realization.length === 0 && d.monthly.length === 0}
+      skeleton={<Skeleton className="h-96 w-full" />}
+    >
+      {(d, meta) => (
+        <div className="space-y-4">
+          <LargeLoadStats data={d} />
+          <Realization data={d} mode={mode} caveats={meta.caveats} />
+          <Monthly data={d} mode={mode} />
+          <Provenance meta={meta} className="border-t border-border pt-3" />
+        </div>
       )}
-    </div>
+    </QueryBody>
   );
 }
