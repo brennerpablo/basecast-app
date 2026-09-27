@@ -1,13 +1,42 @@
 "use client";
 
 import type { UseQueryResult } from "@tanstack/react-query";
-import { parseAsBoolean, parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
+import {
+  ArrowRight,
+  CloudSun,
+  Factory,
+  Gauge,
+  Handshake,
+  Layers,
+  ListOrdered,
+  type LucideIcon,
+  Map as MapIcon,
+  MapPin,
+  MapPinOff,
+  Percent,
+  ScanSearch,
+  Server,
+  ShieldCheck,
+  Store,
+  Target,
+  Trophy,
+} from "lucide-react";
+import Link from "next/link";
+import { createSerializer, parseAsBoolean, parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import { useCallback, useMemo, useState } from "react";
 
+import { Tabs, TabsList, TabsTrigger } from "@/components/components-app/ui/tabs";
+import { type CountyHover, CountyMap } from "@/components/maps/county-map";
+import { CONTENT_SWAP, PANEL_ENTER, PANEL_EXIT, usePresence } from "@/components/motion/presence";
 import { CaveatBadges, VerifiedBadge } from "@/components/product/caveat-badges";
-import { DataCard, MartNotBuiltState } from "@/components/product/data-card";
-import { formatDate, formatPercent, formatPower } from "@/components/product/format";
+import { DashboardStatCard } from "@/components/product/dashboard-stat-card";
+import { MartNotBuiltState, QueryBody } from "@/components/product/data-card";
+import { Filter, FilterRow } from "@/components/product/filter";
+import { formatDate, formatPercent, formatPower, formatWhole, GAP } from "@/components/product/format";
+import { KpiItem } from "@/components/product/kpi-item";
+import { PageHeader } from "@/components/product/page-header";
 import { Provenance } from "@/components/product/provenance";
+import { SectionCard } from "@/components/product/section-card";
 import { SegmentedControl } from "@/components/product/segmented-control";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
@@ -17,9 +46,11 @@ import { useProductQuery } from "@/lib/bff/queries";
 import type { Mode } from "@/lib/explorer/colors";
 import {
   CHANNEL_LABEL,
+  type ChannelList,
   type CountiesData,
   type CountyRow,
   dataCenterCount,
+  type Layer,
   LAYER_LABEL,
   LAYERS,
   LIST_LABEL,
@@ -31,10 +62,12 @@ import {
   queueValue,
   type ZonesData,
 } from "@/lib/explorer/layers";
+import { acquisitionSummary, dataCenterSummary, queueSummary } from "@/lib/explorer/summary";
 import { useTheme } from "@/lib/hooks/use-theme";
+import { cn } from "@/lib/utils";
 
-import { type CountyHover, CountyMap } from "./county-map";
 import { CountyPanel, STRATUM_LABEL } from "./county-panel";
+import { CountyTable } from "./county-table";
 import { AcquisitionLegend, SwatchLegend } from "./map-legend";
 
 type QueueBacktest = components["schemas"]["QueueBacktestData"];
@@ -87,16 +120,27 @@ function QueueCredibility() {
   const raw = range(data.county_rank.map((r) => r.rho_raw ?? Number.NaN));
   if (!statewide.length && !adj) return null;
   return (
-    <p className="text-xs text-muted-foreground">
-      <span className="font-medium text-foreground">How far to trust it.</span>{" "}
-      {statewide.length > 0 && (
-        <>
-          Backtest of the generation queue over {statewide[0].window_months} months: predicted vs built{" "}
-          {statewide.map((r) => `${formatPercent(r.error_pct, { signed: true })} (${formatDate(r.report_month)})`).join(", ")}.{" "}
-        </>
-      )}
-      {adj && raw && <>County rank correlation (Spearman) {adj} adjusted vs {raw} raw.</>}
-    </p>
+    <SectionCard
+      title="How far to trust it"
+      icon={ShieldCheck}
+      subtitle={
+        statewide.length > 0
+          ? `The same method run from past queue snapshots: predicted vs built over the next ${statewide[0].window_months} months.`
+          : undefined
+      }
+      action={
+        <Link href="/backtest" className="inline-flex items-center gap-1 text-xs font-medium text-basecast-brand hover:underline">
+          Backtest <ArrowRight className="size-3" aria-hidden />
+        </Link>
+      }
+    >
+      <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+        {statewide.map((r) => (
+          <KpiItem key={r.report_month} label={`${formatDate(r.report_month)} snapshot`} value={formatPercent(r.error_pct, { signed: true })} />
+        ))}
+        {adj && raw && <KpiItem label="County rank correlation" value={`${adj} adjusted · ${raw} raw`} />}
+      </div>
+    </SectionCard>
   );
 }
 
@@ -216,13 +260,119 @@ function HoverCard({
   );
 }
 
-/** /explorer: the Texas counties by acquisition priority, generation queue or new data centers. */
+const LAYER_ICON: Record<Layer, LucideIcon> = {
+  acquisition: Target,
+  queue: Factory,
+  "data-centers": Server,
+  zones: CloudSun,
+};
+
+/** The layer's statewide numbers, as stat cards; the channel lists double as the list filter. */
+function LayerStats({
+  rows,
+  layer,
+  list,
+  naics,
+  horizon,
+  loading,
+  onList,
+}: {
+  rows: CountyRow[];
+  layer: Layer;
+  list: ChannelList;
+  naics: boolean;
+  horizon: number | undefined;
+  loading: boolean;
+  onList: (list: ChannelList) => void;
+}) {
+  const grid = "grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4";
+  if (layer === "acquisition") {
+    const s = acquisitionSummary(rows);
+    const toggle = (target: ChannelList) => () => onList(list === target ? "all" : target);
+    return (
+      <div className={grid}>
+        <DashboardStatCard
+          layout="stacked" icon={<MapIcon className="size-4" aria-hidden />} title="Counties scored" value={formatWhole(s.scored)} isLoading={loading} />
+        <DashboardStatCard
+          layout="stacked" icon={<Trophy className="size-4" aria-hidden />} title="Top class (5 of 5)" value={formatWhole(s.topClass)} isLoading={loading} />
+        <DashboardStatCard
+          layout="stacked"
+          icon={<Store className="size-4" aria-hidden />}
+          title="Retail-direct list"
+          value={formatWhole(s.retail)}
+          isLoading={loading}
+          isActive={list === "retail"}
+          onClick={toggle("retail")}
+        />
+        <DashboardStatCard
+          layout="stacked"
+          icon={<Handshake className="size-4" aria-hidden />}
+          title="Partnership list"
+          value={formatWhole(s.partnership)}
+          isLoading={loading}
+          isActive={list === "partnership"}
+          onClick={toggle("partnership")}
+        />
+      </div>
+    );
+  }
+  if (layer === "queue") {
+    const s = queueSummary(rows);
+    return (
+      <div className={grid}>
+        <DashboardStatCard
+          layout="stacked" icon={<Factory className="size-4" aria-hidden />} title="Raw queue" value={formatPower(s.rawMw)} isLoading={loading} />
+        <DashboardStatCard
+          layout="stacked"
+          icon={<Gauge className="size-4" aria-hidden />}
+          title={horizon ? `Adjusted, Dec ${horizon}` : "Adjusted"}
+          value={formatPower(s.adjMw)}
+          isLoading={loading}
+        />
+        <DashboardStatCard
+          layout="stacked"
+          icon={<Percent className="size-4" aria-hidden />}
+          title="Adjusted ÷ raw"
+          value={s.ratio == null ? GAP : formatPercent(s.ratio, { ratio: true })}
+          isLoading={loading}
+        />
+        <DashboardStatCard
+          layout="stacked" icon={<Layers className="size-4" aria-hidden />} title="Projects" value={formatWhole(s.projects)} isLoading={loading} />
+      </div>
+    );
+  }
+  if (layer === "data-centers") {
+    const s = dataCenterSummary(rows, naics);
+    return (
+      <div className={grid}>
+        <DashboardStatCard
+          layout="stacked" icon={<Server className="size-4" aria-hidden />} title="New sites since 2025" value={formatWhole(s.sites)} isLoading={loading} />
+        <DashboardStatCard
+          layout="stacked" icon={<MapPin className="size-4" aria-hidden />} title="Counties with a site" value={formatWhole(s.counties)} isLoading={loading} />
+        <DashboardStatCard
+          layout="stacked" icon={<ScanSearch className="size-4" aria-hidden />} title="Matched on NAICS only" value={formatWhole(s.naicsOnly)} isLoading={loading} />
+        <DashboardStatCard
+          layout="stacked" icon={<MapPinOff className="size-4" aria-hidden />} title="Outside ERCOT" value={formatWhole(s.outside)} isLoading={loading} />
+      </div>
+    );
+  }
+  return null;
+}
+
+const explorerUrl = createSerializer(explorerParsers);
+
+/**
+ * /explorer: the Texas counties by acquisition priority, generation queue, new data centers or grid layers
+ * by zone, one line tab each (`?layer=`). Under the tabs: the layer's filters and stat cards, the map, the
+ * layer's own cards and the counties as a table; the clicked county opens beside them (`?county=`).
+ */
 export function ExplorerScreen() {
   const [state, setState] = useQueryStates(explorerParsers);
   const { resolvedTheme } = useTheme();
   const mode: Mode = resolvedTheme === "dark" ? "dark" : "light";
   const [hover, setHover] = useState<CountyHover | null>(null);
   const county = state.county && FIPS.test(state.county) ? state.county : null;
+  const panel = usePresence(county);
 
   const counties = useProductQuery<CountiesData>(
     "geo/counties",
@@ -232,7 +382,6 @@ export function ExplorerScreen() {
   const data = counties.data?.data;
   const rows = useMemo(() => data?.items ?? [], [data]);
   const byFips = useMemo(() => new Map(rows.map((r) => [r.county_fips, r])), [rows]);
-  const options = { layer: state.layer, list: state.list, metric: state.metric, naics: state.naics };
   const zones = useProductQuery<ZonesData>("geo/zones", undefined, { enabled: state.layer === "zones", throwOnError: false });
   const zoneLayers = zones.data?.data.layers ?? [];
   const zoneLayer = zoneLayers.find((l) => l.measure === state.measure) ?? zoneLayers[0];
@@ -250,141 +399,208 @@ export function ExplorerScreen() {
     [rows, state.layer, state.list, state.metric, state.naics, mode, zoneLayer, named],
   );
   const onSelect = useCallback((fips: string) => void setState({ county: fips }), [setState]);
+  const hrefFor = useCallback((fips: string) => `/explorer${explorerUrl({ ...state, county: fips })}`, [state]);
 
   const hovered = hover ? byFips.get(hover.fips) : undefined;
   const shownCaveats = [...LAYER_CAVEATS[state.layer], ...ALWAYS];
+  const caveats = counties.data?.meta.caveats?.filter((c) => shownCaveats.includes(c.code));
+  const LayerIcon = LAYER_ICON[state.layer];
 
-  const controls = (
-    <div className="flex flex-wrap items-center gap-2">
+  const filters = (
+    <FilterRow>
       {state.layer === "acquisition" && (
-        <SegmentedControl
-          label="Channel list"
-          options={LISTS.map((value) => ({ value, label: LIST_LABEL[value] }))}
-          value={state.list}
-          onChange={(list) => void setState({ list: list === "all" ? null : list })}
-        />
+        <Filter label="Channel list">
+          <SegmentedControl
+            label="Channel list"
+            options={LISTS.map((value) => ({ value, label: LIST_LABEL[value] }))}
+            value={state.list}
+            onChange={(list) => void setState({ list: list === "all" ? null : list })}
+          />
+        </Filter>
       )}
       {state.layer === "queue" && data && (
         <>
-          <SegmentedControl
-            label="Metric"
-            options={QUEUE_METRICS.map((value) => ({ value, label: QUEUE_METRIC_LABEL[value] }))}
-            value={state.metric}
-            onChange={(metric) => void setState({ metric: metric === "adjusted" ? null : metric })}
-          />
-          <SegmentedControl
-            label="Horizon"
-            options={data.horizons.map((value) => ({ value, label: `Dec ${value}` }))}
-            value={data.horizon}
-            onChange={(horizon) => void setState({ horizon })}
-          />
-          <SegmentedControl
-            label="Stratum"
-            options={data.strata.map((value) => ({ value, label: STRATUM_LABEL[value] ?? value }))}
-            value={data.stratum}
-            onChange={(stratum) => void setState({ stratum: stratum === "all" ? null : stratum })}
-          />
+          <Filter label="Metric">
+            <SegmentedControl
+              label="Metric"
+              options={QUEUE_METRICS.map((value) => ({ value, label: QUEUE_METRIC_LABEL[value] }))}
+              value={state.metric}
+              onChange={(metric) => void setState({ metric: metric === "adjusted" ? null : metric })}
+            />
+          </Filter>
+          <Filter label="Horizon">
+            <SegmentedControl
+              label="Horizon"
+              options={data.horizons.map((value) => ({ value, label: `Dec ${value}` }))}
+              value={data.horizon}
+              onChange={(horizon) => void setState({ horizon })}
+            />
+          </Filter>
+          <Filter label="Stratum">
+            <SegmentedControl
+              label="Stratum"
+              options={data.strata.map((value) => ({ value, label: STRATUM_LABEL[value] ?? value }))}
+              value={data.stratum}
+              onChange={(stratum) => void setState({ stratum: stratum === "all" ? null : stratum })}
+            />
+          </Filter>
         </>
       )}
       {state.layer === "zones" && zoneLayers.length > 0 && zoneLayer && (
-        <SegmentedControl
-          label="Measure"
-          options={zoneLayers.map((l) => ({ value: l.measure, label: l.label }))}
-          value={zoneLayer.measure}
-          onChange={(measure) => void setState({ measure: measure === zoneLayers[0].measure ? null : measure })}
-        />
+        <Filter label="Measure">
+          <SegmentedControl
+            label="Measure"
+            options={zoneLayers.map((l) => ({ value: l.measure, label: l.label }))}
+            value={zoneLayer.measure}
+            onChange={(measure) => void setState({ measure: measure === zoneLayers[0].measure ? null : measure })}
+          />
+        </Filter>
       )}
       {state.layer === "data-centers" && (
-        <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
-          <Switch checked={state.naics} onCheckedChange={(on) => void setState({ naics: on ? null : false })} />
-          Include NAICS-only matches
-        </label>
+        <Filter label="Matching">
+          <label className="flex h-8 cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+            <Switch checked={state.naics} onCheckedChange={(on) => void setState({ naics: on ? null : false })} />
+            Include NAICS-only matches
+          </label>
+        </Filter>
       )}
-    </div>
+    </FilterRow>
   );
 
+  const mapTitle =
+    state.layer === "queue" && data
+      ? `Generation queue · ${QUEUE_METRIC_LABEL[state.metric]}${state.metric === "raw" ? "" : ` by Dec ${data.horizon}`}${data.stratum === "all" ? "" : ` · ${STRATUM_LABEL[data.stratum] ?? data.stratum}`}`
+      : state.layer === "zones" && zoneLayer
+        ? `Grid layers by zone · ${zoneLayer.label}`
+        : LAYER_LABEL[state.layer];
+  const mapSubtitle =
+    state.layer === "acquisition"
+      ? "Where to win customers: priority by county, colored by the channel that reaches them."
+      : state.layer === "queue"
+        ? `Raw requests against the MW the model expects to reach commercial operation${data?.queue_as_of_month ? ` · ${formatDate(data.queue_as_of_month)} report` : ""}.`
+        : state.layer === "zones"
+          ? `Each county takes its weather zone's value (${zoneLayer?.method ?? "by zone"}); dashed: counties ERCOT names in its reports.`
+          : "Data-center sites with a TCEQ permit since 2025, counted by county.";
+
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <SegmentedControl
-          label="Layer"
-          options={LAYERS.map((value) => ({ value, label: LAYER_LABEL[value] }))}
-          value={state.layer}
-          onChange={(layer) => void setState({ layer: layer === "acquisition" ? null : layer })}
-        />
-        {controls}
-      </div>
-      <div className={county ? "grid gap-4 xl:grid-cols-[minmax(0,1fr)_400px]" : undefined}>
-        <DataCard<CountiesData>
-          title={
-            state.layer === "queue" && data
-              ? `Generation queue · ${QUEUE_METRIC_LABEL[state.metric]}${state.metric === "raw" ? "" : ` by Dec ${data.horizon}`}${data.stratum === "all" ? "" : ` · ${STRATUM_LABEL[data.stratum] ?? data.stratum}`}`
-              : state.layer === "zones" && zoneLayer
-                ? `Grid layers by zone · ${zoneLayer.label}`
-                : LAYER_LABEL[state.layer]
-          }
-          subtitle={
-            state.layer === "acquisition"
-              ? "Where to win customers: priority by county, colored by the channel that reaches them."
-              : state.layer === "queue"
-                ? `Raw requests against the MW the model expects to reach commercial operation${data?.queue_as_of_month ? ` · ${formatDate(data.queue_as_of_month)} report` : ""}.`
-                : state.layer === "zones"
-                  ? `Each county takes its weather zone's value (${zoneLayer?.method ?? "by zone"}); dashed: counties ERCOT names in its reports.`
-                  : "Data-center sites with a TCEQ permit since 2025, counted by county."
-          }
-          query={counties}
-          omitCaveats={
-            (counties.data?.meta.caveats ?? []).map((c) => c.code).filter((code) => !shownCaveats.includes(code))
-          }
-          skeleton={<Skeleton className="h-[62vh] w-full" />}
-        >
-          {() => (
-            <div className="space-y-4">
-              <div className="relative">
-                <CountyMap
-                  styles={paint.styles}
-                  mode={mode}
-                  selected={county}
-                  onHover={setHover}
-                  onSelect={onSelect}
-                  className="h-[62vh] min-h-[420px] overflow-hidden rounded-md border border-border bg-card"
-                />
-                {hovered && hover && (
-                  <div
-                    className="pointer-events-none absolute z-10 max-w-72 rounded-md border border-border bg-popover px-3 py-2 shadow-md"
-                    style={{ left: hover.x + 14, top: hover.y + 14 }}
-                  >
-                    <HoverCard
-                      row={hovered}
-                      layer={state.layer}
-                      metric={options.metric}
-                      naics={options.naics}
-                      zone={zoneLayer}
-                      namedCounty={zones.data?.data.counties.find((c) => c.county_fips === hovered.county_fips)}
+    <div className="space-y-6">
+      <PageHeader
+        title="Explorer"
+        subtitle="Texas by county: where to win customers, what the generation queue will really build, where data centers land, and the grid by weather zone."
+      >
+        <CaveatBadges caveats={caveats} />
+      </PageHeader>
+      {/* The layer lives in the URL; the map sits outside the tabs so a switch repaints it without a reload. */}
+      <Tabs urlParam="layer" defaultValue="acquisition">
+        <TabsList variant="line" color="brand" className="max-w-full overflow-x-auto">
+          {LAYERS.map((layer) => {
+            const Icon = LAYER_ICON[layer];
+            return (
+              <TabsTrigger key={layer} value={layer} className="shrink-0">
+                <Icon className="mr-1.5 size-3.5" aria-hidden />
+                {LAYER_LABEL[layer]}
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+      </Tabs>
+      {filters}
+      <LayerStats
+        rows={rows}
+        layer={state.layer}
+        list={state.list}
+        naics={state.naics}
+        horizon={data?.horizon}
+        loading={!data}
+        onList={(list) => void setState({ list: list === "all" ? null : list })}
+      />
+      {/* Two columns always, the panel's from 0 to 400 px, so the map narrows smoothly as the county opens. */}
+      <div
+        className={cn(
+          "grid gap-y-4 transition-[grid-template-columns,column-gap] duration-300 ease-out motion-reduce:transition-none xl:items-start",
+          panel.shown && !panel.closing ? "xl:grid-cols-[minmax(0,1fr)_400px] xl:gap-x-4" : "xl:grid-cols-[minmax(0,1fr)_0px] xl:gap-x-0",
+        )}
+      >
+        <div className="min-w-0 space-y-4">
+          <SectionCard title={mapTitle} icon={LayerIcon} subtitle={mapSubtitle}>
+            <QueryBody<CountiesData> query={counties} skeleton={<Skeleton className="h-[62vh] w-full" />}>
+              {() => (
+                <div className="space-y-4">
+                  <div className="relative">
+                    <CountyMap
+                      styles={paint.styles}
+                      mode={mode}
+                      selected={county}
+                      onHover={setHover}
+                      onSelect={onSelect}
+                      className="h-[62vh] min-h-[420px] overflow-hidden rounded-md border border-border bg-card"
                     />
+                    {hovered && hover && (
+                      <div
+                        className="pointer-events-none absolute z-10 max-w-72 rounded-md border border-border bg-popover px-3 py-2 shadow-md"
+                        style={{ left: hover.x + 14, top: hover.y + 14 }}
+                      >
+                        <HoverCard
+                          row={hovered}
+                          layer={state.layer}
+                          metric={state.metric}
+                          naics={state.naics}
+                          zone={zoneLayer}
+                          namedCounty={zones.data?.data.counties.find((c) => c.county_fips === hovered.county_fips)}
+                        />
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              {state.layer === "acquisition" && data ? (
-                <AcquisitionLegend breaks={data.legend.breaks} mode={mode} />
-              ) : (
-                <SwatchLegend items={paint.legend} mode={mode} />
-              )}
-              {state.layer === "zones" && <ZoneTable query={zones} layer={zoneLayer} />}
-              {state.layer === "queue" && (
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">
-                    Rank change is the county&apos;s rank by raw MW minus its rank by adjusted MW: positive moves up once
-                    adjusted.
-                  </p>
-                  <QueueCredibility />
+                  {state.layer === "acquisition" && data ? (
+                    <AcquisitionLegend breaks={data.legend.breaks} mode={mode} />
+                  ) : (
+                    <SwatchLegend items={paint.legend} mode={mode} />
+                  )}
                 </div>
               )}
-            </div>
+            </QueryBody>
+          </SectionCard>
+          {state.layer === "zones" && (
+            <SectionCard title="Zones" icon={CloudSun} subtitle={zoneLayer ? `${zoneLayer.label}, by weather zone.` : undefined}>
+              <ZoneTable query={zones} layer={zoneLayer} />
+            </SectionCard>
           )}
-        </DataCard>
-        {county && <CountyPanel fips={county} mode={mode} onClose={() => void setState({ county: null })} />}
+          {state.layer === "queue" && <QueueCredibility />}
+          {state.layer !== "zones" && data && (
+            <SectionCard
+              title="Counties, ranked"
+              icon={ListOrdered}
+              subtitle={
+                state.layer === "acquisition"
+                  ? "In the layer's order; a county's name opens it beside the map."
+                  : state.layer === "queue"
+                    ? `By ${QUEUE_METRIC_LABEL[state.metric].toLowerCase()}, from the top; a county's name opens it beside the map.`
+                    : "Counties with a new site, the most first; a county's name opens it beside the map."
+              }
+            >
+              <CountyTable
+                rows={rows}
+                layer={state.layer}
+                list={state.list}
+                metric={state.metric}
+                naics={state.naics}
+                horizon={data.horizon}
+                selected={county}
+                hrefFor={hrefFor}
+              />
+            </SectionCard>
+          )}
+        </div>
+        {panel.shown && (
+          <div className={cn("xl:sticky xl:top-4 xl:max-h-[calc(100svh-2rem)] xl:overflow-y-auto", panel.closing ? PANEL_EXIT : PANEL_ENTER)}>
+            {/* A fixed width, so the shrinking column clips the panel instead of reflowing it. */}
+            <div key={panel.shown} className={cn("xl:w-[400px]", CONTENT_SWAP)}>
+              <CountyPanel fips={panel.shown} mode={mode} onClose={() => void setState({ county: null })} />
+            </div>
+          </div>
+        )}
       </div>
+      {counties.data && <Provenance meta={counties.data.meta} className="border-t border-border pt-3" />}
     </div>
   );
 }

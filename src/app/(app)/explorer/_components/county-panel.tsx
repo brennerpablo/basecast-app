@@ -1,11 +1,12 @@
 "use client";
 
-import { ArrowRight, X } from "lucide-react";
+import { ArrowRight, Factory, Landmark, ListOrdered, type LucideIcon, Server, Target, Trophy, Users, X, Zap } from "lucide-react";
 import Link from "next/link";
 
 import { AppBadge } from "@/components/components-app/ui/badge";
 import { MartNotBuiltState } from "@/components/product/data-card";
 import { formatDate, formatPercent, formatPower, formatWhole, GAP } from "@/components/product/format";
+import { KpiItem } from "@/components/product/kpi-item";
 import { SectionCard } from "@/components/product/section-card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,8 +29,32 @@ export const STRATUM_LABEL: Record<string, string> = {
   gas_other: "Gas & other",
 };
 
-function Heading({ children }: { children: React.ReactNode }) {
-  return <h3 className="mb-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">{children}</h3>;
+/** A part of the panel, as Fundsys's detail sections: the icon in a brand-tinted square, the title, a link aside. */
+function PanelSection({
+  icon: Icon,
+  title,
+  aside,
+  children,
+}: {
+  icon: LucideIcon;
+  title: string;
+  aside?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="border-t border-border pt-5">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="shrink-0 rounded-md bg-basecast-brand-surface p-1.5">
+            <Icon className="size-3.5 text-basecast-brand" aria-hidden />
+          </span>
+          <h3 className="text-sm font-semibold">{title}</h3>
+        </div>
+        {aside}
+      </div>
+      {children}
+    </section>
+  );
 }
 
 /** The county's land by channel, as shares of its area. */
@@ -96,7 +121,7 @@ export function CountyPanel({ fips, mode, onClose }: { fips: string; mode: Mode;
   return (
     <SectionCard
       title={
-        <span className="text-base">
+        <span className="text-lg">
           {detail.county_name} County <span className="font-mono text-xs font-normal text-muted-foreground">{detail.county_fips}</span>
         </span>
       }
@@ -107,54 +132,61 @@ export function CountyPanel({ fips, mode, onClose }: { fips: string; mode: Mode;
     >
       <div className="space-y-5">
         {a && (
-          <section>
-            <Heading>Acquisition priority</Heading>
-            <p className="flex items-baseline gap-2">
-              <span className="text-2xl font-semibold tabular-nums">{a.priority.toFixed(2)}</span>
-              <span className="text-sm text-muted-foreground">
-                market {a.market_score.toFixed(2)} × grid {a.grid_factor.toFixed(2)}
-              </span>
-            </p>
-            <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-              <AppBadge state="meta">Rank {a.rank}</AppBadge>
-              <AppBadge state="meta">Class {a.priority_class} of 5</AppBadge>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+              <KpiItem icon={Target} label="Acquisition priority" value={a.priority.toFixed(2)} />
+              <KpiItem icon={Trophy} label="Rank" value={`#${a.rank} · class ${a.priority_class} of 5`} />
+              <KpiItem icon={Users} label="Market score" value={a.market_score.toFixed(2)} />
+              <KpiItem icon={Zap} label="Grid factor" value={`× ${a.grid_factor.toFixed(2)}`} />
+            </div>
+            <p className="flex flex-wrap items-center gap-1.5">
               <AppBadge state="meta">{CHANNEL_LABEL[a.channel]}</AppBadge>
               {a.retail_rank != null && <AppBadge state="meta">Retail list #{a.retail_rank}</AppBadge>}
               {a.partner_rank != null && <AppBadge state="meta">Partnership list #{a.partner_rank}</AppBadge>}
             </p>
-            {(a.drivers.length > 0 || a.drags.length > 0) && (
-              <div className="mt-3 space-y-1.5 text-xs">
-                {a.drivers.length > 0 && (
-                  <p className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-muted-foreground">Drivers</span>
-                    {a.drivers.map((d) => (
-                      <AppBadge key={d} state="active">
-                        {signal(d)}
-                      </AppBadge>
-                    ))}
-                  </p>
-                )}
-                {a.drags.length > 0 && (
-                  <p className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-muted-foreground">Drags</span>
-                    {a.drags.map((d) => (
-                      <AppBadge key={d} state="alert">
-                        {signal(d)}
-                      </AppBadge>
-                    ))}
-                  </p>
-                )}
-              </div>
-            )}
-            <div className="mt-3">
-              <p className="mb-1.5 text-xs text-muted-foreground">Channels, by area</p>
-              <ChannelShares a={a} mode={mode} />
-            </div>
-          </section>
+          </div>
         )}
 
-        <section>
-          <Heading>Generation queue{detail.queue_as_of_month ? ` · ${formatDate(detail.queue_as_of_month)} report` : ""}</Heading>
+        {a && (
+          <PanelSection icon={Target} title="Why it ranks here">
+            <div className="space-y-4">
+              {(a.drivers.length > 0 || a.drags.length > 0) && (
+                <div className="space-y-2 text-xs">
+                  {a.drivers.length > 0 && (
+                    <div className="space-y-1.5">
+                      <p className="font-medium text-muted-foreground">Drivers</p>
+                      <p className="flex flex-wrap gap-1.5">
+                        {a.drivers.map((d) => (
+                          <AppBadge key={d} state="active" className="h-auto max-w-full py-0.5 text-left whitespace-normal">
+                            {signal(d)}
+                          </AppBadge>
+                        ))}
+                      </p>
+                    </div>
+                  )}
+                  {a.drags.length > 0 && (
+                    <div className="space-y-1.5">
+                      <p className="font-medium text-muted-foreground">Drags</p>
+                      <p className="flex flex-wrap gap-1.5">
+                        {a.drags.map((d) => (
+                          <AppBadge key={d} state="alert" className="h-auto max-w-full py-0.5 text-left whitespace-normal">
+                            {signal(d)}
+                          </AppBadge>
+                        ))}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              <div>
+                <p className="mb-1.5 text-xs font-medium text-muted-foreground">Channels, by area</p>
+                <ChannelShares a={a} mode={mode} />
+              </div>
+            </div>
+          </PanelSection>
+        )}
+
+        <PanelSection icon={Factory} title={`Generation queue${detail.queue_as_of_month ? ` · ${formatDate(detail.queue_as_of_month)}` : ""}`}>
           {detail.queue.length === 0 ? (
             <p className="text-sm text-muted-foreground">No active project in the generation queue.</p>
           ) : (
@@ -187,11 +219,10 @@ export function CountyPanel({ fips, mode, onClose }: { fips: string; mode: Mode;
               <AppBadge state="alert">Large new gas: {formatPower(all.large_gas_mw_2028)} by Dec 2028</AppBadge>
             </p>
           ) : null}
-        </section>
+        </PanelSection>
 
         {detail.top_projects.length > 0 && (
-          <section>
-            <Heading>Largest projects by expected MW, Dec 2028</Heading>
+          <PanelSection icon={ListOrdered} title="Largest projects by expected MW, Dec 2028">
             <ul className="space-y-2">
               {detail.top_projects.map((p) => (
                 <li key={p.inr} className="text-xs">
@@ -218,11 +249,10 @@ export function CountyPanel({ fips, mode, onClose }: { fips: string; mode: Mode;
                 </li>
               ))}
             </ul>
-          </section>
+          </PanelSection>
         )}
 
-        <section>
-          <Heading>New data centers since 2025</Heading>
+        <PanelSection icon={Server} title="New data centers since 2025">
           {detail.data_centers.length === 0 ? (
             <p className="text-sm text-muted-foreground">None matched in this county.</p>
           ) : (
@@ -243,38 +273,42 @@ export function CountyPanel({ fips, mode, onClose }: { fips: string; mode: Mode;
               ))}
             </ul>
           )}
-        </section>
+        </PanelSection>
 
-        <section>
-          <Heading>Co-ops and munis here</Heading>
+        <PanelSection
+          icon={Landmark}
+          title="Co-ops and munis here"
+          aside={
+            detail.accounts.length > 0 && (
+              <Link
+                href={`/accounts?county=${detail.county_fips}`}
+                className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-basecast-brand hover:underline"
+              >
+                Accounts <ArrowRight className="size-3" aria-hidden />
+              </Link>
+            )
+          }
+        >
           {detail.accounts.length === 0 ? (
             <p className="text-sm text-muted-foreground">No co-op or muni covers this county.</p>
           ) : (
-            <>
-              <ul className="space-y-1.5 text-xs">
-                {detail.accounts.map((acc) => (
-                  <li key={acc.account_id} className="flex items-center gap-2">
-                    <Link href={`/accounts/${acc.account_id}`} className="min-w-0 truncate font-medium hover:text-basecast-brand hover:underline">
-                      {acc.name}
-                    </Link>
-                    <span className="shrink-0 text-muted-foreground">
-                      {formatPercent(acc.county_share, { ratio: true })} · #{formatWhole(acc.rank)}
-                    </span>
-                    <span className="ml-auto shrink-0">
-                      <NextActionBadge action={acc.next_action} />
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href={`/accounts?county=${detail.county_fips}`}
-                className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-basecast-brand hover:underline"
-              >
-                Open them in Accounts <ArrowRight className="size-3" aria-hidden />
-              </Link>
-            </>
+            <ul className="space-y-1.5 text-xs">
+              {detail.accounts.map((acc) => (
+                <li key={acc.account_id} className="flex items-center gap-2">
+                  <Link href={`/accounts/${acc.account_id}`} className="min-w-0 truncate font-medium hover:text-basecast-brand hover:underline">
+                    {acc.name}
+                  </Link>
+                  <span className="shrink-0 text-muted-foreground">
+                    {formatPercent(acc.county_share, { ratio: true })} · #{formatWhole(acc.rank)}
+                  </span>
+                  <span className="ml-auto shrink-0">
+                    <NextActionBadge action={acc.next_action} />
+                  </span>
+                </li>
+              ))}
+            </ul>
           )}
-        </section>
+        </PanelSection>
       </div>
     </SectionCard>
   );

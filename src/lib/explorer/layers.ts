@@ -102,7 +102,8 @@ function rampSteps(ramp: string[], n: number): string[] {
   return Array.from({ length: n }, (_, i) => ramp[Math.round((i * (ramp.length - 1)) / (n - 1))]);
 }
 
-const inList = (row: CountyRow, list: ChannelList) =>
+/** Whether a county is on the channel list (`all` holds every county). */
+export const inList = (row: CountyRow, list: ChannelList) =>
   list === "all" ||
   (list === "retail" && row.acquisition?.retail_rank != null) ||
   (list === "partnership" && row.acquisition?.partner_rank != null);
