@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import type * as React from "react";
 
 import { Card } from "@/components/components-app/ui/card";
@@ -9,10 +10,12 @@ import { Provenance } from "./provenance";
 
 /**
  * A titled card of a product screen: title, subtitle and an action on top, the caveats under them, the
- * body, and the provenance of `meta` as its footer.
+ * body, and the provenance of `meta` as its footer. With `icon` the title takes the Fundsys section header
+ * (the icon in a brand-tinted square, the title in `text-base`), the look screens move to one by one.
  */
 export function SectionCard({
   title,
+  icon: Icon,
   subtitle,
   action,
   caveats,
@@ -21,6 +24,7 @@ export function SectionCard({
   children,
 }: {
   title: React.ReactNode;
+  icon?: LucideIcon;
   subtitle?: React.ReactNode;
   action?: React.ReactNode;
   caveats?: Caveat[] | null;
@@ -31,10 +35,22 @@ export function SectionCard({
   return (
     <Card data-slot="section-card" className={cn("flex min-w-0 flex-col", className)}>
       <div className="mb-4 flex items-start gap-3">
-        <div className="min-w-0">
-          <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-          {subtitle && <div className="mt-0.5 text-xs text-muted-foreground">{subtitle}</div>}
-        </div>
+        {Icon ? (
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="shrink-0 rounded-md bg-basecast-brand-surface p-1.5">
+                <Icon className="size-4 text-basecast-brand" aria-hidden />
+              </span>
+              <h2 className="text-base font-semibold text-foreground">{title}</h2>
+            </div>
+            {subtitle && <div className="mt-1.5 text-xs text-muted-foreground">{subtitle}</div>}
+          </div>
+        ) : (
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+            {subtitle && <div className="mt-0.5 text-xs text-muted-foreground">{subtitle}</div>}
+          </div>
+        )}
         {action && <div className="ml-auto shrink-0">{action}</div>}
       </div>
       <CaveatBadges caveats={caveats} className="-mt-1 mb-4" />

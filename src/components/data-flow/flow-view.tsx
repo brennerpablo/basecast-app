@@ -22,6 +22,7 @@ import { ViewSwitchControl } from "@/components/components-app/ui/view-switch-co
 import { useLakeSources, useRuns, useTables } from "@/components/data-browser/api";
 import { formatBytes, formatCount } from "@/components/data-browser/format";
 import EmptyState from "@/components/empty-state";
+import { PANEL_ENTER, PANEL_EXIT, usePresence } from "@/components/motion/presence";
 import { PageBreadcrumb } from "@/components/page-breadcrumb";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -133,6 +134,7 @@ function FlowScreen() {
   );
 
   const selected = params.node && graph.byId.has(params.node) ? graph.byId.get(params.node)! : null;
+  const panel = usePresence(selected);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -256,8 +258,15 @@ function FlowScreen() {
           centerOn={centerOn}
         />
         <Legend />
-        {selected ? (
-          <SelectedPanel graph={graph} node={selected} now={now} onSelect={(id) => select(id, true)} onClose={() => select(null)} />
+        {panel.shown ? (
+          <SelectedPanel
+            graph={graph}
+            node={panel.shown}
+            now={now}
+            onSelect={(id) => select(id, true)}
+            onClose={() => select(null)}
+            motion={panel.closing ? PANEL_EXIT : PANEL_ENTER}
+          />
         ) : null}
       </div>
     </div>
@@ -270,12 +279,15 @@ function SelectedPanel({
   now,
   onSelect,
   onClose,
+  motion,
 }: {
   graph: FlowGraph;
   node: FlowNode;
   now: number;
   onSelect: (id: string) => void;
   onClose: () => void;
+  /** The enter or exit classes (`PANEL_ENTER`, `PANEL_EXIT`). */
+  motion: string;
 }) {
   const path = useMemo(() => lineage(graph, node.id), [graph, node.id]);
   return (
@@ -287,7 +299,7 @@ function SelectedPanel({
       now={now}
       onSelect={onSelect}
       onClose={onClose}
-      className="absolute z-10 max-md:inset-x-3 max-md:bottom-3 max-md:max-h-[60%] md:top-3 md:right-3 md:bottom-[172px] md:w-[344px]"
+      className={cn("absolute z-10 max-md:inset-x-3 max-md:bottom-3 max-md:max-h-[60%] md:top-3 md:right-3 md:bottom-[172px] md:w-[344px]", motion)}
     />
   );
 }

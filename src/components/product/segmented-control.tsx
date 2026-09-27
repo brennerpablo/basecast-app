@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 
-/** A bordered strip of choices, the chosen one in solid foreground (the /ops range toggle). */
+/** A bordered strip of choices, the chosen one in the brand's lime fill (as the Switch and the active menu item). */
 export function SegmentedControl<T extends string | number>({
   label,
   options,
@@ -32,7 +32,7 @@ export function SegmentedControl<T extends string | number>({
           onClick={() => onChange(option.value)}
           className={cn(
             "shrink-0 rounded px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-colors",
-            value === option.value ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+            value === option.value ? "bg-brand text-brand-foreground shadow-xs" : "text-muted-foreground hover:text-foreground",
           )}
         >
           {option.label}
