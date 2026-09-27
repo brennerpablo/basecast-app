@@ -1,14 +1,16 @@
-import { History } from "lucide-react";
+import { PageBreadcrumb } from "@/components/page-breadcrumb";
 
-import { PagePlaceholder } from "../_components/page-placeholder";
+import { BacktestScreen } from "./_components/backtest-screen";
 
+/**
+ * Backtest: the peak model rerun at past dates against ERCOT's official forecasts and the actual, the
+ * official vintages' own errors, and the generation-queue backtest.
+ */
 export default function BacktestPage() {
   return (
-    <PagePlaceholder
-      breadcrumb={[{ label: "Backtest" }]}
-      Icon={History}
-      title="Backtest"
-      description="Official forecast, adjusted queue, actual peak and our model, side by side."
-    />
+    <>
+      <PageBreadcrumb items={[{ label: "Backtest" }]} />
+      <BacktestScreen />
+    </>
   );
 }

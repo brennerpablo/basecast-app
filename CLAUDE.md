@@ -192,6 +192,11 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   `normalized` (actual × normal-weather load, summer peak against the normal band) and `4cp` (intervals against the
   window, dispatch curve, peak-hour shift, rates); a mart not built shows "being rebuilt". Chart colors and ink:
   `src/lib/charts/palette.ts` (dataviz slots, light and dark steps).
+- `/backtest` (`src/app/(app)/backtest/`): the 2026 fan (every official vintage at its publication date, ERCOT's range,
+  the actual, our P50 and band at the 8 backtest dates), a slider over the API's `as_of_dates` (an invalid `as_of`
+  falls back to the latest), the cells of one date with each row's leak note, scores by era with the ablation
+  (including the era ERCOT did better), the official vintages' error matrix and the generation-queue backtest. Pure
+  helpers in `backtest-data.ts` (tested); marks drawn on recharts' scales for hover targets and keyboard focus.
 - `/insights` (`src/app/(app)/insights/`): the cards of `GET /insights`, grade A first; each shows value, caption,
   companion figures, the line's required caveat (always visible), caveat badges, which queue it speaks of, "Re-derived"
   when `verified` (X6), and a link to the screen behind it. First in the menu and the landing page (`/`, after sign-in, "Exit

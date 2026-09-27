@@ -52,7 +52,8 @@ export function FactValue({
           {fact.note && <p className="text-muted-foreground">{fact.note}</p>}
         </TooltipContent>
       </Tooltip>
-      <SimulatedBadge simulated={fact.simulated} />
+      {/* A Fact that does not say it is simulated is not: only an explicit `true` earns the badge. */}
+      <SimulatedBadge simulated={fact.simulated ?? false} />
       <VerifiedBadge verified={fact.verified} />
     </span>
   );
