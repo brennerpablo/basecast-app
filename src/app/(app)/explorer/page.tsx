@@ -1,14 +1,13 @@
-import { Map } from "lucide-react";
+import { PageBreadcrumb } from "@/components/page-breadcrumb";
 
-import { PagePlaceholder } from "../_components/page-placeholder";
+import { ExplorerScreen } from "./_components/explorer-screen";
 
+/** Explorer: the Texas counties by acquisition priority, generation queue and new data centers. */
 export default function ExplorerPage() {
   return (
-    <PagePlaceholder
-      breadcrumb={[{ label: "Explorer" }]}
-      Icon={Map}
-      title="Texas county map"
-      description="Raw vs. adjusted interconnection queue by county, and priority acquisition zones."
-    />
+    <>
+      <PageBreadcrumb items={[{ label: "Explorer" }]} />
+      <ExplorerScreen />
+    </>
   );
 }

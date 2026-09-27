@@ -176,6 +176,13 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   order (header facts, next action with its lapse date, why now with the event timeline and the paged full history
   from `/events`, score breakdown, gaps and coverage, territory, EIA series). A 404 (unknown or held-back id) is
   "Account not found". Facts render through `FactGrid`/`FactValue`; `formatValue` knows get-data's units.
+- `/explorer` (`src/app/(app)/explorer/`): the county map in MapLibre GL (`maplibre-gl`, pinned), polygons only, no basemap
+  or token. `county-map.tsx` loads `public/geo/*.geojson`, keys counties by `county_fips` (`promoteId`) and takes each
+  county's fill and fade as `feature-state`; the worker is copied to `public/maplibre/` on install
+  (`scripts/copy-workers.mjs`) and set with `setWorkerUrl`. One `GET /geo/counties` feeds the three layers
+  (`layer=acquisition|queue|data-centers`, with `list`, `metric`, `horizon`, `stratum`, `naics`, all in the URL); the
+  colors and legends are pure in `src/lib/explorer/` (dataviz palette: channel hue × priority class, one-hue blue
+  ramp, blue ↔ red for rank change). `county=<fips>` opens the county panel (`GET /geo/counties/{fips}`).
 - `public/geo/`: `tx-counties.geojson` (254 counties; `county_fips` for `promoteId`, `county_name`, `weather_zone`,
   `in_ercot`) and `ercot-weather-zones.geojson` (`weather_zone`), from basecast-airflow `basecast export-geo`.
 - `src/components/data-grid/` is the DataGrid (virtualized, server blocks through `src/lib/hooks/use-grid-window-query.ts`

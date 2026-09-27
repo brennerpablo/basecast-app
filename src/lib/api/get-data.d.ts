@@ -124,6 +124,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/geo/zones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Zones
+         * @description Grid layers by weather zone: where flat load arrived (X1) and where the large loads are, approved and
+         *     queued (X11), plus the counties with large load: allocated approved stock and ERCOT's named counties.
+         */
+        get: operations["zones_geo_zones_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/queue/projects": {
         parameters: {
             query?: never;
@@ -1232,6 +1253,37 @@ export interface components {
         CountyDetailResponse: {
             meta: components["schemas"]["Meta"];
             data: components["schemas"]["CountyDetail"];
+        };
+        /**
+         * CountyLargeLoad
+         * @description A county's large load: the approved stock allocated to it, and ERCOT's figures where it names it.
+         */
+        CountyLargeLoad: {
+            /** County Fips */
+            county_fips: string;
+            /** County Name */
+            county_name: string;
+            /** Weather Zone */
+            weather_zone?: string | null;
+            /**
+             * Allocated A2E Mw
+             * @description Approved stock allocated by data-center signals
+             */
+            allocated_a2e_mw?: number | null;
+            /**
+             * Named By Ercot
+             * @description ERCOT's deck names the county: draw it as an observed point
+             */
+            named_by_ercot: boolean;
+            /** Observed Base Mw */
+            observed_base_mw?: number | null;
+            /** Observed Base Studied Mw */
+            observed_base_studied_mw?: number | null;
+            /**
+             * Verified
+             * @default false
+             */
+            verified: boolean;
         };
         /**
          * CountyQueue
@@ -3665,6 +3717,25 @@ export interface components {
             /** Modified */
             modified?: string | null;
         };
+        /** ZoneLayer */
+        ZoneLayer: {
+            /**
+             * Measure
+             * @description excess_share, min_max_ratio_2019, min_max_ratio_2026 (X1); a2e_stock, pipeline_2032, u_share (X11)
+             */
+            measure: string;
+            /** Label */
+            label: string;
+            /** Unit */
+            unit: string;
+            /**
+             * Method
+             * @description How the zone values were obtained (observed or allocated)
+             */
+            method?: string | null;
+            /** Zones */
+            zones: components["schemas"]["ZoneValue"][];
+        };
         /** ZoneOutlook */
         ZoneOutlook: {
             /** Zone */
@@ -3729,6 +3800,37 @@ export interface components {
             weather_zone: string;
             /** Area Share */
             area_share: number;
+        };
+        /** ZoneValue */
+        ZoneValue: {
+            /** Weather Zone */
+            weather_zone: string;
+            /** Central */
+            central?: number | null;
+            /**
+             * Low
+             * @description Low end of the allocation band, when there is one
+             */
+            low?: number | null;
+            /** High */
+            high?: number | null;
+            /**
+             * Verified
+             * @default true
+             */
+            verified: boolean;
+        };
+        /** ZonesData */
+        ZonesData: {
+            /** Layers */
+            layers: components["schemas"]["ZoneLayer"][];
+            /** Counties */
+            counties: components["schemas"]["CountyLargeLoad"][];
+        };
+        /** ZonesResponse */
+        ZonesResponse: {
+            meta: components["schemas"]["Meta"];
+            data: components["schemas"]["ZonesData"];
         };
     };
     responses: never;
@@ -4027,6 +4129,47 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The mart behind this resource is not built yet */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MartNotBuilt"];
+                };
+            };
+        };
+    };
+    zones_geo_zones_get: {
+        parameters: {
+            query?: {
+                /** @description Only these measures */
+                measure?: string[] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZonesResponse"];
                 };
             };
             /** @description Validation Error */

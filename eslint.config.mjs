@@ -5,8 +5,8 @@ import reactHooks from "eslint-plugin-react-hooks";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 
 export default defineConfig([
-  // The Prisma client, regenerated on npm install.
-  globalIgnores(["src/generated/"]),
+  // The Prisma client, regenerated on npm install, and the web workers copied from their packages.
+  globalIgnores(["src/generated/", "public/pdfjs/", "public/maplibre/"]),
   {
     extends: [...nextCoreWebVitals],
 

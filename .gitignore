@@ -18,3 +18,4 @@ src/generated/
 
 # pdf.js worker, copied from node_modules on install
 /public/pdfjs/
+/public/maplibre/
