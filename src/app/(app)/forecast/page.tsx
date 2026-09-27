@@ -1,14 +1,13 @@
-import { TrendingUp } from "lucide-react";
+import { PageBreadcrumb } from "@/components/page-breadcrumb";
 
-import { PagePlaceholder } from "../_components/page-placeholder";
+import { ForecastScreen } from "./_components/forecast-screen";
 
+/** Forecast: the summer peak by layer against ERCOT's official lines, and the large loads behind it. */
 export default function ForecastPage() {
   return (
-    <PagePlaceholder
-      breadcrumb={[{ label: "Forecast" }]}
-      Icon={TrendingUp}
-      title="Peak demand forecast"
-      description="Peak MW by region and year (P10/P50/P90), built from queue survival and weather-normalized load."
-    />
+    <>
+      <PageBreadcrumb items={[{ label: "Forecast" }]} />
+      <ForecastScreen />
+    </>
   );
 }

@@ -183,6 +183,12 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   (`layer=acquisition|queue|data-centers`, with `list`, `metric`, `horizon`, `stratum`, `naics`, all in the URL); the
   colors and legends are pure in `src/lib/explorer/` (dataviz palette: channel hue × priority class, one-hue blue
   ramp, blue ↔ red for rank change). `county=<fips>` opens the county panel (`GET /geo/counties/{fips}`).
+- `/forecast` (`src/app/(app)/forecast/`): `<Tabs urlParam="tab">` with `peak` (the summer peak in three stacked
+  layers at P50 with the total's band as whiskers, labeled by `band_kind`; ERCOT's official lines in ink told apart by
+  dash; variant and region in the URL; the numbers again as a table; the large-load inputs) and `large-loads`
+  (promised × approved by deck, the ratio band with the API's definition, the monthly stock against the observed
+  peak with the dated annotations). P1 tabs (`queue`, `normalized`, `4cp`) come later. Chart colors and ink:
+  `src/lib/charts/palette.ts` (dataviz slots, light and dark steps).
 - `public/geo/`: `tx-counties.geojson` (254 counties; `county_fips` for `promoteId`, `county_name`, `weather_zone`,
   `in_ercot`) and `ercot-weather-zones.geojson` (`weather_zone`), from basecast-airflow `basecast export-geo`.
 - `src/components/data-grid/` is the DataGrid (virtualized, server blocks through `src/lib/hooks/use-grid-window-query.ts`
