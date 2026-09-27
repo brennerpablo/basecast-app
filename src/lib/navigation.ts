@@ -3,6 +3,7 @@ import {
   Building2,
   Database,
   History,
+  House,
   Lightbulb,
   type LucideIcon,
   Map,
@@ -18,10 +19,14 @@ export type MainMenuSubItem = {
   activeCheck?: (pathname: string) => boolean;
 };
 
+/** The menu's blocks, drawn apart by a divider: Home, the analytics screens, the data and ops tools. */
+export type MainMenuSection = "home" | "analytics" | "system";
+
 export type MainMenuItem = {
   id: string;
   label: string;
   icon: LucideIcon;
+  section?: MainMenuSection;
   /** Leaf items link somewhere; group items carry `subItems` instead. */
   href?: string;
   activeCheck?: (pathname: string) => boolean;
@@ -36,12 +41,20 @@ const underPath = (base: string) => (pathname: string) =>
   pathname === base || pathname.startsWith(`${base}/`);
 
 /**
- * The sidebar menu, in display order. Insights opens the demo; Accounts, commercial intelligence, is the
- * core of the product.
+ * The sidebar menu, in display order. Home gathers one highlight per module; Insights opens the demo;
+ * Accounts, commercial intelligence, is the core of the product.
  */
 export const MAIN_MENU: MainMenuItem[] = [
   {
+    id: "home",
+    section: "home",
+    label: "Home",
+    icon: House,
+    href: "/home",
+  },
+  {
     id: "insights",
+    section: "analytics",
     label: "Insights",
     icon: Lightbulb,
     href: "/insights",
@@ -49,6 +62,7 @@ export const MAIN_MENU: MainMenuItem[] = [
   },
   {
     id: "accounts",
+    section: "analytics",
     label: "Accounts",
     icon: Building2,
     href: "/accounts",
@@ -56,6 +70,7 @@ export const MAIN_MENU: MainMenuItem[] = [
   },
   {
     id: "explorer",
+    section: "analytics",
     label: "Explorer",
     icon: Map,
     href: "/explorer",
@@ -63,6 +78,7 @@ export const MAIN_MENU: MainMenuItem[] = [
   },
   {
     id: "forecast",
+    section: "analytics",
     label: "Forecast",
     icon: TrendingUp,
     href: "/forecast",
@@ -70,6 +86,7 @@ export const MAIN_MENU: MainMenuItem[] = [
   },
   {
     id: "backtest",
+    section: "analytics",
     label: "Backtest",
     icon: History,
     href: "/backtest",
@@ -77,6 +94,7 @@ export const MAIN_MENU: MainMenuItem[] = [
   },
   {
     id: "data",
+    section: "system",
     label: "Data",
     icon: Database,
     href: "/data",
@@ -84,6 +102,7 @@ export const MAIN_MENU: MainMenuItem[] = [
   },
   {
     id: "ops",
+    section: "system",
     label: "Ops",
     icon: Activity,
     href: "/ops",

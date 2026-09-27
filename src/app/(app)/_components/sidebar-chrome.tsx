@@ -21,7 +21,7 @@ export function SidebarChrome({
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <div className="mb-2 flex h-20 shrink-0 flex-col justify-center px-6">
-        <Link href="/" className="w-fit rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring">
+        <Link href="/home" className="w-fit rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring">
           <Logo />
         </Link>
       </div>

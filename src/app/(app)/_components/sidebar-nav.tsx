@@ -137,14 +137,22 @@ export function SidebarNav({
     <SidebarChrome toolbar={toggleAllButton} footer={footer}>
       <nav className="w-full p-2">
         <div className="space-y-1">
-          {MAIN_MENU.map((item) => {
+          {MAIN_MENU.map((item, index) => {
             const Icon = item.icon;
+            const startsSection =
+              index > 0 && item.section !== MAIN_MENU[index - 1].section;
             const isExpanded = expandedItems.has(item.id);
             const hasSubItems = Boolean(item.subItems?.length);
             const isActive = isItemActive(item, pathname);
 
             return (
               <div key={item.id} className="w-full">
+                {startsSection && (
+                  <div
+                    role="separator"
+                    className="mx-3 mb-2 mt-3 border-t border-sidebar-border"
+                  />
+                )}
                 {!hasSubItems && item.href ? (
                   <Link
                     href={item.href}
