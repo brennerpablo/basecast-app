@@ -167,28 +167,48 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   are the generated contract types. Shared UI in `src/components/product/`: `SectionCard` (title, caveats, body,
   `Provenance` below), `DataCard` (a `SectionCard` over one query: loading, "being rebuilt", empty), `FactGrid`, `StatCard`, `FactValue` (a null is a gap, never a zero), `CaveatBadges`, `VerifiedBadge`,
   `SimulatedBadge`, formatters in `format.ts`. Caveat labels and texts come only from the API. The Fundsys dashboard
-  pieces, for screens moving off `SectionCard`: `PageHeader`/`SectionHeading` (a screen's title with no card around it),
-  `DashboardCardHeader` + `CardOpenLink` (`DashboardChartCard`'s icon tile header), `KpiItem`, and `QueryBody` (the
-  states of `DataCard` without the card).
-- `/accounts` (`src/app/(app)/accounts/`): the ranked co-ops and munis in a DataTable. The filters live in the URL
+  pieces, for screens moving off `SectionCard`: `PageHeader` (a screen's title with no card around it, actions on the right),
+  `DashboardCardHeader` + `CardOpenLink` (`DashboardChartCard`'s icon tile header), `KpiItem`, `DashboardStatCard`
+  (a list's or dashboard's stat, `row` or `stacked`, a toggle with `onClick`), `KpiStatCard`/`KpiStatItem` (one
+  entity's KPI strip), `QueryBody` (the states of `DataCard` without the card), and `SectionCard`'s `icon` (the Fundsys
+  section header). `ChartTooltipCard` (`chart-tooltip.tsx`) is the hover card every recharts chart shares.
+  `SegmentedControl` (and /ops's range toggle) marks the chosen option in the brand's lime fill (`bg-brand`), never
+  in foreground black. A panel that opens on a click (the Explorer's county, the data flow's node) goes through
+  `usePresence` + `PANEL_ENTER`/`PANEL_EXIT` (`src/components/motion/presence.ts`: a fade with a short slide, held
+  through its exit, off under reduced motion); a side column that makes room animates `grid-template-columns`.
+  Sheets and dialogs already animate.
+- `/accounts` (`src/app/(app)/accounts/`), laid out as Fundsys's CRM list: the title with the rank toggle and Export CSV,
+  one `DashboardStatCard` per next action (counted over the whole ranking; a click filters by that action, again
+  clears it), then the ranked co-ops and munis in a DataTable (the account cell shows type · G&T under the name). The filters live in the URL
   (`src/lib/accounts/filters.ts`: repeated keys, `county` from the Explorer, `rank=within_type`), go to get-data as
   they are, and the Export CSV link carries the same params; the chips' choices come from the unfiltered list.
   Trigger, flag and next-action labels and texts come from `GET /glossary` (`useCodeLabels` in
   `src/lib/accounts/labels.ts`); a code the glossary lacks shows raw.
-- `/accounts/[id]` (`src/app/(app)/accounts/[id]/`): one account's diagnosis from `GET /accounts/{id}` in the X9
-  order (header facts, next action with its lapse date, why now with the event timeline and the paged full history
-  from `/events`, score breakdown, gaps and coverage, territory, EIA series). A 404 (unknown or held-back id) is
-  "Account not found". Facts render through `FactGrid`/`FactValue`; `formatValue` knows get-data's units. The P1
-  cards (`p1-cards.tsx`) show when the API sends them: wholesale supplier (X13), 4CP offer (X3 + X15), city facts (X10).
+- `/accounts/[id]` (`src/app/(app)/accounts/[id]/`): one account's diagnosis from `GET /accounts/{id}` as Fundsys's
+  entity page: the header (name, type · G&T · counties, tier/rank/action badges, caveats), the KPI strip (header facts
+  in `KPI_FACT_KEYS`; the rest go to Profile, `splitHeaderFacts` in `src/lib/accounts/summary.ts`), then one tab per part
+  (`?tab=`, a file each): Overview (the call in stat cards, the pitch, lead trigger and latest events), Why now (timeline,
+  active strong events, context triggers, the paged history from `/events`), Score (stats, contributions as bars, gaps
+  and coverage, the signals table), Territory (the account's counties on the Explorer's map, counties, facts grouped by
+  `groupTerritoryFacts`, queue, data centers, zone), Wholesale & 4CP (X13 requests as bars, X3 + X15 rates as stat
+  cards), EIA series (charts, early release lighter, then the table), Profile (registry facts, a muni's city, X10). The
+  provenance shows once, at the foot. A 404 (unknown or held-back id) is "Account not found". Facts render through
+  `FactGrid`/`FactValue`; `formatValue` knows get-data's units.
 - `/explorer` (`src/app/(app)/explorer/`): the county map in MapLibre GL (`maplibre-gl`, pinned), polygons only, no basemap
-  or token. `county-map.tsx` loads `public/geo/*.geojson`, keys counties by `county_fips` (`promoteId`) and takes each
+  or token. `CountyMap` (`src/components/maps/county-map.tsx`, also the account's locator) loads `public/geo/*.geojson`, keys counties by `county_fips` (`promoteId`) and takes each
   county's fill and fade as `feature-state`; the worker is copied to `public/maplibre/` on install
   (`scripts/copy-workers.mjs`) and set with `setWorkerUrl`. One `GET /geo/counties` feeds the three layers
   (`layer=acquisition|queue|data-centers`, with `list`, `metric`, `horizon`, `stratum`, `naics`, all in the URL); P1
   `layer=zones` (`measure=`) reads `GET /geo/zones` and paints each county with its weather zone's value, the counties
   ERCOT names dashed, with a zone table (allocation range, machine-read); the
   colors and legends are pure in `src/lib/explorer/` (dataviz palette: channel hue × priority class, one-hue blue
-  ramp, blue ↔ red for rank change). `county=<fips>` opens the county panel (`GET /geo/counties/{fips}`).
+  ramp, blue ↔ red for rank change). Laid out as a Fundsys dashboard: `PageHeader`, the layers as line tabs with icons
+  (`<Tabs urlParam="layer">`; the map sits outside them, so a switch repaints without a reload), the layer's filters
+  in one labeled row, its stat cards (sums of the county rows, `src/lib/explorer/summary.ts`: the queue's add up to the
+  statewide totals, counties flagged outside ERCOT included; the channel lists double as the `list` filter), the map
+  card, the layer's own card (queue: how far to trust it; zones: the zone table) and "Counties, ranked" (the map as a
+  DataTable, `rankedCounties`; a county's name links to `county=`). `county=<fips>` opens the county panel beside them,
+  sticky (`GET /geo/counties/{fips}`): KPI items, then sections with icon headers.
 - `/forecast` (`src/app/(app)/forecast/`): `<Tabs urlParam="tab">` with `peak` (the summer peak in three stacked
   layers at P50 with the total's band as whiskers, labeled by `band_kind`; ERCOT's official lines in ink told apart by
   dash; variant and region in the URL; the numbers again as a table; the large-load inputs) and `large-loads`
@@ -203,8 +223,8 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   (including the era ERCOT did better), the official vintages' error matrix and the generation-queue backtest. Pure
   helpers in `backtest-data.ts` (tested); marks drawn on recharts' scales for hover targets and keyboard focus.
 - `/insights` (`src/app/(app)/insights/`): the cards of `GET /insights` in the Fundsys dashboard look: `PageHeader` with
-  the response's caveats, then one full-width `InsightCard` per finding, stacked under "Headline findings" (grade A, brand
-  accent) and "Supporting findings", the provenance at the foot. Each card: the icon tile header (icon by queue, else by
+  the response's caveats, then two line tabs with icons (`?tab=`): "Headline findings" (grade A, brand accent) and
+  "Supporting findings", one full-width `InsightCard` per finding stacked in each, the provenance at the foot. Each card: the icon tile header (icon by queue, else by
   the screen behind it), value and caption beside the figures (`KpiItem`), the line's required caveat (always visible),
   caveat badges and source doc, "Re-derived" when `verified` (X6), and the open link to the screen behind it. First in
   the menu and the landing page (`/`, after sign-in, "Exit Data"); cards keep the API's order.
@@ -247,7 +267,7 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
 ## Same-window tabs
 
 Ported from fundsys-app (section "Abas na mesma janela" of its `CLAUDE.md`). On desktop the card's first row is a
-strip of app tabs; the breadcrumb moves below as the page title. Hidden on mobile.
+strip of app tabs; the breadcrumb moves below as the page title, shown only for a trail (2+ items): a lone item repeats the screen's `PageHeader`. Hidden on mobile.
 
 - **A tab is a URL, and the URL belongs to the active tab.** Switching tabs is `router.push`; every URL change
   (link, `nuqs`, `router.push`) is written to the active tab. No screen needs to know the strip exists.
