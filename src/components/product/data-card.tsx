@@ -23,13 +23,55 @@ export function MartNotBuiltState({ mart, compact = true }: { mart: string; comp
 }
 
 /**
- * A card over one product query: the title and the response's caveats on top, the body by state, the
- * provenance below.
+ * A view over one product query, by state:
  * - loading: `skeleton`, a blank block by default;
- * - 503 `mart_not_built`: "This view is being rebuilt", naming the mart, in this card only;
+ * - 503 `mart_not_built`: "This view is being rebuilt", naming the mart, in this view only;
  * - empty (`isEmpty`): an empty state;
  * - any other failure with nothing on screen has gone to the route's `error.tsx` (`useProductQuery`);
  *   a query built elsewhere shows it here.
+ * `compact` sizes the empty states for a panel inside a card; a screen without a card around it passes false.
+ */
+export function QueryBody<T>({
+  query,
+  isEmpty,
+  empty,
+  skeleton,
+  compact = true,
+  children,
+}: {
+  query: UseQueryResult<Envelope<T>>;
+  isEmpty?: (data: T) => boolean;
+  empty?: { Icon?: LucideIcon; title: string; description?: string };
+  skeleton?: React.ReactNode;
+  compact?: boolean;
+  children: (data: T, meta: Meta) => React.ReactNode;
+}) {
+  const envelope = query.data;
+  if (envelope) {
+    return isEmpty?.(envelope.data) ? (
+      <EmptyState compact={compact} Icon={empty?.Icon ?? Inbox} title={empty?.title ?? "Nothing to show"} description={empty?.description} />
+    ) : (
+      children(envelope.data, envelope.meta)
+    );
+  }
+  if (isMartNotBuilt(query.error)) return <MartNotBuiltState mart={query.error.mart} compact={compact} />;
+  if (query.error) {
+    return (
+      <EmptyState
+        compact={compact}
+        Icon={CircleAlert}
+        iconClassName="text-red-600"
+        title="Could not load this view"
+        description={query.error.message.replace(/\.?$/, ".")}
+      />
+    );
+  }
+  return skeleton ?? <Skeleton className="h-40 w-full" />;
+}
+
+/**
+ * A card over one product query: the title and the response's caveats on top, the body by state
+ * (`QueryBody`), the provenance below.
  */
 export function DataCard<T>({
   title,
@@ -56,29 +98,6 @@ export function DataCard<T>({
   children: (data: T, meta: Meta) => React.ReactNode;
 }) {
   const envelope = query.data;
-  let body: React.ReactNode;
-  if (envelope) {
-    body = isEmpty?.(envelope.data) ? (
-      <EmptyState compact Icon={empty?.Icon ?? Inbox} title={empty?.title ?? "Nothing to show"} description={empty?.description} />
-    ) : (
-      children(envelope.data, envelope.meta)
-    );
-  } else if (isMartNotBuilt(query.error)) {
-    body = <MartNotBuiltState mart={query.error.mart} />;
-  } else if (query.error) {
-    body = (
-      <EmptyState
-        compact
-        Icon={CircleAlert}
-        iconClassName="text-red-600"
-        title="Could not load this view"
-        description={query.error.message.replace(/\.?$/, ".")}
-      />
-    );
-  } else {
-    body = skeleton ?? <Skeleton className="h-40 w-full" />;
-  }
-
   return (
     <SectionCard
       title={title}
@@ -88,7 +107,9 @@ export function DataCard<T>({
       meta={envelope?.meta}
       className={className}
     >
-      {body}
+      <QueryBody query={query} isEmpty={isEmpty} empty={empty} skeleton={skeleton}>
+        {children}
+      </QueryBody>
     </SectionCard>
   );
 }

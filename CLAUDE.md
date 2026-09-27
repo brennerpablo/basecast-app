@@ -166,7 +166,10 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   `error.tsx`), `useCaveatCatalog` (`GET /caveats`, a bare `{items}`, not an envelope). `Meta`, `Caveat` and `Fact`
   are the generated contract types. Shared UI in `src/components/product/`: `SectionCard` (title, caveats, body,
   `Provenance` below), `DataCard` (a `SectionCard` over one query: loading, "being rebuilt", empty), `FactGrid`, `StatCard`, `FactValue` (a null is a gap, never a zero), `CaveatBadges`, `VerifiedBadge`,
-  `SimulatedBadge`, formatters in `format.ts`. Caveat labels and texts come only from the API.
+  `SimulatedBadge`, formatters in `format.ts`. Caveat labels and texts come only from the API. The Fundsys dashboard
+  pieces, for screens moving off `SectionCard`: `PageHeader`/`SectionHeading` (a screen's title with no card around it),
+  `DashboardCardHeader` + `CardOpenLink` (`DashboardChartCard`'s icon tile header), `KpiItem`, and `QueryBody` (the
+  states of `DataCard` without the card).
 - `/accounts` (`src/app/(app)/accounts/`): the ranked co-ops and munis in a DataTable. The filters live in the URL
   (`src/lib/accounts/filters.ts`: repeated keys, `county` from the Explorer, `rank=within_type`), go to get-data as
   they are, and the Export CSV link carries the same params; the chips' choices come from the unfiltered list.
@@ -199,10 +202,12 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   falls back to the latest), the cells of one date with each row's leak note, scores by era with the ablation
   (including the era ERCOT did better), the official vintages' error matrix and the generation-queue backtest. Pure
   helpers in `backtest-data.ts` (tested); marks drawn on recharts' scales for hover targets and keyboard focus.
-- `/insights` (`src/app/(app)/insights/`): the cards of `GET /insights`, grade A first; each shows value, caption,
-  companion figures, the line's required caveat (always visible), caveat badges, which queue it speaks of, "Re-derived"
-  when `verified` (X6), and a link to the screen behind it. First in the menu and the landing page (`/`, after sign-in, "Exit
-  Data"); cards keep the API's order.
+- `/insights` (`src/app/(app)/insights/`): the cards of `GET /insights` in the Fundsys dashboard look: `PageHeader` with
+  the response's caveats, then one full-width `InsightCard` per finding, stacked under "Headline findings" (grade A, brand
+  accent) and "Supporting findings", the provenance at the foot. Each card: the icon tile header (icon by queue, else by
+  the screen behind it), value and caption beside the figures (`KpiItem`), the line's required caveat (always visible),
+  caveat badges and source doc, "Re-derived" when `verified` (X6), and the open link to the screen behind it. First in
+  the menu and the landing page (`/`, after sign-in, "Exit Data"); cards keep the API's order.
 - `public/geo/`: `tx-counties.geojson` (254 counties; `county_fips` for `promoteId`, `county_name`, `weather_zone`,
   `in_ercot`) and `ercot-weather-zones.geojson` (`weather_zone`), from basecast-airflow `basecast export-geo`.
 - `src/components/data-grid/` is the DataGrid (virtualized, server blocks through `src/lib/hooks/use-grid-window-query.ts`
