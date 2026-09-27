@@ -227,6 +227,12 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   (`models-card.tsx`: every model and benchmark with variant, dates, cells, MAPE, bias and leaks, read one backtest date
   at a time; a flag when the forecast's default variant is not the backtested one; the `stage = model` builds). Pure
   helpers in `backtest-data.ts` (tested); marks drawn on recharts' scales for hover targets and keyboard focus.
+- `/backtest/runs/[runId]`: one model run (a mart build) as an audited notebook: numbered cells for the parameters, the
+  config (only the commit for now), one cell per mart (inputs from `/tables/{name}`, the `mart.check` events as asserts
+  with expected, actual and Δ, what `mart.built` wrote, links to the table and the screen), what is not recorded yet,
+  and the run's `ops.log`. Runs come from `etl_run` through get-data's `/tables/etl_run/rows` (`src/lib/model-runs.ts`,
+  pure and tested; hooks in `model-runs-query.ts`). The Models tab's "Model builds" rows open it. What airflow and
+  get-data must add for the rest: `docs/model-run-audit.md`.
 - `/insights` (`src/app/(app)/insights/`): the cards of `GET /insights` in the Fundsys dashboard look: `PageHeader` with
   the response's caveats, then two line tabs with icons (`?tab=`): "Headline" (grade A, brand accent) and
   "Supporting", one full-width `InsightCard` per finding stacked in each, the provenance at the foot. Each card: the icon tile header (icon by queue, else by

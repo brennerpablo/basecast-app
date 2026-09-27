@@ -16,6 +16,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import type { components } from "@/lib/api/get-data";
 import { type Envelope, fetchEnvelope, type Meta } from "@/lib/bff/envelope";
 import { productKeys, useProductQuery } from "@/lib/bff/queries";
+import { runThatBuilt, shortRunId, tally } from "@/lib/model-runs";
+import { useModelRuns } from "@/lib/model-runs-query";
 import { cn } from "@/lib/utils";
 
 import {
@@ -31,7 +33,6 @@ import {
 } from "./backtest-data";
 
 type PeakForecastData = components["schemas"]["PeakForecastData"];
-type RunsPage = components["schemas"]["RunsPage"];
 
 /** Our models by name; the official benchmarks keep their product code. */
 const MODEL_NAME: Record<string, string> = {
@@ -195,50 +196,82 @@ function ModelsRun({ peak, meta, queue }: { peak: PeakData; meta: Meta; queue: Q
   );
 }
 
-/** The model builds (`stage = model` runs), newest first. */
+/** What a build fed on this screen, for its badge: the backtest marts, the forecast. */
+const FEEDS: [string, string][] = [
+  ["mart_peak_backtest", "Backtest"],
+  ["mart_peak_forecast", "Forecast"],
+];
+
+/**
+ * The model builds (mart builds, `stage = model`), newest first: the marts each wrote, the code it ran, its checks,
+ * and a badge on the build behind the backtest and the forecast shown now. Each row opens the run as a notebook.
+ */
 function ModelBuilds() {
-  const runs = useProductQuery<RunsPage>("pipeline/runs", { stage: "model", limit: 10 }, { throwOnError: false });
-  const items = runs.data?.data.items ?? [];
+  const { runs, isPending, isError } = useModelRuns(20);
+  // The build each mart on screen comes from now: its badge is lit, an older build's is grey.
+  const current = new Map(FEEDS.map(([mart]) => [mart, runs ? runThatBuilt(runs, mart)?.runId : undefined]));
   return (
     <SectionCard
       title="Model builds"
       icon={History}
-      subtitle={runs.data ? `${formatWhole(runs.data.data.total)} runs` : undefined}
+      subtitle={runs ? `${formatWhole(runs.length)} runs` : undefined}
       action={<CardOpenLink href="/ops?tab=pipelines" label="Open the pipelines" />}
     >
-      {runs.isPending ? (
+      {isPending ? (
         <Skeleton className="h-40 w-full" />
-      ) : runs.isError ? (
+      ) : isError || !runs ? (
         <p className="text-sm text-muted-foreground">The run history could not be read.</p>
-      ) : items.length === 0 ? (
+      ) : runs.length === 0 ? (
         <p className="text-sm text-muted-foreground">No model build recorded.</p>
       ) : (
         <div className="grid-scrollbar overflow-x-auto rounded-lg border">
           <table className="w-full text-sm [&_td]:whitespace-nowrap [&_th]:whitespace-nowrap">
             <thead className="bg-muted/50 text-left text-xs tracking-wide text-muted-foreground uppercase">
               <tr>
-                <th className={th}>Status</th>
-                <th className={th}>Build</th>
+                <th className={th}>Run</th>
+                <th className={th}>Marts</th>
+                <th className={th}>Code</th>
+                <th className={cn(th, "text-right")}>Checks</th>
                 <th className={th}>Started</th>
                 <th className={cn(th, "text-right")}>Duration</th>
-                <th className={cn(th, "text-right")}>Rows</th>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {items.map((r) => (
-                <tr key={r.run_id}>
-                  <td className="px-3 py-2">
-                    <span className="inline-flex items-center gap-1.5 text-xs">
-                      <RunDot status={r.status} />
-                      {r.status}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2 font-mono text-xs">{r.source}</td>
-                  <td className="px-3 py-2 text-xs text-muted-foreground">{formatDateTime(r.started_at)}</td>
-                  <td className="px-3 py-2 text-right text-xs tabular-nums">{formatDuration(r.duration_s)}</td>
-                  <td className={num}>{formatWhole(r.rows)}</td>
-                </tr>
-              ))}
+              {runs.map((r) => {
+                const t = tally(r.checks);
+                const feeds = FEEDS.filter(([mart]) => r.built.some((b) => b.mart === mart));
+                return (
+                  <tr key={r.runId} className="hover:bg-accent/60">
+                    <td className="px-3 py-2">
+                      <Link
+                        href={`/backtest/runs/${encodeURIComponent(r.runId)}`}
+                        className="inline-flex items-center gap-1.5 font-mono text-xs text-foreground hover:text-basecast-brand hover:underline"
+                      >
+                        <RunDot status={r.status} />
+                        {shortRunId(r.runId)}
+                      </Link>
+                    </td>
+                    <td className="max-w-80 px-3 py-2 text-xs">
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="truncate font-mono text-muted-foreground" title={r.marts.join(", ")}>
+                          {r.marts.length === 1 ? r.marts[0] : `${r.marts.length} marts`}
+                        </span>
+                        {feeds.map(([mart, label]) => (
+                          <AppBadge key={mart} state={current.get(mart) === r.runId ? "active" : "metadata"}>
+                            {label}
+                          </AppBadge>
+                        ))}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 font-mono text-xs text-muted-foreground">{r.code ?? GAP}</td>
+                    <td className={cn(num, "text-xs", t.failed > 0 && "text-red-600 dark:text-red-400")}>
+                      {t.total ? `${t.passed}/${t.total}` : GAP}
+                    </td>
+                    <td className="px-3 py-2 text-xs text-muted-foreground">{formatDateTime(r.startedAt)}</td>
+                    <td className="px-3 py-2 text-right text-xs tabular-nums">{formatDuration(r.durationS)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
