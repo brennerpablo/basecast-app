@@ -82,26 +82,27 @@ file, table and pipeline run, with the dataset lineage) and **Ops** (service hea
 ## How it fits
 
 ```mermaid
-flowchart LR
-  src["Public data<br/>ERCOT · PUCT · EIA · Census<br/>BLS · NOAA · TCEQ · …"]
+flowchart TB
+  src["Public data: ERCOT · PUCT · EIA · Census · BLS · NOAA · TCEQ · …"]
 
   subgraph airflow["basecast-airflow"]
-    direction TB
+    direction LR
     raw["raw<br/>immutable snapshots"] --> process["process<br/>typed tables"] --> marts["marts<br/>models + golden checks"]
   end
 
   subgraph getdata["basecast-get-data"]
-    api["FastAPI<br/>typed endpoints, {data, meta}"]
+    direction LR
+    api["FastAPI<br/>one typed endpoint per resource"] --> meta["{data, meta}<br/>provenance + caveats"]
   end
 
   subgraph app["basecast-app · this repo"]
-    direction TB
-    bff["BFF route handlers<br/>token stays on the server"] --> ui["Next.js screens"]
+    direction LR
+    bff["BFF route handlers<br/>token stays on the server"] --> ui["Next.js screens<br/>on Vercel"]
   end
 
-  src --> raw
-  marts -- "Postgres · GCS · BigQuery" --> api
-  api -- "openapi.json → TS client" --> bff
+  src --> airflow
+  airflow -- "Postgres · GCS · BigQuery" --> getdata
+  getdata -- "openapi.json → TS client" --> app
 
   style app fill:#b2dd79,stroke:#102a17,stroke-width:2px,color:#102a17
 ```
