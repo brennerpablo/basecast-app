@@ -1,6 +1,6 @@
 "use client";
 
-import { FlaskConical, Info, type LucideIcon, ScanEye } from "lucide-react";
+import { FlaskConical, Info, type LucideIcon, ScanEye, TriangleAlert } from "lucide-react";
 
 import { AppBadge, type AppBadgeState } from "@/components/components-app/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -8,9 +8,13 @@ import type { Caveat, CaveatCode } from "@/lib/bff/envelope";
 import { useCaveatCatalog } from "@/lib/bff/queries";
 import { cn } from "@/lib/utils";
 
-/** How a caveat looks: machine-read values in amber, simulated or invented ones dashed, the rest as metadata. */
+/**
+ * How a caveat looks: machine-read values and scores whose weights are pending review in amber, simulated or
+ * invented ones dashed, the rest as metadata.
+ */
 const LOOK: Partial<Record<CaveatCode, { state: AppBadgeState; Icon: LucideIcon }>> = {
   machine_read_unverified: { state: "alert", Icon: ScanEye },
+  weights_pending_review: { state: "alert", Icon: TriangleAlert },
   simulated: { state: "draft", Icon: FlaskConical },
   fixture: { state: "draft", Icon: FlaskConical },
 };

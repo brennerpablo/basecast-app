@@ -7,6 +7,10 @@ import { cn } from "@/lib/utils";
 import { SimulatedBadge, VerifiedBadge } from "./caveat-badges";
 import { formatDate, formatValue, GAP } from "./format";
 
+/** A source as the reader sees it: the private-data adapters (`UtilityDataSource`, `FleetDataSource`) are "Private data". */
+const sourceLabel = (source: string | null | undefined) =>
+  source ? (/DataSource$/.test(source) ? "Private data" : source) : GAP;
+
 /** A Fact, or any value that carries some of its provenance. */
 export type FactLike = Pick<Fact, "value"> & Partial<Omit<Fact, "value">>;
 
@@ -47,7 +51,7 @@ export function FactValue({
         <TooltipContent className="max-w-xs space-y-1 text-xs">
           {fact.label && <p className="font-medium">{fact.label}</p>}
           {gap && <p>No data.</p>}
-          <p>Source: {fact.source ?? GAP}</p>
+          <p>Source: {sourceLabel(fact.source)}</p>
           <p>As of: {formatDate(fact.as_of)}</p>
           {fact.note && <p className="text-muted-foreground">{fact.note}</p>}
         </TooltipContent>
