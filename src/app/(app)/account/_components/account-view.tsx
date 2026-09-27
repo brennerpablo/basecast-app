@@ -1,6 +1,6 @@
 "use client";
 
-import { AtSign, Check, Mail, Pencil, UserRound, X } from "lucide-react";
+import { AtSign, Check, Pencil, UserRound, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { type ElementType, type ReactNode, useState } from "react";
 import { toast } from "sonner";
@@ -92,15 +92,9 @@ export function AccountView() {
       </div>
 
       <div className="rounded-xl border bg-card shadow-sm">
-        <div className="border-b px-5 py-3">
-          <h3 className="text-sm font-semibold">Account information</h3>
-        </div>
         <div className="divide-y px-5">
           <InfoRow icon={UserRound} label="Display name">
             <EditNameField currentName={name ?? ""} onSaved={() => update()} />
-          </InfoRow>
-          <InfoRow icon={Mail} label="Email">
-            <span className="text-sm">{email}</span>
           </InfoRow>
           <InfoRow icon={AtSign} label="Username">
             <span className="text-sm">{username}</span>

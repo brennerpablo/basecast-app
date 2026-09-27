@@ -10,7 +10,7 @@ import type { OpsRange, RouteStats } from "@/lib/ops/types";
 import { cn } from "@/lib/utils";
 
 import { fmtDuration, fmtInt } from "./format";
-import { ACCENT, KpiCard, LoadError, RANGE_LABEL, SectionCard, ServiceLabel, useOpsQuery } from "./ops-bits";
+import { ACCENT, KpiCard, LoadError, SectionCard, ServiceLabel, useOpsQuery } from "./ops-bits";
 
 export function RequestsTab({ range }: { range: OpsRange }) {
   const { data, isLoading, error } = useOpsQuery<RouteStats[]>(["requests", range], `/api/ops/requests?range=${range}`);
@@ -102,24 +102,24 @@ export function RequestsTab({ range }: { range: OpsRange }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard Icon={Activity} isLoading={isLoading} value={fmtInt(total)} label="Requests" note={`app + get-data, ${RANGE_LABEL[range]}`} accent={ACCENT.blue} />
+        <KpiCard Icon={Activity} isLoading={isLoading} value={fmtInt(total)} label="Requests" accent={ACCENT.blue} />
         <KpiCard
           Icon={TriangleAlert}
           iconClassName={e5 ? "text-red-600" : "text-muted-foreground"}
           isLoading={isLoading}
           value={total ? `${((e5 / total) * 100).toFixed(2)}%` : "—"}
           label="5xx rate"
-          note={e5 ? `${fmtInt(e5)} server errors` : "No server errors in the period"}
+          note={e5 ? `${fmtInt(e5)} × 5xx` : undefined}
           accent={e5 ? ACCENT.red : ACCENT.brand}
         />
-        <KpiCard Icon={Timer} isLoading={isLoading} value={fmtDuration(weighted("p50Ms"))} label="p50" note="Weighted by route" accent={ACCENT.brand} />
+        <KpiCard Icon={Timer} isLoading={isLoading} value={fmtDuration(weighted("p50Ms"))} label="p50 (est.)" accent={ACCENT.brand} />
         <KpiCard
           Icon={Gauge}
           iconClassName={p95 !== null && p95 > SLOW_REQUEST_MS ? "text-amber-600" : undefined}
           isLoading={isLoading}
           value={fmtDuration(p95)}
-          label="p95"
-          note={`Weighted by route; budget ${fmtInt(SLOW_REQUEST_MS)} ms`}
+          label="p95 (est.)"
+          note={`Budget ${fmtInt(SLOW_REQUEST_MS)} ms`}
           accent={p95 !== null && p95 > SLOW_REQUEST_MS ? ACCENT.amber : ACCENT.brand}
         />
       </div>
@@ -127,7 +127,8 @@ export function RequestsTab({ range }: { range: OpsRange }) {
       <SectionCard
         title="By route"
         icon={Route}
-        subtitle={`${fmtInt(rows.length)} routes; templates, never raw URLs. p95 over ${fmtInt(SLOW_REQUEST_MS)} ms in amber, any 5xx in red; open a route for its logs.`}
+        subtitle={`${fmtInt(rows.length)} routes`}
+        info={`p50 and p95 above are each route's percentile weighted by its traffic. Rows: p95 over ${fmtInt(SLOW_REQUEST_MS)} ms in amber, any 5xx in red.`}
       >
         {isLoading ? (
           <SkeletonDatatable />

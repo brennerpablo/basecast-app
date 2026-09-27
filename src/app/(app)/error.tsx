@@ -26,8 +26,7 @@ export default function AppError({ error, reset }: ErrorProps) {
           Something went wrong
         </h1>
         <p className="mb-8 text-sm text-slate-600 dark:text-slate-400">
-          We hit an unexpected error while loading this page. You can try again
-          or go back to the start.
+          This page failed to load.
         </p>
         {process.env.NODE_ENV === "development" && (
           <pre className="mb-6 max-h-40 w-full overflow-auto whitespace-pre-wrap wrap-break-word rounded bg-slate-100 p-3 text-left text-xs text-slate-700 dark:bg-muted dark:text-slate-300">

@@ -374,7 +374,7 @@ export function TabItem({
           type="button"
           tabIndex={-1}
           aria-label={`Unpin ${title}`}
-          title="Pinned tab: click to unpin"
+          title="Unpin"
           disabled={!interactive}
           onClick={onUnpin}
           className="mr-1 flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"

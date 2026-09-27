@@ -31,9 +31,7 @@ export function SignInForm() {
     // A network failure lands here too: to the user it is the same "could not sign in".
     const result = await signIn("credentials", { ...values, redirect: false }).catch(() => undefined);
     if (!result?.ok) {
-      toast.error("Couldn't sign in", {
-        description: "Check your email or username and password.",
-      });
+      toast.error("Wrong email/username or password");
       return;
     }
     setEntering(true);
@@ -46,10 +44,7 @@ export function SignInForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
-        <div className="mb-5">
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">Sign in</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Use your email or username.</p>
-        </div>
+        <h1 className="mb-5 text-lg font-semibold tracking-tight text-foreground">Sign in</h1>
 
         <FormField
           control={form.control}

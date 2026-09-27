@@ -31,12 +31,12 @@ const SERVICE_ICON = { app: AppWindow, "get-data": Server } as const;
 function serviceNote(s: RequestServiceHealth): string {
   const rate = s.requests ? `${((s.errors5xx / s.requests) * 100).toFixed(1)}% 5xx` : "no requests";
   const p95 = s.p95Ms === null ? null : `p95 ${fmtDuration(s.p95Ms)}`;
-  return [rate, p95, `last line ${fmtAgo(s.lastAt)}`].filter(Boolean).join(" · ");
+  return [p95, rate].filter(Boolean).join(" · ");
 }
 
 const GRID_LABELS = {
   success: { color: "bg-emerald-500", label: "Succeeded" },
-  partial: { color: "bg-amber-500", label: "Partial or recovered" },
+  partial: { color: "bg-amber-500", label: "Partial" },
   failed: { color: "bg-red-500", label: "Failed" },
   running: { color: "bg-blue-500", label: "Running" },
   abandoned: { color: "bg-slate-400", label: "Abandoned" },
@@ -125,7 +125,7 @@ export function OverviewTab({ range }: { range: OpsRange }) {
           isLoading={isLoading}
           value={pipes ? fmtInt(pipes.runs) : "—"}
           label={<span className="inline-flex items-center gap-1"><ServiceLabel service="airflow" /> pipeline runs</span>}
-          note={pipes ? `${pipes.reason} · last run ${fmtAgo(pipes.lastAt)}` : undefined}
+          note={pipes ? (pipes.status === "healthy" ? `last run ${fmtAgo(pipes.lastAt)}` : pipes.reason) : undefined}
           accent={pipes ? HEALTH_ACCENT[pipes.status] : ACCENT.muted}
           badge={pipes && <HealthBadge status={pipes.status} />}
         />
@@ -135,13 +135,13 @@ export function OverviewTab({ range }: { range: OpsRange }) {
           isLoading={isLoading}
           value={fmtInt(errorCount)}
           label="Errors"
-          note={errorCount ? `${data!.topErrors.length} distinct` : `No errors in the ${RANGE_LABEL[range]}`}
+          note={errorCount ? `${data!.topErrors.length} distinct` : undefined}
           accent={errorCount ? ACCENT.red : ACCENT.brand}
         />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-stretch">
-        <SectionCard title="Requests over time" icon={Activity} subtitle="app + get-data, by status class">
+        <SectionCard title="Requests over time" icon={Activity}>
           <div className="h-72 min-h-0">
             {charts ? (
               <AreaChart
@@ -160,7 +160,7 @@ export function OverviewTab({ range }: { range: OpsRange }) {
             )}
           </div>
         </SectionCard>
-        <SectionCard title="Latency over time" icon={Timer} subtitle="p95 per service; the app line includes its wait for get-data">
+        <SectionCard title="p95 latency" icon={Timer} info="The app line includes its wait for get-data.">
           <div className="h-72 min-h-0">
             {charts ? (
               <AreaChart
@@ -184,7 +184,7 @@ export function OverviewTab({ range }: { range: OpsRange }) {
       <SectionCard
         title="Pipeline runs"
         icon={Workflow}
-        subtitle="Last 14 days, one cell per source per day (CT)"
+        subtitle="Last 14 days"
         action={
           <Link href={`/ops?tab=pipelines&range=${range}`} className="inline-flex items-center text-xs font-medium text-basecast-brand hover:underline">
             All runs <ChevronRight className="size-3.5" />
@@ -200,7 +200,7 @@ export function OverviewTab({ range }: { range: OpsRange }) {
         )}
       </SectionCard>
 
-      <SectionCard title="Top errors" icon={Bug} subtitle={`Grouped by error and place, ${RANGE_LABEL[range]}. Open one to see its log lines.`}>
+      <SectionCard title="Top errors" icon={Bug}>
         {!data ? (
           <TableSkeleton />
         ) : data.topErrors.length === 0 ? (

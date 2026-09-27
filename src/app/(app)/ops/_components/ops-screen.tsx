@@ -5,7 +5,6 @@ import { Activity, LayoutDashboard, type LucideIcon, RefreshCw, ScrollText, Work
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/components-app/ui/tabs";
-import { Filter } from "@/components/product/filter";
 import { PageHeader } from "@/components/product/page-header";
 import { Button } from "@/components/ui/button";
 import { OPS_RANGES } from "@/lib/ops/types";
@@ -36,13 +35,11 @@ export function OpsScreen() {
 
   const actions = (
     <>
-      <Filter label="Range">
-        <RangeToggle value={range} onChange={(r) => void setRange(r === "24h" ? null : r)} />
-      </Filter>
+      <RangeToggle value={range} onChange={(r) => void setRange(r === "24h" ? null : r)} />
       <Button
         size="sm"
         variant="outline"
-        className="self-end"
+        title="Refreshes every 30 s"
         disabled={fetching}
         aria-busy={fetching}
         onClick={() => void queryClient.invalidateQueries({ queryKey: ["ops"] })}
@@ -55,11 +52,7 @@ export function OpsScreen() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Ops"
-        subtitle="Requests, latency, pipeline runs and log lines of the app, get-data and airflow. Refreshes every 30 s."
-        actions={actions}
-      />
+      <PageHeader title="Ops" actions={actions} />
       <Tabs urlParam="tab" defaultValue="overview" className="space-y-6">
         <TabsList variant="line" color="brand" className="max-w-full overflow-x-auto">
           {TABS.map(({ value, label, icon: Icon }) => (

@@ -6,15 +6,15 @@ import { useMemo } from "react";
 
 import { type ColumnMetadata, DataTable } from "@/components/components-app/data-table";
 import { FilterSearchInput } from "@/components/components-app/url-filters";
-import { Filter, FilterRow } from "@/components/product/filter";
+import { FilterRow } from "@/components/product/filter";
 import SkeletonDatatable from "@/components/skeleton-datatable";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { OpsLogEntry, OpsLogPage, OpsRange } from "@/lib/ops/types";
 import { cn } from "@/lib/utils";
 
-import { fmtDayTime, fmtDuration, fmtInt, fmtLogTime } from "./format";
-import { Field, FieldBlock, LevelBadge, LoadError, RANGE_LABEL, SectionCard, SERVICE_COLOR, ServiceLabel, useOpsQuery } from "./ops-bits";
+import { fmtDayLogTime, fmtDuration, fmtInt, fmtLogTime } from "./format";
+import { Field, FieldBlock, LevelBadge, LoadError, SectionCard, SERVICE_COLOR, ServiceLabel, useOpsQuery } from "./ops-bits";
 
 /** Lines loaded per view; the table pages and filters them in the browser. */
 const LOG_LIMIT = 500;
@@ -94,7 +94,7 @@ function LogDetailSheet({
       <SheetContent side="right" className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
         <SheetHeader className="border-b px-6 py-4">
           <SheetTitle>Log line</SheetTitle>
-          <SheetDescription>{entry ? `${fmtDayTime(entry.ts)} CT · ${fmtLogTime(entry.ts)}` : ""}</SheetDescription>
+          <SheetDescription>{entry ? `${fmtDayLogTime(entry.ts)} CT` : ""}</SheetDescription>
         </SheetHeader>
         {entry && (
           <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5 text-sm">
@@ -255,14 +255,10 @@ export function LogsTab({ range }: { range: OpsRange }) {
   return (
     <div className="space-y-6">
       <FilterRow>
-        <Filter label="Search">
-          <FilterSearchInput
-            value={q}
-            onValueChange={(v) => void setQ(v)}
-            placeholder="Message, event, route, error, request or run id"
-            className="w-full sm:w-md"
-          />
-        </Filter>
+        <label className="min-w-0">
+          <span className="sr-only">Search logs</span>
+          <FilterSearchInput value={q} onValueChange={(v) => void setQ(v)} placeholder="Search logs" className="w-full sm:w-md" />
+        </label>
         {scope && (
           <button
             type="button"
@@ -282,11 +278,7 @@ export function LogsTab({ range }: { range: OpsRange }) {
         <SectionCard
           title="Log lines"
           icon={ScrollText}
-          subtitle={
-            isLoading
-              ? "—"
-              : `${fmtInt(entries.length)}${data?.nextBefore ? `+ (newest ${fmtInt(LOG_LIMIT)} shown)` : ""} lines ${scope ? `of this ${scope.key.toLowerCase()}` : `in the ${RANGE_LABEL[range]}`}. Open a line by its time or message.`
-          }
+          subtitle={isLoading ? undefined : `${fmtInt(entries.length)} lines${data?.nextBefore ? ` · newest ${fmtInt(LOG_LIMIT)}` : ""}`}
         >
           {isLoading ? (
             <SkeletonDatatable />

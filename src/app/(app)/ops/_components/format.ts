@@ -21,6 +21,9 @@ export function fmtLogTime(iso: string): string {
   return `${timeFmt.format(d)}.${String(d.getMilliseconds()).padStart(3, "0")}`;
 }
 
+/** `Sep 26, 14:32:04.118` */
+export const fmtDayLogTime = (iso: string) => `${dayFmt.format(new Date(iso))}, ${fmtLogTime(iso)}`;
+
 /** `Sep 26, 14:32` */
 export const fmtDayTime = (iso: string) => dayTimeFmt.format(new Date(iso));
 

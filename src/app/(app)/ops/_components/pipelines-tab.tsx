@@ -23,7 +23,6 @@ import {
   KpiCard,
   LevelBadge,
   LoadError,
-  RANGE_LABEL,
   RunStatusBadge,
   SectionCard,
   useOpsQuery,
@@ -107,7 +106,7 @@ function RunDetailSheet({ runId, onClose }: { runId: string | null; onClose: () 
 
             <FieldBlock label={`Events (${fmtInt(events.length)})`}>
               {events.length === 0 ? (
-                <p className="text-xs text-muted-foreground">No events recorded.</p>
+                <p className="text-xs text-muted-foreground">—</p>
               ) : (
                 <ol className="space-y-1">
                   {events.slice(0, 200).map((e, i) => {
@@ -128,9 +127,7 @@ function RunDetailSheet({ runId, onClose }: { runId: string | null; onClose: () 
 
             <FieldBlock label={`Log lines (${fmtInt(data.logs.length)})`}>
               {data.logs.length === 0 ? (
-                <p className="rounded-md border border-dashed border-border bg-muted/30 p-3 text-xs text-muted-foreground italic">
-                  This run wrote no lines to ops.log.
-                </p>
+                <p className="text-xs text-muted-foreground">—</p>
               ) : (
                 <ol className="space-y-1">
                   {data.logs.map((l) => (
@@ -250,7 +247,11 @@ export function PipelinesTab({ range }: { range: OpsRange }) {
         return (
           <span
             className={cn("tabular-nums", slow && "font-semibold text-amber-700 dark:text-amber-300")}
-            title={r.medianS ? `Median for this source: ${fmtDuration(r.medianS * 1_000)}` : undefined}
+            title={
+              r.medianS
+                ? `${slow ? `Over ${SLOW_RATIO}× this source's median` : "Median for this source"}: ${fmtDuration(r.medianS * 1_000)}`
+                : undefined
+            }
           >
             {fmtDuration((r.durationS ?? 0) * 1_000)}
           </span>
@@ -278,14 +279,14 @@ export function PipelinesTab({ range }: { range: OpsRange }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard Icon={Activity} isLoading={isLoading} value={fmtInt(all.length)} label="Total runs" note={median === null ? "—" : `Median duration: ${fmtDuration(median * 1_000)}`} accent={ACCENT.blue} />
+        <KpiCard Icon={Activity} isLoading={isLoading} value={fmtInt(all.length)} label="Total runs" note={median === null ? undefined : `Median ${fmtDuration(median * 1_000)}`} accent={ACCENT.blue} />
         <KpiCard
           Icon={CircleCheck}
           iconClassName="text-basecast-brand"
           isLoading={isLoading}
           value={fmtInt(succeeded)}
           label="Succeeded"
-          note={finished.length ? `Success rate: ${Math.round((succeeded / finished.length) * 100)}%` : "No finished runs"}
+          note={finished.length ? `${Math.round((succeeded / finished.length) * 100)}% success` : undefined}
           accent={ACCENT.brand}
         />
         <KpiCard
@@ -294,7 +295,6 @@ export function PipelinesTab({ range }: { range: OpsRange }) {
           isLoading={isLoading}
           value={fmtInt(failed)}
           label="Failed"
-          note={failed ? "Open a run below to investigate" : "No failures in the period"}
           accent={failed ? ACCENT.red : ACCENT.brand}
         />
         <KpiCard
@@ -303,18 +303,17 @@ export function PipelinesTab({ range }: { range: OpsRange }) {
           isLoading={isLoading}
           value={fmtInt(running)}
           label="Running"
-          note={running ? "In progress now" : "No run in progress"}
           accent={running ? ACCENT.amber : ACCENT.brand}
         />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-5 lg:items-stretch">
-        <SectionCard className="lg:col-span-2" title="Runs over time" icon={Activity} subtitle={`Runs per bucket, ${RANGE_LABEL[range]}`}>
+        <SectionCard className="lg:col-span-2" title="Runs over time" icon={Activity}>
           <div className="h-72 min-h-0">
             {!data ? (
               <ChartSkeleton className="h-full" />
             ) : data.runs.length === 0 ? (
-              <div className="flex h-full items-center justify-center text-xs text-muted-foreground">No runs in the period.</div>
+              <div className="flex h-full items-center justify-center text-xs text-muted-foreground">No runs</div>
             ) : (
               <AreaChart
                 className="h-full"
@@ -330,12 +329,12 @@ export function PipelinesTab({ range }: { range: OpsRange }) {
             )}
           </div>
         </SectionCard>
-        <SectionCard className="lg:col-span-3" title="By source" icon={Database} subtitle="Click a source to filter the runs">
+        <SectionCard className="lg:col-span-3" title="By source" icon={Database}>
           <div className="h-72 min-h-0 overflow-y-auto">
             {!data ? (
               <div className="space-y-2">{[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-6 w-full" />)}</div>
             ) : data.sources.length === 0 ? (
-              <EmptyState compact className="h-full" Icon={Workflow} title="No source ran in the period" />
+              <EmptyState compact className="h-full" Icon={Workflow} title="No runs" />
             ) : (
               <div className="rounded-md border border-border">
                 <table className="w-full text-xs whitespace-nowrap">
@@ -393,7 +392,7 @@ export function PipelinesTab({ range }: { range: OpsRange }) {
       <SectionCard
         title="Runs"
         icon={ListOrdered}
-        subtitle={isLoading ? "—" : `${fmtInt(runs.length)} runs in the period; a duration over ${SLOW_RATIO}× the source's median is in amber. Open a run by its start time.`}
+        subtitle={isLoading ? undefined : `${fmtInt(runs.length)} runs`}
         action={
           source && (
             <button
