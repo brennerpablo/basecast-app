@@ -2,6 +2,9 @@
 // `src/lib/auth/google-user.ts`. Anyone with a Google account can sign up: they get every screen but the
 // admin ones (`isSuperAdmin`).
 
+/** The `?error=` code a Google sign-in that failed on our side (the database) comes back with. */
+export const GOOGLE_SIGN_IN_UNAVAILABLE = "GoogleUnavailable";
+
 const USERNAME_MIN = 3;
 const USERNAME_MAX = 32;
 

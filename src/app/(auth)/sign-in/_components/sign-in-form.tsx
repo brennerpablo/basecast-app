@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { GOOGLE_SIGN_IN_UNAVAILABLE } from "@/lib/auth/google";
 
 import { GoogleIcon } from "./google-icon";
 import { safeInternalPath } from "./safe-internal-path";
@@ -26,6 +27,7 @@ type Values = { identifier: string; password: string };
 /** next-auth sends a failed Google sign-in back here with `?error=`; `AccessDenied` is our refusal. */
 const GOOGLE_ERRORS: Record<string, string> = {
   AccessDenied: "This Google account can't sign in. Its email must be verified by Google.",
+  [GOOGLE_SIGN_IN_UNAVAILABLE]: "Sign-in is unavailable right now. Try again in a moment.",
 };
 const GOOGLE_ERROR_FALLBACK = "Could not sign in with Google. Try again.";
 

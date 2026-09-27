@@ -7,7 +7,7 @@ import GoogleProvider from "next-auth/providers/google";
 
 import { userImage } from "@/lib/account/profile";
 import { DUMMY_PASSWORD_HASH, normalizeIdentifier } from "@/lib/auth/credentials";
-import type { GoogleProfile } from "@/lib/auth/google";
+import { GOOGLE_SIGN_IN_UNAVAILABLE, type GoogleProfile } from "@/lib/auth/google";
 import { resolveGoogleUser } from "@/lib/auth/google-user";
 import { getDb } from "@/lib/db";
 import { log } from "@/lib/observability";
@@ -75,7 +75,15 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.provider !== "google") return true;
-      const resolved = await resolveGoogleUser(profile as GoogleProfile);
+      let resolved;
+      try {
+        resolved = await resolveGoogleUser(profile as GoogleProfile);
+      } catch (error) {
+        // next-auth puts a thrown error's message in the redirect's `?error=`: a Prisma message would
+        // show file paths and code to the visitor. It goes to the log; the URL gets a fixed code.
+        log.error("auth.google_failed", "Google sign-in failed", { error });
+        throw new Error(GOOGLE_SIGN_IN_UNAVAILABLE);
+      }
       if (!resolved) return false;
       // Without an adapter next-auth hands this same object on to the token (`defaultToken` and the
       // `jwt` callback, in next-auth/core/routes/callback.js), so our id, username and photo replace
