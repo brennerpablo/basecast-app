@@ -58,7 +58,9 @@ export function PageBreadcrumb({ items }: PageBreadcrumbProps) {
 /**
  * Renders the breadcrumb bar. `inline` (the default) sits in the mobile toolbar
  * row after the sidebar trigger, so it leads with a vertical rule; `title` is
- * the desktop form, alone above the page content as its title.
+ * the desktop form, alone above the page content. The desktop form shows only a
+ * trail (two items or more): a single item is just the screen's name, which the
+ * app tab and the screen's own heading already show.
  */
 export function BreadcrumbBar({
   variant = "inline",
@@ -68,6 +70,7 @@ export function BreadcrumbBar({
   const { items } = useBreadcrumbContext();
 
   if (items.length === 0) return null;
+  if (variant === "title" && items.length === 1) return null;
 
   return (
     <>
