@@ -10,6 +10,9 @@ body{margin:0;background:#F5F3EE;-webkit-font-smoothing:antialiased}
 a{color:#152B1E}a:hover{color:#2F6B47}
 a:focus-visible{outline:3px solid #6FA8FF;outline-offset:3px}
 body{padding-bottom:96px}
+.lp-header{position:sticky;top:12px;z-index:20;display:flex;justify-content:space-between;align-items:center;margin:12px 24px;padding:12px 12px 12px 32px;border:1px solid rgba(21,43,30,0.08);border-radius:999px;background:rgba(245,243,238,0.8);box-shadow:0 10px 32px rgba(21,43,30,0.14);-webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6)}
+@supports (animation-timeline: scroll()){.lp-header{animation:lp-glass linear both;animation-timeline:scroll();animation-range:0 120px}}
+@keyframes lp-glass{from{border-color:rgba(21,43,30,0);background:rgba(245,243,238,0);box-shadow:0 10px 32px rgba(21,43,30,0);-webkit-backdrop-filter:blur(0) saturate(1);backdrop-filter:blur(0) saturate(1)}}
 .lp-toggle{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10;display:flex;gap:4px;padding:4px;border-radius:999px;background:#1B3F2A;box-shadow:0 8px 24px rgba(21,43,30,0.28);font-family:Figtree,'Helvetica Neue',Helvetica,sans-serif}
 .lp-toggle a{display:flex;align-items:center;min-height:40px;padding:0 18px;border-radius:999px;color:#D5DED6;font-weight:600;font-size:15px;text-decoration:none;white-space:nowrap}
 .lp-toggle a:hover{color:#F5F3EE}
@@ -19,15 +22,9 @@ body{padding-bottom:96px}
 <body>
 <div style="width: 1440px; margin: 0 auto; box-sizing: border-box; display: flex; flex-direction: column; background: #F5F3EE; color: #152B1E; font-family: Figtree, 'Helvetica Neue', Helvetica, sans-serif">
 
-<header style="display: flex; justify-content: space-between; align-items: center; padding: 24px 56px">
-<div style="display: flex; align-items: center; gap: 20px">
+<header class="lp-header">
 <img src="/landing/basecast-logo.svg" alt="BaseCast" style="display: block; height: 46px; width: auto">
-<span style="padding: 8px 16px; border-radius: 999px; background: #E4EADF; font-weight: 600; font-size: 15px">Internal engineering overview</span>
-</div>
-<nav aria-label="Project links" style="display: flex; align-items: center; gap: 28px; font-weight: 600; font-size: 17px">
-<a href="https://github.com/brennerpablo" style="text-underline-offset: 5px">GitHub</a>
-<a href="/insights" style="text-underline-offset: 5px">Live app</a>
-</nav>
+<a href="/sign-in" style="display: flex; align-items: center; min-height: 48px; box-sizing: border-box; padding: 0 24px; border: 1.5px solid #152B1E; border-radius: 999px; font-weight: 600; font-size: 17px; text-decoration: none">Sign in</a>
 </header>
 
 <section style="padding: 8px 24px 0">

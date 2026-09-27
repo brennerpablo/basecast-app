@@ -248,8 +248,9 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
 - Some comments in `components/ui`, `components-app` and `fields` are still in Portuguese (pending
   translation pass).
 - Landing pages (`public/landing/`, static HTML from Claude Design, 1440px wide, own tokens and fonts, no app code):
-  `product.html` at `/` for visitors, `internal.html` at `/how-its-built` for everyone, with a floating toggle
-  between them (plain links and CSS in each file). The proxy rewrites to them (`LANDING_PAGES` in
+  `product.html` at `/` for visitors, `internal.html` at `/how-its-built` for everyone, with the same header (logo, Sign in;
+  sticky, turning to blurred glass on scroll through a CSS scroll-driven animation) and a floating toggle
+  between them (plain links and CSS, repeated in each file). The proxy rewrites to them (`LANDING_PAGES` in
   `src/lib/auth/gate.ts`); the lake numbers in `internal.html` are fixed as of Sep 26, 2026.
 - Login, required on every page but the landing pages: next-auth v4 in `src/lib/auth.ts` (password, and "Continue with Google" where
   anyone signs up: `src/lib/auth/google.ts` pure rules, `google-user.ts` the upsert and the superadmins' email),
