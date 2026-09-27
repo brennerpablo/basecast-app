@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Flag, type LucideIcon, MapPinOff, Scale, Unplug } from "lucide-react";
+import { CirclePause, Eye, FileText, Flag, type LucideIcon, MapPinOff, PhoneCall, Scale, Sprout, Unplug } from "lucide-react";
 
 import { AppBadge, type AppBadgeState } from "@/components/components-app/ui/badge";
 import { formatDate, GAP } from "@/components/product/format";
@@ -16,8 +16,13 @@ const ACTION_STATE: Record<NextAction, AppBadgeState> = {
   hold: "inactive",
 };
 
-/** The order next actions sort and list in, most urgent first. */
-export const ACTION_ORDER: NextAction[] = ["call_now", "nurture", "watch", "hold"];
+/** A glyph per next action, for its stat cards. */
+export const ACTION_ICON: Record<NextAction, LucideIcon> = {
+  call_now: PhoneCall,
+  nurture: Sprout,
+  watch: Eye,
+  hold: CirclePause,
+};
 
 /** A glossary code as a badge: the label on it, the glossary's text in the tooltip. */
 export function CodeBadge({ kind, code, state }: { kind: CodeKind; code: string; state: AppBadgeState }) {

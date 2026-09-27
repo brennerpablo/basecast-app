@@ -6,8 +6,12 @@ import { useMemo } from "react";
 
 import { DataTable } from "@/components/components-app/data-table";
 import { FilterChipMultiselect, FilterClearButton, FilterSearchInput } from "@/components/components-app/url-filters";
-import { DataCard } from "@/components/product/data-card";
+import { CaveatBadges } from "@/components/product/caveat-badges";
+import { DashboardStatCard } from "@/components/product/dashboard-stat-card";
+import { QueryBody } from "@/components/product/data-card";
 import { formatWhole } from "@/components/product/format";
+import { PageHeader } from "@/components/product/page-header";
+import { Provenance } from "@/components/product/provenance";
 import SkeletonDatatable from "@/components/skeleton-datatable";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -19,12 +23,20 @@ import {
   LIST_FILTERS,
   type ListFilter,
 } from "@/lib/accounts/filters";
-import { ACCOUNT_TYPE_LABEL, type AccountsData, type AccountSummary, type CodeKind, useCodeLabels } from "@/lib/accounts/labels";
+import {
+  ACCOUNT_TYPE_LABEL,
+  type AccountsData,
+  type AccountSummary,
+  type CodeKind,
+  type NextAction,
+  useCodeLabels,
+} from "@/lib/accounts/labels";
+import { ACTION_ORDER, countByAction } from "@/lib/accounts/summary";
 import type { components } from "@/lib/api/get-data";
 import { useProductQuery } from "@/lib/bff/queries";
 import { dataUrl } from "@/lib/bff/url";
 
-import { ACTION_ORDER } from "./account-bits";
+import { ACTION_ICON } from "./account-bits";
 import { accountColumns } from "./accounts-columns";
 
 type CountyDetail = components["schemas"]["CountyDetail"];
@@ -81,7 +93,46 @@ function CountyChip({ fips, onRemove }: { fips: string; onRemove: () => void }) 
   );
 }
 
-/** /accounts: the co-ops and munis ranked by the API, filtered through the URL, with the CSV of the same filters. */
+/**
+ * One stat card per next action, counted over the whole ranking (not the filtered list), as Fundsys's list
+ * KPIs. A card is a quick filter: it narrows the list to its action, and clicking it again clears it.
+ */
+function ActionCards({
+  items,
+  selected,
+  onSelect,
+}: {
+  items: AccountSummary[] | undefined;
+  selected: string[];
+  onSelect: (action: NextAction | null) => void;
+}) {
+  const { label } = useCodeLabels();
+  const counts = countByAction(items ?? []);
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+      {ACTION_ORDER.map((action) => {
+        const Icon = ACTION_ICON[action];
+        const active = selected.length === 1 && selected[0] === action;
+        return (
+          <DashboardStatCard
+            key={action}
+            icon={<Icon className="size-4" aria-hidden />}
+            title={label("next_action", action)}
+            value={formatWhole(counts[action])}
+            isLoading={!items}
+            isActive={active}
+            onClick={() => onSelect(active ? null : action)}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * /accounts: the co-ops and munis ranked by the API, filtered through the URL, with the CSV of the same filters.
+ * Laid out as Fundsys's CRM list: the title with the actions on the right, the stat cards, the table on its own.
+ */
 export function AccountsScreen() {
   const [filters, setFilters] = useQueryStates(accountsFilterParsers);
   const county = filters.county && FIPS.test(filters.county) ? filters.county : null;
@@ -146,8 +197,25 @@ export function AccountsScreen() {
     </Button>
   );
 
+  const meta = list.data?.meta;
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <PageHeader
+        title="Accounts"
+        subtitle={
+          shown === undefined
+            ? "Co-ops and munis ranked by priority."
+            : `${formatWhole(shown)}${all !== undefined && all !== shown ? ` of ${formatWhole(all)}` : ""} co-ops and munis${filters.rank === "within_type" ? ", ranked within their type" : ", ranked by priority"}.`
+        }
+        actions={
+          <>
+            {rankToggle}
+            {exportButton}
+          </>
+        }
+      >
+        <CaveatBadges caveats={meta?.caveats?.filter((caveat) => caveat.code !== "weights_pending_review")} />
+      </PageHeader>
       {pendingWeights && (
         <Alert className="border-yellow-600/40 bg-yellow-50 text-yellow-950 dark:border-yellow-800/45 dark:bg-yellow-950/30 dark:text-yellow-100 [&>svg]:text-yellow-700 dark:[&>svg]:text-yellow-300">
           <TriangleAlert className="size-4" aria-hidden />
@@ -155,18 +223,12 @@ export function AccountsScreen() {
           <AlertDescription className="text-sm">{pendingWeights.text}</AlertDescription>
         </Alert>
       )}
-      <DataCard<AccountsData>
-        title="Prioritized accounts"
-        subtitle={
-          shown === undefined
-            ? "Co-ops and munis ranked by priority."
-            : `${formatWhole(shown)}${all !== undefined && all !== shown ? ` of ${formatWhole(all)}` : ""} co-ops and munis${filters.rank === "within_type" ? ", ranked within their type" : ", ranked by priority"}.`
-        }
-        action={rankToggle}
-        query={list}
-        omitCaveats={["weights_pending_review"]}
-        skeleton={<SkeletonDatatable />}
-      >
+      <ActionCards
+        items={universe.data?.data.items}
+        selected={filters.action}
+        onSelect={(action) => void setFilters({ action: action ? [action] : null })}
+      />
+      <QueryBody<AccountsData> query={list} compact={false} skeleton={<SkeletonDatatable />}>
         {(data) => (
           <DataTable<AccountSummary>
             columnsMetadata={columns}
@@ -179,12 +241,12 @@ export function AccountsScreen() {
             enableDownload={false}
             toolbarIconsOnly
             filterExtras={filterBar}
-            toolbarExtras={exportButton}
             fetching={list.isFetching && list.isPlaceholderData}
             getRowId={(row) => row.account_id}
           />
         )}
-      </DataCard>
+      </QueryBody>
+      {meta && <Provenance meta={meta} className="border-t border-border pt-3" />}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, History } from "lucide-react";
-import { parseAsBoolean, parseAsInteger, useQueryStates } from "nuqs";
+import { ChevronLeft, ChevronRight, Clock, History, Layers, Zap } from "lucide-react";
+import { parseAsInteger, useQueryStates } from "nuqs";
 
 import { AppBadge } from "@/components/components-app/ui/badge";
 import { formatDate, formatPercent, formatWhole } from "@/components/product/format";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { type AccountDetail, type AccountEvent, type EventsPage, useCodeLabels } from "@/lib/accounts/labels";
-import type { Caveat, Meta } from "@/lib/bff/envelope";
+import type { Caveat } from "@/lib/bff/envelope";
 import { useProductQuery } from "@/lib/bff/queries";
 import { cn } from "@/lib/utils";
 
@@ -20,8 +20,6 @@ const DAY_MS = 86_400_000;
 /** The whole history the timeline draws, and one page of the "full history" table. */
 const TIMELINE_LIMIT = 500;
 const HISTORY_PAGE = 50;
-/** Active strong events shown before "Show all": the freshest first, as the API orders them. */
-const ACTIVE_SHOWN = 5;
 
 const utc = (date: string) => Date.parse(`${date}T00:00:00Z`);
 
@@ -48,7 +46,7 @@ function EventTimeline({ events, asOf }: { events: AccountEvent[]; asOf: string 
 
   return (
     <div className="space-y-1.5">
-      <div className="relative h-20" role="img" aria-label="Timeline of the account's events">
+      <div className="relative h-24" role="img" aria-label="Timeline of the account's events">
         <div className="absolute top-0 right-0 bottom-5 rounded-sm bg-basecast-brand/10" style={{ left: x(windowStart) }} />
         <span className="absolute top-0.5 right-1.5 text-[10px] font-medium text-basecast-brand">Last 12 months</span>
         <div className="absolute right-0 bottom-5 left-0 h-px bg-border" />
@@ -69,8 +67,8 @@ function EventTimeline({ events, asOf }: { events: AccountEvent[]; asOf: string 
                 className={cn(
                   "absolute size-2.5 -translate-x-1/2 cursor-help rounded-full border-2",
                   event.strength === "strong"
-                    ? "top-5 border-basecast-brand bg-basecast-brand"
-                    : "top-10 border-muted-foreground/60 bg-card",
+                    ? "top-6 border-basecast-brand bg-basecast-brand"
+                    : "top-12 border-muted-foreground/60 bg-card",
                 )}
                 style={{ left: x(utc(event.event_date)) }}
               />
@@ -117,9 +115,7 @@ function EventRow({ event }: { event: AccountEvent }) {
 }
 
 const historyParsers = {
-  history: parseAsBoolean.withDefault(false),
   events: parseAsInteger.withDefault(0),
-  active: parseAsBoolean.withDefault(false),
 };
 
 /** Every event of the account, newest first, a page at a time (`/accounts/{id}/events`). */
@@ -134,7 +130,7 @@ function FullHistory({ id, total }: { id: string; total: number }) {
   const items = page.data?.data.items ?? [];
   const count = page.data?.data.total ?? total;
   return (
-    <div className="mt-3 overflow-x-auto rounded-md border border-border">
+    <div className="overflow-x-auto rounded-md border border-border">
       {page.isPending ? (
         <Skeleton className="h-40 w-full" />
       ) : (
@@ -205,20 +201,12 @@ function FullHistory({ id, total }: { id: string; total: number }) {
   );
 }
 
-/** Why now: the timeline, the active strong events, the context triggers in one line each, and the full history. */
-export function WhyNowCard({
-  account,
-  meta,
-  caveats,
-  className,
-}: {
-  account: AccountDetail;
-  meta: Meta;
-  caveats?: Caveat[];
-  className?: string;
-}) {
+/**
+ * Why now: the timeline across the width, the active strong events beside the context triggers, and the full
+ * history a page at a time (`?events=` is its offset).
+ */
+export function WhyNowTab({ account, caveats }: { account: AccountDetail; caveats?: Caveat[] }) {
   const { label } = useCodeLabels();
-  const [{ history, active: allActive }, setState] = useQueryStates(historyParsers);
   const timeline = useProductQuery<EventsPage>(
     `accounts/${encodeURIComponent(account.account_id)}/events`,
     { limit: TIMELINE_LIMIT },
@@ -227,68 +215,65 @@ export function WhyNowCard({
   const { active, context_summary: context, history_count: historyCount } = account.triggers;
 
   return (
-    <SectionCard
-      title="Why now"
-      subtitle={`${formatWhole(active.length)} active strong ${active.length === 1 ? "event" : "events"} · ${formatWhole(historyCount)} ever`}
-      caveats={caveats}
-      meta={meta}
-      className={className}
-    >
-      {timeline.data ? (
-        <EventTimeline events={timeline.data.data.items} asOf={account.as_of} />
-      ) : (
-        timeline.isPending && <Skeleton className="h-20 w-full" />
-      )}
-      {active.length > 0 ? (
-        <>
-          <ul className="mt-2">
-            {(allActive ? active : active.slice(0, ACTIVE_SHOWN)).map((event, i) => (
-              <EventRow key={`${event.source_ref ?? event.title}-${i}`} event={event} />
-            ))}
-          </ul>
-          {active.length > ACTIVE_SHOWN && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-basecast-brand"
-              onClick={() => void setState({ active: allActive ? null : true })}
-            >
-              {allActive ? "Show the latest only" : `Show all ${formatWhole(active.length)} active strong events`}
-            </Button>
+    <div className="space-y-4">
+      <SectionCard
+        title="Timeline"
+        icon={Clock}
+        subtitle={`${formatWhole(active.length)} active strong ${active.length === 1 ? "event" : "events"} · ${formatWhole(historyCount)} in the history`}
+        caveats={caveats}
+      >
+        {timeline.data ? (
+          <EventTimeline events={timeline.data.data.items} asOf={account.as_of} />
+        ) : (
+          timeline.isPending && <Skeleton className="h-28 w-full" />
+        )}
+      </SectionCard>
+      <div className="grid gap-4 lg:grid-cols-3 lg:items-start">
+        <SectionCard
+          title="Active strong events"
+          icon={Zap}
+          subtitle="Strong events of the last 12 months, the freshest first."
+          className="lg:col-span-2"
+        >
+          {active.length > 0 ? (
+            <ul>
+              {active.map((event, i) => (
+                <EventRow key={`${event.source_ref ?? event.title}-${i}`} event={event} />
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">No strong event in the last 12 months.</p>
           )}
-        </>
-      ) : (
-        <p className="mt-3 text-sm text-muted-foreground">No strong event in the last 12 months.</p>
-      )}
-      {context.length > 0 && (
-        <div className="mt-3 space-y-1.5">
-          <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">Context</p>
-          {context.map((line) => (
-            <p key={line.trigger} className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <CodeBadge kind="trigger" code={line.trigger} state="meta" />
-              <span>
-                ×{formatWhole(line.count)} · latest {formatDate(line.latest_date)}
-                {line.counties?.length ? ` · ${line.counties.join(", ")}` : ""}
-              </span>
-              <span className="sr-only">{label("trigger", line.trigger)}</span>
-            </p>
-          ))}
-        </div>
-      )}
-      {historyCount > 0 && (
-        <div className="mt-4">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2 text-xs"
-            onClick={() => void setState({ history: history ? null : true, events: null })}
-          >
-            <History aria-hidden />
-            {history ? "Hide the full history" : `Show full history (${formatWhole(historyCount)} events)`}
-          </Button>
-          {history && <FullHistory id={account.account_id} total={historyCount} />}
-        </div>
-      )}
-    </SectionCard>
+        </SectionCard>
+        <SectionCard title="Context triggers" icon={Layers} subtitle="Weaker signals, one line per trigger.">
+          {context.length > 0 ? (
+            <ul className="divide-y divide-border">
+              {context.map((line) => (
+                <li key={line.trigger} className="space-y-1.5 py-3 first:pt-0 last:pb-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <CodeBadge kind="trigger" code={line.trigger} state="meta" />
+                    <span className="text-sm font-semibold tabular-nums">×{formatWhole(line.count)}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Latest {formatDate(line.latest_date)}
+                    {line.counties?.length ? ` · ${line.counties.join(", ")}` : ""}
+                  </p>
+                  <span className="sr-only">{label("trigger", line.trigger)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">No context trigger.</p>
+          )}
+        </SectionCard>
+      </div>
+      <SectionCard title="Event history" icon={History} subtitle="Every event of the account, the newest first.">
+        {historyCount > 0 ? (
+          <FullHistory id={account.account_id} total={historyCount} />
+        ) : (
+          <p className="text-sm text-muted-foreground">No event in the history.</p>
+        )}
+      </SectionCard>
+    </div>
   );
 }

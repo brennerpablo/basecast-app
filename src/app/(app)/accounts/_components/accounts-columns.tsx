@@ -8,8 +8,9 @@ import { AppBadge } from "@/components/components-app/ui/badge";
 import { SimulatedBadge } from "@/components/product/caveat-badges";
 import { formatWhole, GAP } from "@/components/product/format";
 import { ACCOUNT_TYPE_LABEL, type AccountSummary } from "@/lib/accounts/labels";
+import { ACTION_ORDER } from "@/lib/accounts/summary";
 
-import { ACTION_ORDER, ActionUntil, FlagIcons, NextActionBadge, ScoreBar, TopTrigger, TriggerChips } from "./account-bits";
+import { ActionUntil, FlagIcons, NextActionBadge, ScoreBar, TopTrigger, TriggerChips } from "./account-bits";
 
 /** Sorts a nullable text column with the empty cells last. */
 function textNullsLast(a: Row<AccountSummary>, b: Row<AccountSummary>, id: string): number {
@@ -45,25 +46,24 @@ export function accountColumns(rankScope: "all" | "within_type"): ColumnMetadata
       type: "text",
       sortable: true,
       hideable: false,
-      columnClassName: "min-w-52",
+      columnClassName: "min-w-60",
+      // Two lines, as the company cell of Fundsys's CRM: the name, then the type and the G&T in grey.
       cell: ({ row }) => (
-        <span className="flex flex-wrap items-center gap-1.5">
-          <Link
-            href={`/accounts/${encodeURIComponent(row.original.account_id)}`}
-            className="font-medium text-foreground hover:text-basecast-brand hover:underline"
-          >
-            {row.original.name}
-          </Link>
-          <SimulatedBadge simulated={row.original.simulated} />
+        <span className="flex flex-col gap-0.5 py-0.5">
+          <span className="flex flex-wrap items-center gap-1.5">
+            <Link
+              href={`/accounts/${encodeURIComponent(row.original.account_id)}`}
+              className="leading-tight font-medium text-foreground hover:text-basecast-brand hover:underline"
+            >
+              {row.original.name}
+            </Link>
+            <SimulatedBadge simulated={row.original.simulated} />
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {[ACCOUNT_TYPE_LABEL[row.original.account_type] ?? row.original.account_type, row.original.gt].filter(Boolean).join(" · ")}
+          </span>
         </span>
       ),
-    },
-    {
-      columnId: "account_type",
-      title: "Type",
-      type: "text",
-      sortable: true,
-      formatter: (value) => ACCOUNT_TYPE_LABEL[value as AccountSummary["account_type"]] ?? String(value),
     },
     {
       columnId: "tier",
@@ -113,15 +113,6 @@ export function accountColumns(rankScope: "all" | "within_type"): ColumnMetadata
       type: "text",
       columnClassName: "whitespace-nowrap",
       cell: ({ row }) => <TriggerChips triggers={row.original.active_triggers} />,
-    },
-    {
-      columnId: "gt",
-      title: "G&T",
-      type: "text",
-      sortable: true,
-      sortingFn: textNullsLast,
-      columnClassName: "min-w-44 max-w-56 whitespace-normal",
-      cell: ({ row }) => muted(row.original.gt),
     },
     {
       columnId: "primary_weather_zone",
