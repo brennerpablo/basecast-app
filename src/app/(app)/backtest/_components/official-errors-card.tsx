@@ -1,5 +1,8 @@
 "use client";
 
+import { Files, Target } from "lucide-react";
+
+import { DashboardStatCard } from "@/components/product/dashboard-stat-card";
 import { formatDate, formatPercent, formatPower, formatWhole, GAP } from "@/components/product/format";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Meta } from "@/lib/bff/envelope";
@@ -136,6 +139,37 @@ function HorizonSummaryTable({ data, view }: { data: OfficialErrorsData; view: s
           )}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+/** The official product's error in four stat cards: 1, 3 and 5 summers ahead, and the vintages scored. */
+export function OfficialStats({ data, view }: { data: OfficialErrorsData; view: string }) {
+  const rows = data.summary.filter((s) => s.product === view);
+  const at = (h: number) => rows.find((r) => r.horizon === h);
+  const vintages = new Set(data.items.filter((i) => inView(i.product, view)).map((i) => `${i.product}-${i.vintage}`)).size;
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+      {[1, 3, 5].map((h) => {
+        const r = at(h);
+        return (
+          <DashboardStatCard
+            key={h}
+            layout="stacked"
+            icon={<Target className="size-4" aria-hidden />}
+            title={`${sourceLabel(view)}, ${h} ${h === 1 ? "summer" : "summers"} ahead`}
+            value={r ? formatPercent(r.mape) : GAP}
+            hint={r ? `Mean absolute error · bias ${formatPercent(r.bias_pct, { signed: true })} · ${formatWhole(r.n)} vintages` : "Not scored"}
+          />
+        );
+      })}
+      <DashboardStatCard
+        layout="stacked"
+        icon={<Files className="size-4" aria-hidden />}
+        title="Vintages scored"
+        value={formatWhole(vintages)}
+        hint={`${sourceLabel(view)} vintages against every summer they forecast`}
+      />
     </div>
   );
 }

@@ -1,23 +1,29 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CalendarRange, Factory, Grid3x3, type LucideIcon, Target, Trophy } from "lucide-react";
 import Link from "next/link";
 import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import { useEffect } from "react";
 
-import { DataCard } from "@/components/product/data-card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/components-app/ui/tabs";
+import { CaveatBadges } from "@/components/product/caveat-badges";
+import { QueryBody } from "@/components/product/data-card";
+import { Filter, FilterRow } from "@/components/product/filter";
 import { formatDate } from "@/components/product/format";
+import { PageHeader } from "@/components/product/page-header";
+import { Provenance } from "@/components/product/provenance";
+import { SectionCard } from "@/components/product/section-card";
 import { SegmentedControl } from "@/components/product/segmented-control";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BffError, isMartNotBuilt } from "@/lib/bff/envelope";
+import { BffError, isMartNotBuilt, type Meta } from "@/lib/bff/envelope";
 import { useProductQuery } from "@/lib/bff/queries";
 import { cn } from "@/lib/utils";
 
 import { AsOfBar } from "./as-of-bar";
 import { AsOfBody } from "./as-of-card";
 import { type OfficialErrorsData, type PeakData, productViews, type QueueData } from "./backtest-data";
-import { FanBody } from "./fan-card";
-import { OfficialErrorsBody, pickView } from "./official-errors-card";
+import { FanBody, FanStats } from "./fan-card";
+import { OfficialErrorsBody, OfficialStats, pickView } from "./official-errors-card";
 import { QueueBody } from "./queue-card";
 import { ScoresBody } from "./scores-card";
 
@@ -79,110 +85,218 @@ export function BacktestScreen() {
   const views = productViews(errors.data?.data.products ?? []);
   const view = pickView(views, state.product);
 
-  return (
-    <div className="space-y-4">
-      {!isMartNotBuilt(peak.error) && (
-        <AsOfBar
-          dates={dates}
-          value={selected}
-          onChange={(date) => void setState({ as_of: date === latest ? null : date })}
-          era={era}
-          pending={pending}
-        />
-      )}
+  const dateFilter = !isMartNotBuilt(peak.error) && (
+    <AsOfBar
+      dates={dates}
+      value={selected}
+      onChange={(date) => void setState({ as_of: date === latest ? null : date })}
+      era={era}
+      pending={pending}
+    />
+  );
+  const foot = (meta: Meta) => <Provenance meta={meta} className="border-t border-border pt-3" />;
 
-      <DataCard
-        title={data ? `Summer ${data.fan_target_year}: every forecast against the actual` : "The latest summer: every forecast against the actual"}
-        subtitle="The official vintages by publication date, ERCOT's own range, and basecast at each backtest date."
-        action={
-          <SegmentedControl
-            label="Fan view"
-            options={[
-              { value: "chart", label: "Chart" },
-              { value: "table", label: "Table" },
-            ]}
-            value={state.fan}
-            onChange={(fan) => void setState({ fan: fan === "chart" ? null : fan })}
-          />
-        }
-        query={peak}
-        isEmpty={(d) => d.fan.length === 0}
-        empty={{ title: "No forecast of the latest summer", description: "The fan mart has no rows yet." }}
-        skeleton={<Skeleton className="h-120 w-full" />}
-      >
-        {(d, meta) => (
-          <div className={cn("transition-opacity", pending && "opacity-60")}>
-            <FanBody data={d} meta={meta} asOf={selected ?? d.as_of} view={state.fan} />
-          </div>
-        )}
-      </DataCard>
-
-      <DataCard
-        title={selected ? `As of ${formatDate(selected)}: basecast against the official vintages` : "One backtest date"}
-        subtitle="Every summer the date could forecast, the official vintage published by then, and the actual."
-        query={peak}
-        isEmpty={(d) => d.cells.length === 0}
-        empty={{ title: "No cell for this date" }}
-        skeleton={<Skeleton className="h-144 w-full" />}
-      >
-        {(d, meta) => (
-          <div className={cn("transition-opacity", pending && "opacity-60")}>
-            <AsOfBody data={d} meta={meta} />
-          </div>
-        )}
-      </DataCard>
-
-      <DataCard
-        title="Scores by era"
-        subtitle="Over every backtest date, by era; hover an era for where it starts and why."
-        query={peak}
-        isEmpty={(d) => d.scores.length === 0 && d.comparisons.length === 0}
-        empty={{ title: "No scores yet" }}
-        skeleton={<Skeleton className="h-96 w-full" />}
-      >
-        {(d, meta) => <ScoresBody data={d} meta={meta} />}
-      </DataCard>
-
-      <DataCard
-        title="How far off the official forecasts were"
-        subtitle="Every official vintage against every summer it forecast, as the error in % of the actual peak."
-        action={
-          views.length > 1 && view ? (
-            <SegmentedControl
-              label="Official product"
-              options={views.map((value) => ({ value, label: value }))}
-              value={view}
-              onChange={(product) => void setState({ product: product === pickView(views, null) ? null : product })}
-            />
-          ) : undefined
-        }
-        query={errors}
-        isEmpty={(d) => d.items.length === 0 || !view}
-        empty={{ title: "No official vintage scored yet" }}
-        skeleton={<Skeleton className="h-96 w-full" />}
-      >
-        {(d, meta) => (view ? <OfficialErrorsBody data={d} meta={meta} view={view} /> : null)}
-      </DataCard>
-
-      <DataCard
-        title="Generation queue backtest"
-        subtitle="The adjusted generation queue rerun on past queue reports: predicted against built, the raw queue and the developers' own dates."
-        action={
-          <Link
-            href="/explorer?layer=queue"
-            className="inline-flex items-center gap-1 text-xs font-medium whitespace-nowrap text-basecast-brand hover:underline"
+  const tabs: { value: string; label: string; icon: LucideIcon; content: React.ReactNode }[] = [
+    {
+      value: "summer",
+      label: data ? `Summer ${data.fan_target_year}` : "Latest summer",
+      icon: Target,
+      content: (
+        <div className="space-y-4">
+          {dateFilter}
+          <QueryBody
+            query={peak}
+            compact={false}
+            isEmpty={(d) => d.fan.length === 0}
+            empty={{ title: "No forecast of the latest summer", description: "The fan mart has no rows yet." }}
+            skeleton={<Skeleton className="h-120 w-full" />}
           >
-            Adjusted queue on the map
-            <ArrowRight className="size-3" aria-hidden />
-          </Link>
-        }
-        query={queue}
-        isEmpty={(d) => d.items.length === 0 && d.county_rank.length === 0}
-        empty={{ title: "No queue snapshot backtested yet" }}
-        skeleton={<Skeleton className="h-80 w-full" />}
+            {(d, meta) => (
+              <div className={cn("space-y-4 transition-opacity", pending && "opacity-60")}>
+                <FanStats data={d} meta={meta} asOf={selected ?? d.as_of} />
+                <SectionCard
+                  title={`Every forecast of the summer ${d.fan_target_year} peak`}
+                  icon={Target}
+                  subtitle="The official vintages by publication date, ERCOT's own range, and basecast at each backtest date."
+                  action={
+                    <SegmentedControl
+                      label="Fan view"
+                      options={[
+                        { value: "chart", label: "Chart" },
+                        { value: "table", label: "Table" },
+                      ]}
+                      value={state.fan}
+                      onChange={(fan) => void setState({ fan: fan === "chart" ? null : fan })}
+                    />
+                  }
+                >
+                  <FanBody data={d} meta={meta} asOf={selected ?? d.as_of} view={state.fan} />
+                </SectionCard>
+                {foot(meta)}
+              </div>
+            )}
+          </QueryBody>
+        </div>
+      ),
+    },
+    {
+      value: "date",
+      label: "By date",
+      icon: CalendarRange,
+      content: (
+        <div className="space-y-4">
+          {dateFilter}
+          <QueryBody
+            query={peak}
+            compact={false}
+            isEmpty={(d) => d.cells.length === 0}
+            empty={{ title: "No cell for this date" }}
+            skeleton={<Skeleton className="h-144 w-full" />}
+          >
+            {(d, meta) => (
+              <div className={cn("space-y-4 transition-opacity", pending && "opacity-60")}>
+                <SectionCard
+                  title={selected ? `As of ${formatDate(selected)}: basecast against the official vintages` : "One backtest date"}
+                  icon={CalendarRange}
+                  subtitle="Every summer the date could forecast, the official vintage published by then, and the actual."
+                >
+                  <AsOfBody data={d} meta={meta} />
+                </SectionCard>
+                {foot(meta)}
+              </div>
+            )}
+          </QueryBody>
+        </div>
+      ),
+    },
+    {
+      value: "scores",
+      label: "Scores by era",
+      icon: Trophy,
+      content: (
+        <QueryBody
+          query={peak}
+          compact={false}
+          isEmpty={(d) => d.scores.length === 0 && d.comparisons.length === 0}
+          empty={{ title: "No scores yet" }}
+          skeleton={<Skeleton className="h-96 w-full" />}
+        >
+          {(d, meta) => (
+            <div className="space-y-4">
+              <ScoresBody data={d} meta={meta} />
+              {foot(meta)}
+            </div>
+          )}
+        </QueryBody>
+      ),
+    },
+    {
+      value: "official",
+      label: "Official vintages",
+      icon: Grid3x3,
+      content: (
+        <div className="space-y-4">
+          {views.length > 1 && view && (
+            <FilterRow>
+              <Filter label="Official product">
+                <SegmentedControl
+                  label="Official product"
+                  options={views.map((value) => ({ value, label: value }))}
+                  value={view}
+                  onChange={(product) => void setState({ product: product === pickView(views, null) ? null : product })}
+                />
+              </Filter>
+            </FilterRow>
+          )}
+          <QueryBody
+            query={errors}
+            compact={false}
+            isEmpty={(d) => d.items.length === 0 || !view}
+            empty={{ title: "No official vintage scored yet" }}
+            skeleton={<Skeleton className="h-96 w-full" />}
+          >
+            {(d, meta) =>
+              view ? (
+                <div className="space-y-4">
+                  <OfficialStats data={d} view={view} />
+                  <SectionCard
+                    title="How far off the official forecasts were"
+                    icon={Grid3x3}
+                    subtitle="Every official vintage against every summer it forecast, as the error in % of the actual peak."
+                    caveats={meta.caveats}
+                  >
+                    <OfficialErrorsBody data={d} meta={meta} view={view} />
+                  </SectionCard>
+                  {foot(meta)}
+                </div>
+              ) : null
+            }
+          </QueryBody>
+        </div>
+      ),
+    },
+    {
+      value: "queue",
+      label: "Generation queue",
+      icon: Factory,
+      content: (
+        <QueryBody
+          query={queue}
+          compact={false}
+          isEmpty={(d) => d.items.length === 0 && d.county_rank.length === 0}
+          empty={{ title: "No queue snapshot backtested yet" }}
+          skeleton={<Skeleton className="h-80 w-full" />}
+        >
+          {(d, meta) => (
+            <div className="space-y-4">
+              <SectionCard
+                title="Generation queue backtest"
+                icon={Factory}
+                subtitle="The adjusted generation queue rerun on past queue reports: predicted against built, the raw queue and the developers' own dates."
+                caveats={meta.caveats}
+                action={
+                  <Link
+                    href="/explorer?layer=queue"
+                    className="inline-flex items-center gap-1 text-xs font-medium whitespace-nowrap text-basecast-brand hover:underline"
+                  >
+                    Adjusted queue on the map
+                    <ArrowRight className="size-3" aria-hidden />
+                  </Link>
+                }
+              >
+                <QueueBody data={d} />
+              </SectionCard>
+              {foot(meta)}
+            </div>
+          )}
+        </QueryBody>
+      ),
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Backtest"
+        subtitle="How our peak model would have done at each past date, against ERCOT's official forecasts and the actual, and how the adjusted generation queue did against what was built."
       >
-        {(d) => <QueueBody data={d} />}
-      </DataCard>
+        <CaveatBadges caveats={peak.data?.meta.caveats} />
+      </PageHeader>
+      <Tabs urlParam="tab" defaultValue="summer" className="space-y-6">
+        <TabsList variant="line" color="brand" className="max-w-full overflow-x-auto">
+          {tabs.map(({ value, label, icon: Icon }) => (
+            <TabsTrigger key={value} value={value} className="shrink-0">
+              <Icon className="mr-1.5 size-3.5" aria-hidden />
+              {label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        {tabs.map(({ value, content }) => (
+          <TabsContent key={value} value={value}>
+            {content}
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   );
 }

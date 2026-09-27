@@ -436,13 +436,9 @@ export function FanBody({
   const parts = fanParts(data.fan);
   const targetYear = data.fan_target_year;
   const actualMw = parts.actual?.value_mw ?? null;
-  const actualPeak: ActualPeak | undefined = data.actuals.find((a) => a.year === targetYear);
   const preliminaryCaveat = meta.caveats?.find((c) => c.code === "preliminary_actuals");
   const unverifiedCaveat = meta.caveats?.find((c) => c.code === "machine_read_unverified");
-  const model = modelAt(parts.models, asOf);
   const inUse = officialsInUse(data.fan, data.cells, targetYear);
-  const { preliminary, range } = parts;
-  const miss = preliminary?.value_mw != null && actualMw != null ? preliminary.value_mw - actualMw : null;
 
   const legend: LegendItem[] = [
     { key: "model", label: "basecast P50, P10–P90 at each backtest date", swatch: "whisker", color: SERIES.basecast[mode] },
@@ -455,96 +451,6 @@ export function FanBody({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatTile
-          label={`Actual peak, summer ${targetYear}`}
-          swatch={<SwatchIcon swatch={parts.actual?.final === false ? "dashed" : "line"} color={ACTUAL[mode]} />}
-          fact={{
-            value: actualMw,
-            unit: "MW",
-            label: parts.actual?.label,
-            source: parts.actual?.source,
-            as_of: meta.data_as_of,
-            verified: parts.actual?.verified,
-            // A Fact without `simulated` would read as simulated: the response says.
-            simulated: meta.simulated,
-          }}
-          badges={parts.actual?.final === false && preliminaryCaveat ? <CaveatBadge caveat={preliminaryCaveat} /> : null}
-          caption={
-            actualPeak?.peak_ts_utc
-              ? `${formatDate(actualPeak.peak_ts_utc)}${actualPeak.hour_ending_local != null ? `, hour ending ${actualPeak.hour_ending_local}` : ""}`
-              : undefined
-          }
-        />
-        <StatTile
-          label="Preliminary long-term forecast"
-          swatch={<SwatchIcon swatch="diamond" color={SERIES.LTLF[mode]} />}
-          fact={{
-            value: preliminary?.value_mw ?? null,
-            unit: "MW",
-            label: preliminary?.label,
-            source: preliminary?.source,
-            as_of: preliminary?.vintage_date,
-            verified: preliminary?.verified,
-            simulated: meta.simulated,
-          }}
-          caption={
-            preliminary && (
-              <>
-                {preliminary.vintage}, {formatDate(preliminary.vintage_date)}.
-                {miss != null && (
-                  <>
-                    {" "}
-                    About {Math.abs(Math.round(miss / 1_000))} GW {miss >= 0 ? "above" : "below"} the actual (
-                    {vsActual(preliminary.value_mw, actualMw)}).
-                  </>
-                )}
-              </>
-            )
-          }
-        />
-        <StatTile
-          label="ERCOT's projected range"
-          swatch={<SwatchIcon swatch="bar" color={SERIES.LTLF[mode]} />}
-          fact={{
-            value: range?.low_mw ?? null,
-            label: range?.label,
-            source: range?.source,
-            as_of: range?.vintage_date,
-            verified: range?.verified,
-            simulated: meta.simulated,
-          }}
-          format={() => fmtRange(range?.low_mw, range?.high_mw)}
-          caption={
-            range && (
-              <>
-                {range.vintage}, {formatDate(range.vintage_date)}.{actualMw != null && <> {rangeVerdict(range, actualMw)}</>}
-              </>
-            )
-          }
-        />
-        <StatTile
-          label={`basecast as of ${formatDate(asOf)}`}
-          swatch={<SwatchIcon swatch="whisker" color={SERIES.basecast[mode]} />}
-          fact={{
-            value: model?.value_mw ?? null,
-            unit: "MW",
-            label: model?.label,
-            source: model?.source,
-            as_of: model?.vintage_date,
-            verified: model?.verified,
-            simulated: meta.simulated,
-          }}
-          caption={
-            model && (
-              <>
-                P10–P90 {fmtRange(model.low_mw, model.high_mw)} · {vsActual(model.value_mw, actualMw)} vs the actual.
-              </>
-            )
-          }
-        />
-      </div>
-
       {view === "chart" ? (
         <>
           <ChartLegend items={legend} />
@@ -565,6 +471,122 @@ export function FanBody({
       ) : (
         <FanTable fan={data.fan} targetYear={targetYear} actual={actualMw} />
       )}
+    </div>
+  );
+}
+
+/**
+ * The latest summer in four stat cards: the actual peak, the preliminary long-term forecast, ERCOT's own
+ * range, and our model at the backtest date, each marked with its swatch in the chart.
+ */
+export function FanStats({
+  data,
+  meta,
+  asOf,
+}: {
+  data: PeakData;
+  meta: Meta;
+  asOf: string;
+}) {
+  const mode = useMode();
+  const parts = fanParts(data.fan);
+  const targetYear = data.fan_target_year;
+  const actualMw = parts.actual?.value_mw ?? null;
+  const actualPeak: ActualPeak | undefined = data.actuals.find((a) => a.year === targetYear);
+  const preliminaryCaveat = meta.caveats?.find((c) => c.code === "preliminary_actuals");
+  const model = modelAt(parts.models, asOf);
+  const { preliminary, range } = parts;
+  const miss = preliminary?.value_mw != null && actualMw != null ? preliminary.value_mw - actualMw : null;
+
+  return (
+  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+      <StatTile
+        label={`Actual peak, summer ${targetYear}`}
+        swatch={<SwatchIcon swatch={parts.actual?.final === false ? "dashed" : "line"} color={ACTUAL[mode]} />}
+        fact={{
+          value: actualMw,
+          unit: "MW",
+          label: parts.actual?.label,
+          source: parts.actual?.source,
+          as_of: meta.data_as_of,
+          verified: parts.actual?.verified,
+          // A Fact without `simulated` would read as simulated: the response says.
+          simulated: meta.simulated,
+        }}
+        badges={parts.actual?.final === false && preliminaryCaveat ? <CaveatBadge caveat={preliminaryCaveat} /> : null}
+        caption={
+          actualPeak?.peak_ts_utc
+            ? `${formatDate(actualPeak.peak_ts_utc)}${actualPeak.hour_ending_local != null ? `, hour ending ${actualPeak.hour_ending_local}` : ""}`
+            : undefined
+        }
+      />
+      <StatTile
+        label="Preliminary long-term forecast"
+        swatch={<SwatchIcon swatch="diamond" color={SERIES.LTLF[mode]} />}
+        fact={{
+          value: preliminary?.value_mw ?? null,
+          unit: "MW",
+          label: preliminary?.label,
+          source: preliminary?.source,
+          as_of: preliminary?.vintage_date,
+          verified: preliminary?.verified,
+          simulated: meta.simulated,
+        }}
+        caption={
+          preliminary && (
+            <>
+              {preliminary.vintage}, {formatDate(preliminary.vintage_date)}.
+              {miss != null && (
+                <>
+                  {" "}
+                  About {Math.abs(Math.round(miss / 1_000))} GW {miss >= 0 ? "above" : "below"} the actual (
+                  {vsActual(preliminary.value_mw, actualMw)}).
+                </>
+              )}
+            </>
+          )
+        }
+      />
+      <StatTile
+        label="ERCOT's projected range"
+        swatch={<SwatchIcon swatch="bar" color={SERIES.LTLF[mode]} />}
+        fact={{
+          value: range?.low_mw ?? null,
+          label: range?.label,
+          source: range?.source,
+          as_of: range?.vintage_date,
+          verified: range?.verified,
+          simulated: meta.simulated,
+        }}
+        format={() => fmtRange(range?.low_mw, range?.high_mw)}
+        caption={
+          range && (
+            <>
+              {range.vintage}, {formatDate(range.vintage_date)}.{actualMw != null && <> {rangeVerdict(range, actualMw)}</>}
+            </>
+          )
+        }
+      />
+      <StatTile
+        label={`basecast as of ${formatDate(asOf)}`}
+        swatch={<SwatchIcon swatch="whisker" color={SERIES.basecast[mode]} />}
+        fact={{
+          value: model?.value_mw ?? null,
+          unit: "MW",
+          label: model?.label,
+          source: model?.source,
+          as_of: model?.vintage_date,
+          verified: model?.verified,
+          simulated: meta.simulated,
+        }}
+        caption={
+          model && (
+            <>
+              P10–P90 {fmtRange(model.low_mw, model.high_mw)} · {vsActual(model.value_mw, actualMw)} vs the actual.
+            </>
+          )
+        }
+      />
     </div>
   );
 }

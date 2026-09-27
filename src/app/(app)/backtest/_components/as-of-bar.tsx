@@ -3,7 +3,7 @@
 import * as SliderPrimitive from "@radix-ui/react-slider";
 
 import { AppBadge } from "@/components/components-app/ui/badge";
-import { Card } from "@/components/components-app/ui/card";
+import { Filter } from "@/components/product/filter";
 import { formatDate } from "@/components/product/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -15,8 +15,8 @@ import type { Era } from "./backtest-data";
 const short = (date: string) => formatDate(date.slice(0, 7)).replace(/ (\d{2})(\d{2})$/, " '$2");
 
 /**
- * The backtest date, over the dates the API sends (never a date of our own): it moves our model and the
- * official vintages of that date in the fan, and the as-of card below.
+ * The backtest date as a labeled filter, over the dates the API sends (never a date of our own): it moves our
+ * model and the official vintages of that date in the fan, and the one-date view.
  */
 export function AsOfBar({
   dates,
@@ -35,13 +35,8 @@ export function AsOfBar({
   const index = dates && value ? dates.indexOf(value) : -1;
   const last = (dates?.length ?? 1) - 1;
   return (
-    <Card className="flex flex-col gap-4 lg:flex-row lg:items-center">
-      <div className="shrink-0 lg:w-56">
-        <p className="text-sm font-semibold text-foreground">Backtest date</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          The model rerun at each date. Leak notes below flag any input it took from later.
-        </p>
-      </div>
+    <Filter label="Backtest date">
+      <div className="flex flex-col gap-3 rounded-md border border-border bg-card px-4 py-3 lg:flex-row lg:items-center">
       {!dates || index < 0 ? (
         <Skeleton className="h-10 flex-1" />
       ) : (
@@ -98,6 +93,8 @@ export function AsOfBar({
           </Tooltip>
         )}
       </div>
-    </Card>
+      </div>
+      <p className="text-xs text-muted-foreground">The model rerun at each date; leak notes flag any input it took from later.</p>
+    </Filter>
   );
 }

@@ -1,9 +1,11 @@
 "use client";
 
-import type * as React from "react";
+import { FlaskConical, Landmark, Scale, Table2, Target } from "lucide-react";
 
 import { AppBadge } from "@/components/components-app/ui/badge";
+import { DashboardStatCard } from "@/components/product/dashboard-stat-card";
 import { formatPercent, formatWhole, GAP } from "@/components/product/format";
+import { SectionCard } from "@/components/product/section-card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Meta } from "@/lib/bff/envelope";
 import { cn } from "@/lib/utils";
@@ -23,7 +25,6 @@ import {
 } from "./backtest-data";
 import { useMode } from "./chart-bits";
 import { type Mode, SERIES } from "./palette";
-import { StatTile } from "./stat-tile";
 
 const th = "py-2 pr-3 font-medium";
 const num = "py-2 pr-3 text-right tabular-nums whitespace-nowrap";
@@ -143,34 +144,6 @@ function Comparisons({ data, mode }: { data: PeakData; mode: Mode }) {
   );
 }
 
-/** Organic only against the full method, over every date. */
-function Ablation({ data, meta }: { data: PeakData; meta: Meta }) {
-  const organic = data.ablation.find((s) => s.source === ORGANIC);
-  const full = data.ablation.find((s) => s.source === MODEL);
-  if (!organic && !full) return <p className="text-sm text-muted-foreground">No ablation in this build.</p>;
-  const fact = (score: Score | undefined) => ({
-    value: score?.mape ?? null,
-    unit: "%",
-    label: score ? `${sourceLabel(score.source)}, mean absolute error (${eraLabel(score.era, data.eras).toLowerCase()})` : undefined,
-    source: meta.sources?.join(", "),
-    as_of: meta.data_as_of,
-    simulated: meta.simulated,
-  });
-  const caption = (score: Score | undefined) =>
-    score && (
-      <>
-        Bias {formatPercent(score.bias_pct, { signed: true })} · band coverage{" "}
-        {score.coverage == null ? GAP : formatPercent(score.coverage, { ratio: true })} · {formatWhole(score.n)} cells
-      </>
-    );
-  return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <StatTile label="Organic only: trend and weather, no large-load layer" fact={fact(organic)} caption={caption(organic)} />
-      <StatTile label="Full method: plus the large-load and unattributed layers" fact={fact(full)} caption={caption(full)} />
-    </div>
-  );
-}
-
 /** Every source's score in every era. */
 function AllScores({ data }: { data: PeakData }) {
   const groups = scoresByEra(data.scores, data.eras);
@@ -212,38 +185,54 @@ function AllScores({ data }: { data: PeakData }) {
   );
 }
 
-function Section({ title, note, children }: { title: string; note?: React.ReactNode; children: React.ReactNode }) {
+/** The score over every date in four stat cards: basecast, the two official forecasts, and basecast without its large-load layer. */
+function ScoreStats({ data }: { data: PeakData }) {
+  const all = (source: string) => data.scores.find((s) => s.era === "all" && s.source === source);
+  const cards = [
+    { source: MODEL, icon: Target, note: (s: Score) => `Bias ${formatPercent(s.bias_pct, { signed: true })} · band coverage ${s.coverage == null ? GAP : formatPercent(s.coverage, { ratio: true })} · ${formatWhole(s.n)} cells` },
+    { source: "LTLF", icon: Landmark, note: (s: Score) => `Bias ${formatPercent(s.bias_pct, { signed: true })} · ${formatWhole(s.n)} cells` },
+    { source: "CDR", icon: Landmark, note: (s: Score) => `Bias ${formatPercent(s.bias_pct, { signed: true })} · ${formatWhole(s.n)} cells` },
+    { source: ORGANIC, icon: FlaskConical, note: (s: Score) => `No large-load layer (ablation) · ${formatWhole(s.n)} cells` },
+  ];
   return (
-    <section className="min-w-0 space-y-2">
-      <div>
-        <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{title}</h3>
-        {note && <p className="mt-0.5 text-xs text-muted-foreground">{note}</p>}
-      </div>
-      {children}
-    </section>
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+      {cards.map(({ source, icon: Icon, note }) => {
+        const score = all(source);
+        return (
+          <DashboardStatCard
+            key={source}
+            layout="stacked"
+            icon={<Icon className="size-4" aria-hidden />}
+            title={`${sourceLabel(source)}, mean absolute error`}
+            value={score ? formatPercent(score.mape) : GAP}
+            hint={score ? note(score) : "Not scored in this build"}
+          />
+        );
+      })}
+    </div>
   );
 }
 
 /**
- * The scores over every backtest date: basecast against each official source on the same cells, split by
- * era (including the one where ERCOT did better), the ablation, and every source's own score.
+ * The scores over every backtest date: the four numbers on top, then basecast against each official source on
+ * the same cells, split by era (including the one where ERCOT did better), and every source's own score.
  */
 export function ScoresBody({ data, meta }: { data: PeakData; meta: Meta }) {
   const mode = useMode();
   return (
-    <div className="space-y-6">
-      <Section
+    <div className="space-y-4">
+      <ScoreStats data={data} />
+      <SectionCard
         title="basecast against the official forecasts"
-        note="Paired on the same cells (backtest date and target summer). Error = (forecast − actual) ÷ actual; a positive bias is a forecast that ran high."
+        icon={Scale}
+        subtitle="Paired on the same cells (backtest date and target summer), by era; hover an era for where it starts and why. Error = (forecast − actual) ÷ actual; a positive bias ran high."
+        caveats={meta.caveats}
       >
         <Comparisons data={data} mode={mode} />
-      </Section>
-      <Section title="Ablation" note="The same model without its large-load layer, over every date.">
-        <Ablation data={data} meta={meta} />
-      </Section>
-      <Section title="Every source by era" note="Band coverage is the share of cells whose actual fell inside our P10–P90.">
+      </SectionCard>
+      <SectionCard title="Every source by era" icon={Table2} subtitle="Band coverage is the share of cells whose actual fell inside our P10–P90.">
         <AllScores data={data} />
-      </Section>
+      </SectionCard>
     </div>
   );
 }
