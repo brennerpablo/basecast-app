@@ -178,22 +178,22 @@ export function TerritoryCard({
       <div className="space-y-6">
         <FactGrid facts={t.facts} />
         <div className="grid gap-6 xl:grid-cols-2">
-          <section>
+          <section className="min-w-0">
             <Heading>Counties</Heading>
             <Counties counties={t.counties} />
           </section>
-          <section>
+          <section className="min-w-0">
             <Heading>Generation queue, raw × adjusted</Heading>
             {t.queue.length ? <Queue rows={t.queue} /> : <p className="text-sm text-muted-foreground">No project in the queue.</p>}
           </section>
         </div>
         <div className="grid gap-6 xl:grid-cols-2">
-          <section>
+          <section className="min-w-0">
             <Heading>New data centers nearby</Heading>
             <DataCenters sites={t.data_centers} />
           </section>
           {t.zone_outlook && (
-            <section>
+            <section className="min-w-0">
               <Heading>Zone outlook</Heading>
               <ZoneOutlook outlook={t.zone_outlook} />
             </section>

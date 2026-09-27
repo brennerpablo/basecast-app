@@ -214,7 +214,7 @@ function AllScores({ data }: { data: PeakData }) {
 
 function Section({ title, note, children }: { title: string; note?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section className="space-y-2">
+    <section className="min-w-0 space-y-2">
       <div>
         <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{title}</h3>
         {note && <p className="mt-0.5 text-xs text-muted-foreground">{note}</p>}

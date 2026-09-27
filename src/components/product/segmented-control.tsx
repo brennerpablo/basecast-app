@@ -21,7 +21,8 @@ export function SegmentedControl<T extends string | number>({
     <div
       role="group"
       aria-label={label}
-      className={cn("inline-flex items-center gap-1 rounded-md border border-border bg-card p-1", className)}
+      // Scrolls inside itself when its choices outgrow the row, so a narrow screen never scrolls sideways.
+      className={cn("inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-md border border-border bg-card p-1", className)}
     >
       {options.map((option) => (
         <button
@@ -30,7 +31,7 @@ export function SegmentedControl<T extends string | number>({
           aria-pressed={value === option.value}
           onClick={() => onChange(option.value)}
           className={cn(
-            "rounded px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-colors",
+            "shrink-0 rounded px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-colors",
             value === option.value ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
           )}
         >

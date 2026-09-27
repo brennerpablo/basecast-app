@@ -29,7 +29,7 @@ export function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <Card className={cn("flex min-w-0 flex-col", className)}>
+    <Card data-slot="section-card" className={cn("flex min-w-0 flex-col", className)}>
       <div className="mb-4 flex items-start gap-3">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold text-foreground">{title}</h2>

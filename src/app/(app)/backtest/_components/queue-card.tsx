@@ -141,7 +141,7 @@ export function QueueBody({ data }: { data: QueueData }) {
 
   return (
     <div className="space-y-6">
-      <section className="space-y-3">
+      <section className="min-w-0 space-y-3">
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground">
             Megawatts reaching commercial operation within {windows.length === 1 ? `${windows[0]} months` : "the window"} of each
@@ -166,11 +166,11 @@ export function QueueBody({ data }: { data: QueueData }) {
         )}
       </section>
       <div className="grid gap-6 xl:grid-cols-5">
-        <section className="space-y-2 xl:col-span-3">
+        <section className="min-w-0 space-y-2 xl:col-span-3">
           <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Predicted vs built, by stratum</h3>
           <ByStratum items={data.items} months={months} strata={strata} />
         </section>
-        <section className="space-y-2 xl:col-span-2">
+        <section className="min-w-0 space-y-2 xl:col-span-2">
           <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">County ranking vs what was built</h3>
           <p className="text-xs text-muted-foreground">Spearman correlation across counties; 1 is the same order.</p>
           <CountyRanks data={data} />
