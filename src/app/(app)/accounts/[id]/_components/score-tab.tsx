@@ -8,7 +8,7 @@ import { formatDate, formatValue, GAP } from "@/components/product/format";
 import { SectionCard } from "@/components/product/section-card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { AccountDetail } from "@/lib/accounts/labels";
-import type { Caveat } from "@/lib/bff/envelope";
+import { gapText, methodText } from "@/lib/accounts/summary";
 
 const two = (value: number) => value.toFixed(2);
 
@@ -27,20 +27,13 @@ function PercentileBar({ pct }: { pct: number | null | undefined }) {
 
 /**
  * The signals as a table: each one's value and percentile, its configured and used weight (renormalized when
- * a signal is missing) and its contribution; the contributions sum to the score the API sends.
+ * a signal is missing) and its contribution; the contributions sum to the score the API sends. The method is in
+ * the title's tooltip; the pending weights show in the header and the Weights card.
  */
-function SignalsCard({
-  account,
-  caveats,
-  className,
-}: {
-  account: AccountDetail;
-  caveats?: Caveat[];
-  className?: string;
-}) {
+function SignalsCard({ account, className }: { account: AccountDetail; className?: string }) {
   const { score } = account;
   return (
-    <SectionCard title="Signals" icon={Table2} subtitle={score.method} caveats={caveats} className={className}>
+    <SectionCard title="Signals" icon={Table2} info={score.method ? methodText(score.method) : undefined} className={className}>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead className="text-left text-muted-foreground">
@@ -87,8 +80,7 @@ function SignalsCard({
           <tfoot>
             <tr>
               <td className="pt-2 font-medium" colSpan={4}>
-                Score · rank {score.rank} of {score.n_accounts} · tier {score.tier}
-                {score.weights_set && <span className="font-normal text-muted-foreground"> · weights {score.weights_set}</span>}
+                Score
               </td>
               <td className="pt-2 text-right font-semibold tabular-nums">{score.score.toFixed(3)}</td>
             </tr>
@@ -123,7 +115,7 @@ function GapsCard({ account, className }: { account: AccountDetail; className?: 
                 <AppBadge state={gap.kind === "missing" ? "alert" : "meta"} className="mt-0.5 shrink-0">
                   {gap.kind.replaceAll("_", " ")}
                 </AppBadge>
-                <span>{gap.detail}</span>
+                <span>{gapText(gap.detail)}</span>
               </li>
             ))}
           </ul>
@@ -137,8 +129,8 @@ function GapsCard({ account, className }: { account: AccountDetail; className?: 
             </p>
             <ul className="space-y-1">
               <Covered on={coverage.public_data ?? true} label="Public data" off="" />
-              <Covered on={coverage.utility_private_data ?? false} label="The co-op's own data" off="UtilityDataSource, not connected" />
-              <Covered on={coverage.fleet_data ?? false} label="Base's fleet" off="FleetDataSource, not connected" />
+              <Covered on={coverage.utility_private_data ?? false} label="Account's own data" off="Not connected" />
+              <Covered on={coverage.fleet_data ?? false} label="Base's fleet" off="Not connected" />
             </ul>
           </div>
         )}
@@ -157,9 +149,9 @@ function ContributionsCard({ account, className }: { account: AccountDetail; cla
   const maxWeight = Math.max(...signals.map((s) => s.weight_used), 0.0001);
   return (
     <SectionCard
-      title="What makes the score"
+      title="Score contributions"
       icon={Gauge}
-      subtitle="Each bar's track is the signal's weight; the fill is what it adds (percentile × weight)."
+      info="Each bar's track is the signal's weight; the fill is what it adds (percentile × weight)."
       className={className}
     >
       <ul className="space-y-3">
@@ -212,17 +204,12 @@ function ScoreStats({ account }: { account: AccountDetail }) {
   const pending = score.weights_status === "pending_review";
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <DashboardStatCard layout="stacked" icon={<Gauge className="size-4" aria-hidden />} title="Score" value={two(score.score)} hint="Of 1.00, from percentiles in the universe" />
+      <DashboardStatCard layout="stacked" icon={<Gauge className="size-4" aria-hidden />} title="Score" value={two(score.score)} hint="of 1.00" />
       <DashboardStatCard
         layout="stacked"
         icon={<Trophy className="size-4" aria-hidden />}
         title="Rank"
         value={`${score.rank} of ${score.n_accounts}`}
-        hint={
-          score.rank_within_type != null
-            ? `#${score.rank_within_type} among ${account.account_type === "muni" ? "munis" : "co-ops"}`
-            : "Across co-ops and munis"
-        }
       />
       <DashboardStatCard layout="stacked" icon={<Layers className="size-4" aria-hidden />} title="Tier" value={score.tier} />
       <DashboardStatCard
@@ -238,7 +225,7 @@ function ScoreStats({ account }: { account: AccountDetail }) {
 }
 
 /** Score: the four numbers, what makes the score beside the data gaps, and the signals as a table. */
-export function ScoreTab({ account, caveats }: { account: AccountDetail; caveats?: Caveat[] }) {
+export function ScoreTab({ account }: { account: AccountDetail }) {
   return (
     <div className="space-y-4">
       <ScoreStats account={account} />
@@ -246,7 +233,7 @@ export function ScoreTab({ account, caveats }: { account: AccountDetail; caveats
         <ContributionsCard account={account} className="lg:col-span-2" />
         <GapsCard account={account} />
       </div>
-      <SignalsCard account={account} caveats={caveats} />
+      <SignalsCard account={account} />
     </div>
   );
 }

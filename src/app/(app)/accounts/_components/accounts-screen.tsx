@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, TriangleAlert, X } from "lucide-react";
+import { Download, X } from "lucide-react";
 import { useQueryStates } from "nuqs";
 import { useMemo } from "react";
 
@@ -13,7 +13,6 @@ import { formatWhole } from "@/components/product/format";
 import { PageHeader } from "@/components/product/page-header";
 import { Provenance } from "@/components/product/provenance";
 import SkeletonDatatable from "@/components/skeleton-datatable";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -145,7 +144,6 @@ export function AccountsScreen() {
   const options = filterOptions(universe.data?.data.items ?? [], codeLabel);
   const columns = useMemo(() => accountColumns(filters.rank), [filters.rank]);
 
-  const pendingWeights = list.data?.meta.caveats?.find((c) => c.code === "weights_pending_review");
   const shown = list.data?.data.total;
   const all = universe.data?.data.total;
 
@@ -184,7 +182,7 @@ export function AccountsScreen() {
         checked={filters.rank === "within_type"}
         onCheckedChange={(on) => void setFilters({ rank: on ? "within_type" : null })}
       />
-      Rank munis within type
+      Rank within type
     </label>
   );
 
@@ -204,8 +202,10 @@ export function AccountsScreen() {
         title="Accounts"
         subtitle={
           shown === undefined
-            ? "Co-ops and munis ranked by priority."
-            : `${formatWhole(shown)}${all !== undefined && all !== shown ? ` of ${formatWhole(all)}` : ""} co-ops and munis${filters.rank === "within_type" ? ", ranked within their type" : ", ranked by priority"}.`
+            ? undefined
+            : all !== undefined && all !== shown
+              ? `${formatWhole(shown)} of ${formatWhole(all)}`
+              : `${formatWhole(shown)} accounts`
         }
         actions={
           <>
@@ -214,15 +214,8 @@ export function AccountsScreen() {
           </>
         }
       >
-        <CaveatBadges caveats={meta?.caveats?.filter((caveat) => caveat.code !== "weights_pending_review")} />
+        <CaveatBadges caveats={meta?.caveats} />
       </PageHeader>
-      {pendingWeights && (
-        <Alert className="border-yellow-600/40 bg-yellow-50 text-yellow-950 dark:border-yellow-800/45 dark:bg-yellow-950/30 dark:text-yellow-100 [&>svg]:text-yellow-700 dark:[&>svg]:text-yellow-300">
-          <TriangleAlert className="size-4" aria-hidden />
-          <AlertTitle>{pendingWeights.label}</AlertTitle>
-          <AlertDescription className="text-sm">{pendingWeights.text}</AlertDescription>
-        </Alert>
-      )}
       <ActionCards
         items={universe.data?.data.items}
         selected={filters.action}

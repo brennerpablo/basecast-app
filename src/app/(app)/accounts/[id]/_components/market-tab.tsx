@@ -5,14 +5,14 @@ import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, 
 
 import { AppBadge } from "@/components/components-app/ui/badge";
 import EmptyState from "@/components/empty-state";
-import { VerifiedBadge } from "@/components/product/caveat-badges";
+import { SimulatedBadge, VerifiedBadge } from "@/components/product/caveat-badges";
 import { ChartTooltipCard } from "@/components/product/chart-tooltip";
 import { DashboardStatCard } from "@/components/product/dashboard-stat-card";
 import { FactValue } from "@/components/product/fact-value";
-import { formatDate, formatPercent, formatPower, formatWhole } from "@/components/product/format";
+import { formatDate, formatPercent, formatPower, formatWhole, GAP } from "@/components/product/format";
 import { SectionCard } from "@/components/product/section-card";
+import { Tooltip as HoverTip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { components } from "@/lib/api/get-data";
-import type { Caveat } from "@/lib/bff/envelope";
 import { type ChartMode, gwTick, INK, SERIES } from "@/lib/charts/palette";
 import { useTheme } from "@/lib/hooks/use-theme";
 
@@ -63,25 +63,27 @@ function RequestChart({ path, mode }: { path: Supplier["path"]; mode: ChartMode 
   );
 }
 
-/** X13: the large loads the account's wholesale supplier asked for (requests, not forecasts). */
-function SupplierCard({ supplier, caveats, mode }: { supplier: Supplier; caveats?: Caveat[]; mode: ChartMode }) {
+/**
+ * The large loads the account's wholesale supplier asked for (requests, not forecasts): the API's sentence about
+ * them in the title's tooltip, the chart beside the badges and the filing.
+ */
+function SupplierCard({ supplier, mode }: { supplier: Supplier; mode: ChartMode }) {
   return (
     <SectionCard
       title={`Wholesale supplier · ${supplier.gt}`}
       icon={Building2}
-      subtitle={supplier.via === "self" ? "The account files itself." : `Filed by ${supplier.tsp ?? supplier.gt} for its territory.`}
+      subtitle={supplier.via === "self" ? "Self-filed" : `Via ${supplier.tsp ?? supplier.gt}`}
+      info={supplier.fact || undefined}
       action={<VerifiedBadge verified={supplier.verified} />}
-      caveats={caveats}
     >
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="space-y-4 lg:col-span-2">
-          <p className="text-sm">{supplier.fact}</p>
           <div className="flex flex-wrap gap-1.5">
             {supplier.share_of_rfi != null && (
               <AppBadge state="meta">{formatPercent(supplier.share_of_rfi, { ratio: true })} of the ERCOT RFI</AppBadge>
             )}
-            {supplier.n_accounts != null && <AppBadge state="meta">{formatWhole(supplier.n_accounts)} accounts share this supplier</AppBadge>}
-            {supplier.fires_trigger && <AppBadge state="info">Counts as a context trigger</AppBadge>}
+            {supplier.n_accounts != null && <AppBadge state="meta">{formatWhole(supplier.n_accounts)} accounts</AppBadge>}
+            {supplier.fires_trigger && <AppBadge state="info">Context trigger</AppBadge>}
           </div>
           <p className="text-xs text-muted-foreground">
             Filed {formatDate(supplier.filed_date)}
@@ -89,7 +91,7 @@ function SupplierCard({ supplier, caveats, mode }: { supplier: Supplier; caveats
           </p>
         </div>
         <div className="min-w-0 lg:col-span-3">
-          <p className="mb-1 text-xs font-medium text-muted-foreground">Requested large load in service, by year</p>
+          <p className="mb-1 text-xs font-medium text-muted-foreground">Requested MW by year</p>
           <RequestChart path={supplier.path} mode={mode} />
         </div>
       </div>
@@ -97,8 +99,38 @@ function SupplierCard({ supplier, caveats, mode }: { supplier: Supplier; caveats
   );
 }
 
-/** X3 + X15: the 4CP offer in numbers (each transmission rate, the window, the dispatch days), then its notes. */
-function FourCpSection({ offer, caveats }: { offer: FourCp; caveats?: Caveat[] }) {
+/**
+ * The account's own load at the 4CP: private data, so a gap with "Not connected" (the API's note in its tooltip)
+ * until the account's data is connected; then the value as any Fact.
+ */
+function Account4cp({ fact }: { fact: FourCp["account_4cp"] }) {
+  if (fact.value !== null && fact.value !== undefined) {
+    return <FactValue fact={fact} valueClassName="text-2xl font-semibold text-foreground" />;
+  }
+  const badge = <AppBadge state="meta">Not connected</AppBadge>;
+  return (
+    <span className="flex items-center gap-2">
+      <span className="text-2xl font-semibold text-muted-foreground tabular-nums">{GAP}</span>
+      {fact.note ? (
+        <HoverTip>
+          <TooltipTrigger asChild>
+            <span tabIndex={0} className="cursor-help">
+              {badge}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs text-xs">{fact.note}</TooltipContent>
+        </HoverTip>
+      ) : (
+        badge
+      )}
+      <SimulatedBadge simulated={fact.simulated ?? false} />
+      <VerifiedBadge verified={fact.verified} />
+    </span>
+  );
+}
+
+/** The 4CP offer in numbers (each transmission rate, the window, the dispatch days), then the account and the zone. */
+function FourCpSection({ offer }: { offer: FourCp }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -126,18 +158,15 @@ function FourCpSection({ offer, caveats }: { offer: FourCp; caveats?: Caveat[] }
             icon={<CalendarClock className="size-4" aria-hidden />}
             title="Dispatch days"
             value={`~${formatWhole(offer.dispatch_days)}`}
-            hint="A summer, to catch all four CPs"
+            hint="per summer"
           />
         )}
       </div>
-      <SectionCard title="4CP offer" icon={Zap} subtitle={offer.note} action={<VerifiedBadge verified={offer.verified} />} caveats={caveats}>
+      <SectionCard title="4CP offer" icon={Zap} info={offer.note || undefined} action={<VerifiedBadge verified={offer.verified} />}>
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-1">
             <p className="text-xs font-medium text-muted-foreground">{offer.account_4cp.label}</p>
-            <FactValue fact={offer.account_4cp} valueClassName="text-2xl font-semibold text-foreground" />
-            <p className="text-xs text-muted-foreground">
-              Private data ({offer.account_4cp.source}){offer.account_4cp.note ? `: ${offer.account_4cp.note}` : ""}
-            </p>
+            <Account4cp fact={offer.account_4cp} />
           </div>
           {offer.zone_line && <p className="rounded-md bg-muted/60 px-3 py-2 text-sm text-foreground/80">{offer.zone_line}</p>}
         </div>
@@ -147,34 +176,21 @@ function FourCpSection({ offer, caveats }: { offer: FourCp; caveats?: Caveat[] }
 }
 
 /** Wholesale & 4CP: the supplier's large-load requests and the 4CP offer, when the diagnosis has them. */
-export function MarketTab({
-  account,
-  supplierCaveats,
-  fourCpCaveats,
-}: {
-  account: components["schemas"]["AccountDetail"];
-  supplierCaveats?: Caveat[];
-  fourCpCaveats?: Caveat[];
-}) {
+export function MarketTab({ account }: { account: components["schemas"]["AccountDetail"] }) {
   const { resolvedTheme } = useTheme();
   const mode: ChartMode = resolvedTheme === "dark" ? "dark" : "light";
   const suppliers = account.suppliers ?? [];
   if (!suppliers.length && !account.four_cp_offer) {
     return (
-      <EmptyState
-        compact
-        Icon={Building2}
-        title="No wholesale supplier or 4CP offer"
-        description="They show here when the diagnosis has them for this account."
-      />
+<EmptyState compact Icon={Building2} title="No wholesale supplier or 4CP offer" />
     );
   }
   return (
     <div className="space-y-4">
       {suppliers.map((supplier) => (
-        <SupplierCard key={`${supplier.gt}-${supplier.tsp ?? ""}`} supplier={supplier} caveats={supplierCaveats} mode={mode} />
+        <SupplierCard key={`${supplier.gt}-${supplier.tsp ?? ""}`} supplier={supplier} mode={mode} />
       ))}
-      {account.four_cp_offer && <FourCpSection offer={account.four_cp_offer} caveats={fourCpCaveats} />}
+      {account.four_cp_offer && <FourCpSection offer={account.four_cp_offer} />}
     </div>
   );
 }

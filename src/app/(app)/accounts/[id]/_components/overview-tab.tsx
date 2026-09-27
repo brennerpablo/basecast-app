@@ -7,6 +7,7 @@ import { DashboardStatCard } from "@/components/product/dashboard-stat-card";
 import { formatDate, formatWhole, GAP } from "@/components/product/format";
 import { SectionCard } from "@/components/product/section-card";
 import { type AccountDetail, useCodeLabels } from "@/lib/accounts/labels";
+import { pitchPoints } from "@/lib/accounts/summary";
 
 import { ACTION_ICON, CodeBadge } from "../../_components/account-bits";
 
@@ -28,7 +29,6 @@ function CallStats({ account }: { account: AccountDetail }) {
   const { label } = useCodeLabels();
   const next = account.next_action;
   const lead = next.lead_trigger;
-  const { score } = account;
   const ActionIcon = ACTION_ICON[next.action];
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -37,43 +37,40 @@ function CallStats({ account }: { account: AccountDetail }) {
         icon={<ActionIcon className="size-4" aria-hidden />}
         title="Next action"
         value={next.action_label}
-        hint={`Tier ${score.tier} · rank ${score.rank} of ${score.n_accounts}`}
       />
       <DashboardStatCard
         layout="stacked"
         icon={<CalendarClock className="size-4" aria-hidden />}
         title="Holds until"
         value={next.changes_on ? formatDate(next.changes_on) : GAP}
-        hint={
-          next.changes_on
-            ? `Unless a new event lands${next.changes_to ? `; then ${label("next_action", next.changes_to)}` : ""}`
-            : "No lapse date"
-        }
+        hint={next.changes_on && next.changes_to ? `then ${label("next_action", next.changes_to)}` : undefined}
       />
       <DashboardStatCard
         layout="stacked"
         icon={<Radar className="size-4" aria-hidden />}
         title="Lead trigger"
         value={lead ? label("trigger", lead.trigger) : GAP}
-        hint={lead ? `${lead.title} · ${formatDate(lead.event_date)}` : "No strong trigger"}
       />
       <DashboardStatCard
         layout="stacked"
         icon={<Clock className="size-4" aria-hidden />}
         title="Active strong events"
         value={formatWhole(account.triggers.active.length)}
-        hint={`${formatWhole(account.triggers.history_count)} events in the history`}
+        hint={`${formatWhole(account.triggers.history_count)} total`}
       />
     </div>
   );
 }
 
-/** What to say: the rule that fired, the offer, and the talking points, numbered. */
+/**
+ * What to say: the offer and the talking points, numbered; the rule that fired in the title's tooltip. The zone's
+ * 4CP line lives on the Wholesale & 4CP tab, so it is left out of the points here.
+ */
 function PitchCard({ account, className }: { account: AccountDetail; className?: string }) {
   const next = account.next_action;
-  const points = next.talking_points ?? [];
+  const points = pitchPoints(next.talking_points ?? [], account.four_cp_offer?.zone_line, account.territory.zone_outlook?.line);
   return (
-    <SectionCard title="Pitch" icon={Megaphone} subtitle={next.rule} className={className}>
+    <SectionCard title="Pitch" icon={Megaphone} info={next.rule} className={className}>
       <div className="space-y-5">
         {next.offer && (
           <div className="rounded-lg border border-basecast-brand-border bg-basecast-brand-surface px-4 py-3">
@@ -96,7 +93,7 @@ function PitchCard({ account, className }: { account: AccountDetail; className?:
             </ol>
           </div>
         )}
-        {!next.offer && points.length === 0 && <p className="text-sm text-muted-foreground">No offer or talking point for this action.</p>}
+        {!next.offer && points.length === 0 && <p className="text-sm text-muted-foreground">Nothing to pitch</p>}
       </div>
     </SectionCard>
   );
@@ -117,7 +114,7 @@ function LeadTriggerCard({ account }: { account: AccountDetail }) {
           </p>
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">No strong trigger behind this action.</p>
+        <p className="text-sm text-muted-foreground">No strong trigger</p>
       )}
     </SectionCard>
   );

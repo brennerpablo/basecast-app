@@ -95,7 +95,7 @@ export function accountColumns(rankScope: "all" | "within_type"): ColumnMetadata
     {
       columnId: "action_changes_on",
       title: "Until",
-      description: "The day the action lapses unless a new event lands, and the action it falls to.",
+      description: "Lapses unless a new event lands, then falls to the next action.",
       type: "text",
       sortable: true,
       sortingFn: textNullsLast,

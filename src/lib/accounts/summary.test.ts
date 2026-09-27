@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import type { Fact } from "@/lib/bff/envelope";
 
-import { countByAction, groupTerritoryFacts, headerText, splitHeaderFacts } from "./summary";
+import { countByAction, gapText, groupTerritoryFacts, headerText, methodText, pitchPoints, splitHeaderFacts, splitLabel } from "./summary";
 
 const fact = (key: string, value: Fact["value"] = 1): Fact => ({ key, label: key, value }) as Fact;
 
@@ -44,4 +44,35 @@ test("territory facts group by theme in the API's order, and an unknown key land
   assert.deepEqual(groups.queue.map((f) => f.key), ["queue_raw_mw", "storage_adj_2028"]);
   assert.deepEqual(groups.zone.map((f) => f.key), ["weather_zone", "zone_4cp_mw"]);
   assert.deepEqual(groups.other.map((f) => f.key), ["account_4cp_mw"]);
+});
+
+test("the pitch drops the zone's 4CP line, with or without the outlook's trailing clause, and keeps the rest", () => {
+  const zone = "4CP (NCENT, 2025): zone load at the CPs 92% of its own peak";
+  const points = ["bill pressure: 4CP savings", `${zone}; no $/kW-yr rate in the repo (not verified)`];
+  assert.deepEqual(pitchPoints(points, zone), ["bill pressure: 4CP savings"]);
+  assert.deepEqual(pitchPoints([...points.slice(0, 1), "other line"], zone, "other line"), ["bill pressure: 4CP savings"]);
+  assert.deepEqual(pitchPoints(points, null), points);
+});
+
+test("a gap's text loses a trailing internal source, and keeps other parentheticals", () => {
+  assert.equal(gapText("Account load at the 4CP: no value (UtilityDataSource)"), "Account load at the 4CP: no value");
+  assert.equal(gapText("Generation queue, raw (context counties): no value (queue_adjusted)"), "Generation queue, raw (context counties): no value");
+  assert.equal(gapText("customers +12% in 2024 vs 2023"), "customers +12% in 2024 vs 2023");
+  assert.equal(gapText("Price: no value (EIA-861)"), "Price: no value (EIA-861)");
+});
+
+test("the score method drops the config file it cites", () => {
+  assert.equal(
+    methodText("weighted mean of within-universe percentile ranks (config/account_score.yaml, pending review)"),
+    "Weighted mean of within-universe percentile ranks",
+  );
+  assert.equal(methodText("weighted mean (fixture weights)"), "Weighted mean (fixture weights)");
+});
+
+test("a label splits at its first parenthetical", () => {
+  assert.deepEqual(splitLabel("3 exposed counties (share ≥ 20%)"), {
+    short: "3 exposed counties",
+    detail: "3 exposed counties (share ≥ 20%)",
+  });
+  assert.deepEqual(splitLabel("home county: Fayette"), { short: "Home county: Fayette", detail: null });
 });

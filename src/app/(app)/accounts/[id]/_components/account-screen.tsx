@@ -10,7 +10,7 @@ import { Provenance } from "@/components/product/provenance";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { AccountDetail } from "@/lib/accounts/labels";
 import { splitHeaderFacts } from "@/lib/accounts/summary";
-import { BffError, type CaveatCode, isMartNotBuilt } from "@/lib/bff/envelope";
+import { BffError, isMartNotBuilt } from "@/lib/bff/envelope";
 import { useProductQuery } from "@/lib/bff/queries";
 
 import { AccountHeader, AccountKpis } from "./account-header";
@@ -52,7 +52,8 @@ function AccountSkeleton() {
 
 /**
  * /accounts/[id]: the diagnosis of one account (X9), as Fundsys's entity page: the header, the KPI strip and
- * one tab per part (`?tab=`), each laid out on its own; the provenance once, at the foot. An unknown id, and any
+ * one tab per part (`?tab=`), each laid out on its own; the caveats once, in the header, and the provenance once,
+ * at the foot. An unknown id, and any
  * account held back from the scored universe, answers 404 alike: "not found".
  */
 export function AccountScreen({ id }: { id: string }) {
@@ -74,7 +75,7 @@ export function AccountScreen({ id }: { id: string }) {
         {isMartNotBuilt(error) ? (
           <MartNotBuiltState mart={error.mart} compact={false} />
         ) : notFound ? (
-          <EmptyState Icon={SearchX} title="Account not found" description={`No account in the ranking answers to ${id}.`} />
+          <EmptyState Icon={SearchX} title="Account not found" />
         ) : (
           <AccountSkeleton />
         )}
@@ -83,7 +84,6 @@ export function AccountScreen({ id }: { id: string }) {
   }
 
   const { data: account, meta } = detail.data;
-  const only = (...codes: CaveatCode[]) => meta.caveats?.filter((c) => codes.includes(c.code));
   const { kpis, profile } = splitHeaderFacts(account.header);
   return (
     <div className="space-y-6">
@@ -103,16 +103,16 @@ export function AccountScreen({ id }: { id: string }) {
           <OverviewTab account={account} />
         </TabsContent>
         <TabsContent value="why-now">
-          <WhyNowTab account={account} caveats={only("by_county_not_point")} />
+          <WhyNowTab account={account} />
         </TabsContent>
         <TabsContent value="score">
-          <ScoreTab account={account} caveats={only("weights_pending_review")} />
+          <ScoreTab account={account} />
         </TabsContent>
         <TabsContent value="territory">
-          <TerritoryTab account={account} caveats={only("by_county_not_point")} />
+          <TerritoryTab account={account} />
         </TabsContent>
         <TabsContent value="market">
-          <MarketTab account={account} supplierCaveats={only("requests_not_forecasts")} fourCpCaveats={only("optimistic_weather")} />
+          <MarketTab account={account} />
         </TabsContent>
         <TabsContent value="eia">
           <EiaTab account={account} />

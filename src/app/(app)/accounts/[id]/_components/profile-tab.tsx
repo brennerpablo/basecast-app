@@ -13,11 +13,11 @@ type City = components["schemas"]["CityFacts"];
 
 const FIT_LABEL: Record<string, string> = {
   same: "City ≈ territory",
-  city_larger: "City larger than the territory",
-  territory_larger: "Territory larger than the city",
+  city_larger: "City > territory",
+  territory_larger: "Territory > city",
 };
 
-/** X10: Census facts of the muni's city, labelled as the city and not the territory, with how well they fit. */
+/** Census facts of the muni's city, labelled as the city and not the territory, with how well they fit. */
 function CityCard({ city }: { city: City }) {
   return (
     <SectionCard
@@ -43,7 +43,7 @@ export function ProfileTab({ facts, city }: { facts: Fact[]; city?: City | null 
   return (
     <div className="space-y-4">
       {facts.length > 0 && (
-        <SectionCard title="Registry" icon={IdCard} subtitle="Who the account is in PUCT, EIA and ERCOT's registries.">
+        <SectionCard title="Registry" icon={IdCard}>
           <FactGrid facts={facts} />
         </SectionCard>
       )}

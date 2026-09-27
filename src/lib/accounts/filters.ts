@@ -5,7 +5,7 @@ import type { Params } from "@/lib/bff/url";
 /**
  * The /accounts filters, as they live in the URL: repeated keys for the lists (`?tier=A&tier=B`, as
  * get-data takes them, and safe for G&T names with commas), `county` from the Explorer, `rank` for the
- * "rank munis within type" toggle.
+ * "rank within type" toggle.
  */
 export const accountsFilterParsers = {
   type: parseAsNativeArrayOf(parseAsString),

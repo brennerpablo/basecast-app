@@ -27,8 +27,8 @@ import { KpiItem } from "@/components/product/kpi-item";
 import { KpiStatCard, KpiStatItem } from "@/components/product/kpi-stat-card";
 import { SectionCard } from "@/components/product/section-card";
 import type { AccountDetail } from "@/lib/accounts/labels";
-import { groupTerritoryFacts } from "@/lib/accounts/summary";
-import type { Caveat, Fact } from "@/lib/bff/envelope";
+import { groupTerritoryFacts, splitLabel } from "@/lib/accounts/summary";
+import type { Fact } from "@/lib/bff/envelope";
 import { SERIES } from "@/lib/charts/palette";
 import { type Mode, SEQUENTIAL } from "@/lib/explorer/colors";
 import type { CountyStyle } from "@/lib/explorer/layers";
@@ -189,7 +189,6 @@ function LocatorCard({ account, className }: { account: AccountDetail; className
     <SectionCard
       title="Where"
       icon={MapIcon}
-      subtitle="The territory's counties on the map of Texas."
       action={
         lead && (
           <Link
@@ -216,7 +215,7 @@ function LocatorCard({ account, className }: { account: AccountDetail; className
         </span>
         {counties.some((c) => !c.exposed) && (
           <span className="flex items-center gap-1.5">
-            <span className="size-3 rounded-[3px]" style={{ background: SEQUENTIAL[mode][1] }} /> Other county of the territory
+            <span className="size-3 rounded-[3px]" style={{ background: SEQUENTIAL[mode][1] }} /> Other
           </span>
         )}
       </div>
@@ -224,34 +223,36 @@ function LocatorCard({ account, className }: { account: AccountDetail; className
   );
 }
 
-/** The weather zone's facts and the outlook's line; the year's LTLF and the months behind the actual below. */
+/**
+ * The weather zone's facts, then the year's LTLF and the months behind the actual peak as one short line. The
+ * outlook's 4CP sentence lives on the Wholesale & 4CP tab; without a 4CP offer there, it waits in the title's
+ * tooltip (`line`).
+ */
 function ZoneCard({
   facts,
   outlook,
+  line,
   className,
 }: {
   facts: Fact[];
   outlook: AccountDetail["territory"]["zone_outlook"];
+  line?: string | null;
   className?: string;
 }) {
   if (!facts.length && !outlook) return null;
+  const figures = [
+    outlook?.ltlf_now != null ? `LTLF ${formatPower(outlook.ltlf_now)}` : null,
+    outlook?.ncp_now_months ? `${outlook.ncp_now_months} months in` : null,
+  ].filter(Boolean);
   return (
     <SectionCard
       title={outlook ? `Weather zone ${outlook.zone}` : "Weather zone"}
       icon={CloudSun}
-      subtitle="The zone's peak outlook, the 4CP and when its own peak ends."
+      info={line || undefined}
+      subtitle={figures.length ? figures.join(" · ") : undefined}
       className={className}
     >
-      <div className="space-y-4">
-        {facts.length > 0 && <FactGrid facts={facts} className="xl:grid-cols-3" />}
-        {outlook?.line && <p className="rounded-md bg-muted/60 px-3 py-2 text-sm text-foreground/80">{outlook.line}</p>}
-        {outlook && (outlook.ltlf_now != null || outlook.ncp_now_months) && (
-          <p className="text-xs text-muted-foreground">
-            {outlook.ltlf_now != null && <>LTLF for this summer: {formatPower(outlook.ltlf_now)}. </>}
-            {outlook.ncp_now_months ? <>The actual peak so far covers {outlook.ncp_now_months} months.</> : null}
-          </p>
-        )}
-      </div>
+      {facts.length > 0 && <FactGrid facts={facts} className="xl:grid-cols-3" />}
     </SectionCard>
   );
 }
@@ -260,9 +261,14 @@ function ZoneCard({
  * Territory: where it sits beside its counties, the growth and homes behind the score, the generation queue
  * beside the new data centers, and the weather zone.
  */
-export function TerritoryTab({ account, caveats }: { account: AccountDetail; caveats?: Caveat[] }) {
+export function TerritoryTab({ account }: { account: AccountDetail }) {
   const t = account.territory;
   const groups = groupTerritoryFacts(t.facts);
+  const context = t.context_label
+    ? splitLabel(t.context_label)
+    : t.context_rule === "home_county"
+      ? { short: "Home county", detail: null }
+      : null;
   return (
     <div className="space-y-4">
       <div className="grid gap-4 lg:grid-cols-5 lg:items-start">
@@ -270,8 +276,8 @@ export function TerritoryTab({ account, caveats }: { account: AccountDetail; cav
         <SectionCard
           title="Counties"
           icon={MapPinned}
-          subtitle={t.context_label ?? (t.context_rule === "home_county" ? "Context: home county" : undefined)}
-          caveats={caveats}
+          subtitle={context?.short}
+          info={context?.detail ?? undefined}
           className="lg:col-span-3"
         >
           <Counties counties={t.counties} />
@@ -286,7 +292,7 @@ export function TerritoryTab({ account, caveats }: { account: AccountDetail; cav
           ))}
         </KpiStatCard>
       )}
-      <SectionCard title="Generation queue, raw × adjusted" icon={Factory} subtitle="What the queue lists against what our model expects to be built.">
+      <SectionCard title="Generation queue, raw × adjusted" icon={Factory}>
         <div className="grid gap-6 xl:grid-cols-3">
           {groups.queue.length > 0 && <FactItems facts={groups.queue} className="content-start sm:grid-cols-2 xl:col-span-1" />}
           <div className="min-w-0 xl:col-span-2">
@@ -295,13 +301,18 @@ export function TerritoryTab({ account, caveats }: { account: AccountDetail; cav
         </div>
       </SectionCard>
       <div className="grid gap-4 lg:grid-cols-3 lg:items-start">
-        <SectionCard title="New data centers nearby" icon={Server} subtitle="TCEQ permits in the territory's counties since 2025.">
+        <SectionCard title="New data centers nearby" icon={Server} subtitle="TCEQ permits since 2025">
           <div className="space-y-5">
             {groups.dataCenters.length > 0 && <FactItems facts={groups.dataCenters} className="sm:grid-cols-2" />}
             <DataCenters sites={t.data_centers} />
           </div>
         </SectionCard>
-        <ZoneCard facts={groups.zone} outlook={t.zone_outlook} className="lg:col-span-2" />
+        <ZoneCard
+          facts={groups.zone}
+          outlook={t.zone_outlook}
+          line={account.four_cp_offer?.zone_line ? null : t.zone_outlook?.line}
+          className="lg:col-span-2"
+        />
       </div>
       {groups.other.length > 0 && (
         <SectionCard title="Other facts" icon={ListPlus}>

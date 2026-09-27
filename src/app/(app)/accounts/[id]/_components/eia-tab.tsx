@@ -21,7 +21,7 @@ function EiaTable({ account, className }: { account: AccountDetail; className?: 
     <SectionCard
       title="EIA-861 by year"
       icon={Table2}
-      subtitle="Meters include delivery-only customers; sales, revenue and prices are bundled only."
+      subtitle="Meters incl. delivery-only; $ and MWh bundled only"
       className={className}
     >
       {years.length === 0 ? (
@@ -216,13 +216,13 @@ export function EiaTab({ account }: { account: AccountDetail }) {
   return (
     <div className="space-y-4">
       <div className="grid gap-4 lg:grid-cols-2">
-        <SectionCard title="Meters" icon={Users} subtitle="All classes, including delivery-only.">
+        <SectionCard title="Meters" icon={Users} subtitle="Incl. delivery-only">
           <YearChart rows={rows} mode={mode} kind="line" dataKey="meters" tick={compact.format} format={formatWhole} label="Meters" />
         </SectionCard>
-        <SectionCard title="Retail sales" icon={Zap} subtitle="MWh a year, bundled service.">
+        <SectionCard title="Retail sales" icon={Zap} subtitle="MWh, bundled">
           <YearChart rows={rows} mode={mode} kind="bar" dataKey="sales_mwh" tick={compact.format} format={(v) => formatValue(v, "MWh")} label="Sales" />
         </SectionCard>
-        <SectionCard title="Retail revenue" icon={DollarSign} subtitle="A year, bundled service.">
+        <SectionCard title="Retail revenue" icon={DollarSign}>
           <YearChart
             rows={rows}
             mode={mode}
@@ -233,11 +233,11 @@ export function EiaTab({ account }: { account: AccountDetail }) {
             label="Revenue"
           />
         </SectionCard>
-        <SectionCard title="Prices" icon={Receipt} subtitle="Revenue ÷ sales, ¢/kWh.">
+        <SectionCard title="Prices" icon={Receipt} subtitle="¢/kWh">
           <PriceChart rows={rows} mode={mode} />
         </SectionCard>
       </div>
-      {early && <p className="text-xs text-muted-foreground">* EIA&apos;s early release: lighter bars and hollow points; it can change when the final data lands.</p>}
+      {early && <p className="text-xs text-muted-foreground">* Early release, may change</p>}
       <EiaTable account={account} />
     </div>
   );

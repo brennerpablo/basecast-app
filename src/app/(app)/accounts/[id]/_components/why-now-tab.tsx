@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { type AccountDetail, type AccountEvent, type EventsPage, useCodeLabels } from "@/lib/accounts/labels";
-import type { Caveat } from "@/lib/bff/envelope";
 import { useProductQuery } from "@/lib/bff/queries";
 import { cn } from "@/lib/utils";
 
@@ -94,8 +93,11 @@ function EventTimeline({ events, asOf }: { events: AccountEvent[]; asOf: string 
   );
 }
 
-/** One event: date and age, trigger, title and detail, place and source, and the offer angle it suggests. */
-function EventRow({ event }: { event: AccountEvent }) {
+/**
+ * One event: date and age, trigger, title and detail, place and source, and the offer angle it suggests, which
+ * `showOffer` limits to the first event carrying that angle.
+ */
+function EventRow({ event, showOffer }: { event: AccountEvent; showOffer: boolean }) {
   return (
     <li className="space-y-1 border-b border-border py-3 last:border-0">
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -109,7 +111,7 @@ function EventRow({ event }: { event: AccountEvent }) {
         {eventPlace(event)} · {event.source}
         {event.source_ref && <span className="font-mono"> · {event.source_ref}</span>}
       </p>
-      {event.offer && <p className="text-xs text-foreground/80 italic">Offer angle: {event.offer}</p>}
+      {showOffer && event.offer && <p className="text-xs text-foreground/80 italic">Offer angle: {event.offer}</p>}
     </li>
   );
 }
@@ -205,7 +207,7 @@ function FullHistory({ id, total }: { id: string; total: number }) {
  * Why now: the timeline across the width, the active strong events beside the context triggers, and the full
  * history a page at a time (`?events=` is its offset).
  */
-export function WhyNowTab({ account, caveats }: { account: AccountDetail; caveats?: Caveat[] }) {
+export function WhyNowTab({ account }: { account: AccountDetail }) {
   const { label } = useCodeLabels();
   const timeline = useProductQuery<EventsPage>(
     `accounts/${encodeURIComponent(account.account_id)}/events`,
@@ -213,14 +215,22 @@ export function WhyNowTab({ account, caveats }: { account: AccountDetail; caveat
     { throwOnError: false },
   );
   const { active, context_summary: context, history_count: historyCount } = account.triggers;
+  // The same offer angle repeats on every event of a trigger: it shows once, on the freshest.
+  const firstWithOffer = new Set<number>();
+  const offers = new Set<string>();
+  active.forEach((event, i) => {
+    if (event.offer && !offers.has(event.offer)) {
+      offers.add(event.offer);
+      firstWithOffer.add(i);
+    }
+  });
 
   return (
     <div className="space-y-4">
       <SectionCard
         title="Timeline"
         icon={Clock}
-        subtitle={`${formatWhole(active.length)} active strong ${active.length === 1 ? "event" : "events"} · ${formatWhole(historyCount)} in the history`}
-        caveats={caveats}
+        subtitle={`${formatWhole(active.length)} active · ${formatWhole(historyCount)} total`}
       >
         {timeline.data ? (
           <EventTimeline events={timeline.data.data.items} asOf={account.as_of} />
@@ -229,23 +239,18 @@ export function WhyNowTab({ account, caveats }: { account: AccountDetail; caveat
         )}
       </SectionCard>
       <div className="grid gap-4 lg:grid-cols-3 lg:items-start">
-        <SectionCard
-          title="Active strong events"
-          icon={Zap}
-          subtitle="Strong events of the last 12 months, the freshest first."
-          className="lg:col-span-2"
-        >
+        <SectionCard title="Active strong events" icon={Zap} className="lg:col-span-2">
           {active.length > 0 ? (
             <ul>
               {active.map((event, i) => (
-                <EventRow key={`${event.source_ref ?? event.title}-${i}`} event={event} />
+                <EventRow key={`${event.source_ref ?? event.title}-${i}`} event={event} showOffer={firstWithOffer.has(i)} />
               ))}
             </ul>
           ) : (
             <p className="text-sm text-muted-foreground">No strong event in the last 12 months.</p>
           )}
         </SectionCard>
-        <SectionCard title="Context triggers" icon={Layers} subtitle="Weaker signals, one line per trigger.">
+        <SectionCard title="Context triggers" icon={Layers}>
           {context.length > 0 ? (
             <ul className="divide-y divide-border">
               {context.map((line) => (
@@ -267,7 +272,7 @@ export function WhyNowTab({ account, caveats }: { account: AccountDetail; caveat
           )}
         </SectionCard>
       </div>
-      <SectionCard title="Event history" icon={History} subtitle="Every event of the account, the newest first.">
+      <SectionCard title="Event history" icon={History}>
         {historyCount > 0 ? (
           <FullHistory id={account.account_id} total={historyCount} />
         ) : (
