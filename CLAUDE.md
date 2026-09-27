@@ -218,10 +218,14 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   `normalized` (actual × normal-weather load, summer peak against the normal band) and `4cp` (intervals against the
   window, dispatch curve, peak-hour shift, rates); a mart not built shows "being rebuilt". Chart colors and ink:
   `src/lib/charts/palette.ts` (dataviz slots, light and dark steps).
-- `/backtest` (`src/app/(app)/backtest/`): the 2026 fan (every official vintage at its publication date, ERCOT's range,
+- `/backtest` (`src/app/(app)/backtest/`): a scorecard above the tabs (`scorecard.tsx`: peak MAPE against LTLF and CDR, wins
+  against ERCOT era by era, bias, band coverage against its 80% target, the queue's rank ρ; orange where the model falls
+  short), then the 2026 fan (every official vintage at its publication date, ERCOT's range,
   the actual, our P50 and band at the 8 backtest dates), a slider over the API's `as_of_dates` (an invalid `as_of`
   falls back to the latest), the cells of one date with each row's leak note, scores by era with the ablation
-  (including the era ERCOT did better), the official vintages' error matrix and the generation-queue backtest. Pure
+  (including the era ERCOT did better), the official vintages' error matrix, the generation-queue backtest and a Models tab
+  (`models-card.tsx`: every model and benchmark with variant, dates, cells, MAPE, bias and leaks, read one backtest date
+  at a time; a flag when the forecast's default variant is not the backtested one; the `stage = model` builds). Pure
   helpers in `backtest-data.ts` (tested); marks drawn on recharts' scales for hover targets and keyboard focus.
 - `/insights` (`src/app/(app)/insights/`): the cards of `GET /insights` in the Fundsys dashboard look: `PageHeader` with
   the response's caveats, then two line tabs with icons (`?tab=`): "Headline" (grade A, brand accent) and
