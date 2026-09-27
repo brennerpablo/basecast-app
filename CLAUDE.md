@@ -263,6 +263,10 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   photos in `app."UserAvatar"`; crop dialog in `src/components/avatar-upload/`. After an edit the page calls
   `update()`, and the `jwt` callback re-reads name and photo from the database. `withSession` hands the
   session to the handler. Screens outside the sidebar get their tab name and icon from `OTHER_ROUTES`.
+- Admin (`/admin/*`, `src/app/(app)/admin/`): superadmins only. `admin/layout.tsx` calls `requireSuperAdmin()` (a 404 for
+  anyone else) and each page checks again before reading; menu items with `superAdminOnly` show only to them
+  (`menuFor` in `src/lib/navigation.ts`), in the menu's last block. `/admin/users`: every account, newest first
+  (Prisma straight from the page; rows and stat cards pure in `src/lib/admin/users.ts`), read-only.
 - Ops (`/ops`, `src/app/(app)/ops/`, after Data in the menu): tabs Overview, Requests, Pipelines, Logs, all state
   in the URL, refetch every 30 s. Reads `ops.log` and `public.etl_run` straight from Postgres
   (`src/lib/ops/queries.ts`, raw SQL) through `/api/ops/*`. The log is Prisma model `OpsLog` (schema `ops`),
