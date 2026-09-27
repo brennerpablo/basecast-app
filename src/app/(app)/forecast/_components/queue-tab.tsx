@@ -21,7 +21,7 @@ import { useTheme } from "@/lib/hooks/use-theme";
 type Curves = components["schemas"]["QueueCurvesData"];
 
 const STRATUM_LABEL: Record<string, string> = { all: "All fuels", solar: "Solar", storage: "Storage", wind: "Wind", gas_other: "Gas & other" };
-const STAGE_LABEL: Record<string, string> = { entry: "From entry", ia: "From the signed IA" };
+const STAGE_LABEL: Record<string, string> = { entry: "Entry", ia: "Signed IA" };
 
 const parsers = {
   stage: parseAsStringLiteral(["entry", "ia"] as const).withDefault("entry"),
@@ -100,15 +100,14 @@ export function QueueTab() {
                       icon={<CalendarCheck className="size-4" aria-hidden />}
                       title={`COD within ${m.month} months`}
                       value={m.supported && m.cif_cod != null ? formatPercent(m.cif_cod, { ratio: true }) : GAP}
-                      hint={state.weighting === "mw" ? "Share of the MW" : "Share of the projects"}
                     />
                   ))}
                 </div>
               )}
               <SectionCard
-                title={`What reaches COD, what withdraws · ${STRATUM_LABEL[state.stratum] ?? state.stratum}`}
+                title={`COD vs withdrawn · ${STRATUM_LABEL[state.stratum] ?? state.stratum}`}
                 icon={Factory}
-                subtitle={d.as_of_month ? `Cumulative shares since the stage began · ${formatDate(d.as_of_month)} report.` : undefined}
+                subtitle={d.as_of_month ? `${formatDate(d.as_of_month)} report` : undefined}
                 caveats={meta.caveats}
               >
                 {!curve ? (
@@ -152,12 +151,12 @@ export function QueueTab() {
                     </div>
                     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1.5">
-                        <span className="h-0.5 w-4" style={{ background: codColor }} /> Reached commercial operation
+                        <span className="h-0.5 w-4" style={{ background: codColor }} /> Reached COD
                       </span>
                       <span className="flex items-center gap-1.5">
                         <span className="h-0.5 w-4" style={{ background: withdrawnColor }} /> Withdrawn
                       </span>
-                      {cut && <span>Lines stop at month {cut.month}: fewer than 10 projects left at risk.</span>}
+                      {cut && <span>Cut at month {cut.month} (&lt;10 at risk)</span>}
                     </div>
                   </div>
                 )}

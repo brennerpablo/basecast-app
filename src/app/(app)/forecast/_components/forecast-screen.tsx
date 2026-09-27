@@ -27,10 +27,7 @@ const TABS: { value: string; label: string; icon: LucideIcon; content: React.Rea
 export function ForecastScreen() {
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Forecast"
-        subtitle="Texas's summer peak and what moves it: the large loads, what the generation queue builds, the weather and the 4CP."
-      />
+      <PageHeader title="Forecast" />
       <Tabs urlParam="tab" defaultValue="peak" className="space-y-6">
         <TabsList variant="line" color="brand" className="max-w-full overflow-x-auto">
           {TABS.map(({ value, label, icon: Icon }) => (

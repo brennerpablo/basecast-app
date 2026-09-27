@@ -6,6 +6,7 @@ import { AppBadge } from "@/components/components-app/ui/badge";
 import { ChartTooltipCard } from "@/components/product/chart-tooltip";
 import { DataCard } from "@/components/product/data-card";
 import { formatPercent, formatWhole, GAP } from "@/components/product/format";
+import { Provenance } from "@/components/product/provenance";
 import { SectionCard } from "@/components/product/section-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { components } from "@/lib/api/get-data";
@@ -15,7 +16,6 @@ import { useTheme } from "@/lib/hooks/use-theme";
 import { cn } from "@/lib/utils";
 
 type FourCp = components["schemas"]["FourCpData"];
-type Meta = components["schemas"]["Meta"];
 
 const MONTHS = ["Jun", "Jul", "Aug", "Sep"];
 const minutes = (hhmm: string) => {
@@ -29,21 +29,13 @@ const inWindow = (local: string, start: string, end: string) => {
 };
 
 /** Every summer's four coincident-peak intervals, by month, marked inside or outside the offer's window. */
-function Calendar({ data, meta }: { data: FourCp; meta: Meta }) {
+function Calendar({ data }: { data: FourCp }) {
   const years = [...new Set(data.intervals.map((i) => i.year))].sort((a, b) => b - a);
   const start = data.window_start_local;
   const end = data.window_end_local;
   const covered = start && end ? data.intervals.filter((i) => inWindow(i.interval_end_local, start, end)).length : null;
   return (
-    <SectionCard
-      title="The 4CP intervals"
-      subtitle={
-        start && end
-          ? `ERCOT's four coincident peaks each summer. ${covered} of ${data.intervals.length} fall inside the ${start}–${end} window.`
-          : "ERCOT's four coincident peaks each summer."
-      }
-      meta={meta}
-    >
+    <SectionCard title="4CP intervals" subtitle={start && end ? `${covered}/${data.intervals.length} inside ${start}–${end}` : undefined}>
       <div className="overflow-x-auto">
         <table className="w-full text-xs whitespace-nowrap">
           <thead className="text-muted-foreground">
@@ -85,23 +77,18 @@ function Calendar({ data, meta }: { data: FourCp; meta: Meta }) {
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">Interval end, local time. Shaded: inside the window. * not final.</p>
+      <p className="mt-2 text-xs text-muted-foreground">Local interval end · shaded = in window · * not final</p>
     </SectionCard>
   );
 }
 
 /** How many dispatch days a summer takes against how often they catch the 4CPs (X3). */
-function DispatchCurve({ data, meta, mode }: { data: FourCp; meta: Meta; mode: ChartMode }) {
+function DispatchCurve({ data, mode }: { data: FourCp; mode: ChartMode }) {
   const ink = INK[mode];
   const [allColor, monthColor, dayColor] = SERIES[mode];
   const points = [...data.dispatch_curve].sort((a, b) => a.dispatch_days - b.dispatch_days);
   return (
-    <SectionCard
-      title="Dispatch days against hit rate"
-      subtitle="A weather rule that dispatches on more days catches more coincident peaks."
-      caveats={meta.caveats?.filter((c) => c.code === "optimistic_weather")}
-      meta={meta}
-    >
+    <SectionCard title="Dispatch days vs hit rate">
       <div className="h-64 w-full">
         <ResponsiveContainer>
           <LineChart data={points} margin={{ top: 8, right: 16, bottom: 12, left: 8 }}>
@@ -124,9 +111,9 @@ function DispatchCurve({ data, meta, mode }: { data: FourCp; meta: Meta; mode: C
                   <ChartTooltipCard
                     title={`${formatWhole(p.dispatch_days)} dispatch days`}
                     rows={[
-                      { label: "All four CPs caught", value: formatPercent(p.all4_rate, { ratio: true }), color: allColor },
-                      { label: "CP months caught", value: formatPercent(p.month_rate, { ratio: true }), color: monthColor },
-                      { label: "CP days caught", value: formatPercent(p.day_rate, { ratio: true }), color: dayColor },
+                      { label: "All four caught", value: formatPercent(p.all4_rate, { ratio: true }), color: allColor },
+                      { label: "Months caught", value: formatPercent(p.month_rate, { ratio: true }), color: monthColor },
+                      { label: "Days caught", value: formatPercent(p.day_rate, { ratio: true }), color: dayColor },
                     ]}
                   />
                 );
@@ -154,11 +141,11 @@ function DispatchCurve({ data, meta, mode }: { data: FourCp; meta: Meta; mode: C
 }
 
 /** Where scarcity went: the hour the load peaks against the hour the net load (after wind and solar) peaks. */
-function Scarcity({ data, meta, mode }: { data: FourCp; meta: Meta; mode: ChartMode }) {
+function Scarcity({ data, mode }: { data: FourCp; mode: ChartMode }) {
   const ink = INK[mode];
   const [loadColor, netColor] = SERIES[mode];
   return (
-    <SectionCard title="The peak hour moved" subtitle="Mean hour ending of the summer load peak and of the net-load peak (load minus wind and solar)." meta={meta}>
+    <SectionCard title="Peak hour" subtitle="Mean hour ending · net load = load − wind − solar">
       <div className="h-64 w-full">
         <ResponsiveContainer>
           <LineChart data={data.scarcity} margin={{ top: 8, right: 16, bottom: 0, left: 8 }}>
@@ -173,8 +160,8 @@ function Scarcity({ data, meta, mode }: { data: FourCp; meta: Meta; mode: ChartM
                   <ChartTooltipCard
                     title={`Summer ${s.year}`}
                     rows={[
-                      { label: "Load peak, mean HE", value: s.load_peak_mean_he == null ? GAP : s.load_peak_mean_he.toFixed(1), color: loadColor },
-                      { label: "Net-load peak, mean HE", value: s.net_load_peak_mean_he == null ? GAP : s.net_load_peak_mean_he.toFixed(1), color: netColor },
+                      { label: "Load peak", value: s.load_peak_mean_he == null ? GAP : `HE ${s.load_peak_mean_he.toFixed(1)}`, color: loadColor },
+                      { label: "Net-load peak", value: s.net_load_peak_mean_he == null ? GAP : `HE ${s.net_load_peak_mean_he.toFixed(1)}`, color: netColor },
                       { label: "Wind and solar share", value: formatPercent(s.wind_solar_share, { ratio: true }) },
                     ]}
                   />
@@ -201,9 +188,9 @@ function Scarcity({ data, meta, mode }: { data: FourCp; meta: Meta; mode: ChartM
 const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 3 });
 
 /** The transmission rate a 4CP reduction avoids, by year, with its docket and whether it is final. */
-function Rates({ data, meta }: { data: FourCp; meta: Meta }) {
+function Rates({ data }: { data: FourCp }) {
   return (
-    <SectionCard title="Transmission rates" subtitle="The postage-stamp rate a co-op pays on its 4CP load: what a 4CP reduction avoids." meta={meta}>
+    <SectionCard title="Postage-stamp rate" info="The transmission rate a co-op pays on its 4CP load: what a 4CP reduction avoids.">
       <table className="w-full text-xs whitespace-nowrap">
         <thead className="text-left text-muted-foreground">
           <tr className="border-b border-border">
@@ -240,7 +227,10 @@ function Rates({ data, meta }: { data: FourCp; meta: Meta }) {
   );
 }
 
-/** The 4CP tab (X3): the intervals and the window, the dispatch curve, where scarcity moved and the rates. */
+/**
+ * The 4CP tab (X3): the intervals and the window, the dispatch curve, where scarcity moved and the rates. One
+ * response: its caveats show once on the first card, its provenance once at the foot.
+ */
 export function FourCpTab() {
   const { resolvedTheme } = useTheme();
   const mode: ChartMode = resolvedTheme === "dark" ? "dark" : "light";
@@ -249,9 +239,10 @@ export function FourCpTab() {
   return (
     <div className="space-y-4">
       <DataCard<FourCp>
-        title="4CP: the four coincident peaks"
-        subtitle="Transmission costs follow each summer's four coincident peaks; a battery that discharges through them avoids that cost."
+        title="4CP"
+        info="Transmission cost follows each summer's 4 coincident peaks; a battery discharging through them avoids it."
         query={query}
+        provenance={false}
         isEmpty={(d) => d.intervals.length === 0}
         skeleton={<Skeleton className="h-24 w-full" />}
       >
@@ -268,15 +259,16 @@ export function FourCpTab() {
       {envelope && envelope.data.intervals.length > 0 && (
         <>
           <div className="grid gap-4 xl:grid-cols-2">
-            <Calendar data={envelope.data} meta={envelope.meta} />
-            <DispatchCurve data={envelope.data} meta={envelope.meta} mode={mode} />
+            <Calendar data={envelope.data} />
+            <DispatchCurve data={envelope.data} mode={mode} />
           </div>
           <div className="grid gap-4 xl:grid-cols-2">
-            <Scarcity data={envelope.data} meta={envelope.meta} mode={mode} />
-            <Rates data={envelope.data} meta={envelope.meta} />
+            <Scarcity data={envelope.data} mode={mode} />
+            <Rates data={envelope.data} />
           </div>
         </>
       )}
+      {envelope && <Provenance meta={envelope.meta} className="border-t border-border pt-3" />}
     </div>
   );
 }

@@ -161,11 +161,11 @@ function PeakChart({ data, mode }: { data: PeakData; mode: ChartMode }) {
       </div>
       <div className="space-y-1.5 text-xs text-muted-foreground">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
-          <span className="w-24 shrink-0 font-medium text-foreground/80">Our forecast</span>
+          <span className="w-32 shrink-0 font-medium text-foreground/80">Our forecast (P50)</span>
           {LAYERS.map((layer) => (
             <span key={layer} className="flex items-center gap-1.5">
               <span className="size-3 rounded-[3px]" style={{ background: layerColor(layer) }} />
-              {LAYER_LABEL[layer]} (P50)
+              {LAYER_LABEL[layer]}
             </span>
           ))}
           {bandKind && (
@@ -177,7 +177,7 @@ function PeakChart({ data, mode }: { data: PeakData; mode: ChartMode }) {
         </div>
         {officials.length > 0 && (
           <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
-            <span className="w-24 shrink-0 font-medium text-foreground/80">ERCOT&apos;s lines</span>
+            <span className="w-32 shrink-0 font-medium text-foreground/80">ERCOT&apos;s lines</span>
             {officials.map((o) => (
               <span key={o.key} className="flex items-center gap-1.5">
                 <svg width="22" height="6" aria-hidden>
@@ -201,7 +201,7 @@ function BandBasis({ data }: { data: PeakData }) {
   if (!lines.length) return null;
   return (
     <details className="text-xs text-muted-foreground">
-      <summary className="cursor-pointer font-medium text-foreground/80">What the bands are made of</summary>
+      <summary className="cursor-pointer font-medium text-foreground/80">Band basis</summary>
       <ul className="mt-2 list-disc space-y-1 pl-4">
         {lines.map((code) => (
           <li key={code}>{texts[code]}</li>
@@ -278,9 +278,8 @@ function InputsCard({ data }: { data: PeakData }) {
   const i = data.inputs;
   return (
     <SectionCard
-      title="Inputs of the large-load layer"
+      title="Large-load inputs"
       icon={SlidersHorizontal}
-      subtitle="The deck, factor and realization ratio the layer is built from."
       action={<VerifiedBadge verified={i.verified} />}
     >
       <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 xl:grid-cols-5">
@@ -298,7 +297,7 @@ function InputsCard({ data }: { data: PeakData }) {
   );
 }
 
-/** The last summer in four numbers: our P50, the large loads in it, the band, and ERCOT's adjusted line. */
+/** The last summer in four numbers: our P50, the large loads in it, the band, and ERCOT's adjusted line. The year shows once, in the first title. */
 function PeakStats({ data }: { data: PeakData }) {
   const last = [...data.series].sort((a, b) => b.target_year - a.target_year)[0];
   if (!last) return null;
@@ -311,19 +310,19 @@ function PeakStats({ data }: { data: PeakData }) {
       <DashboardStatCard
         layout="stacked"
         icon={<Server className="size-4" aria-hidden />}
-        title={`Large loads in ${year}, P50`}
+        title="Large loads, P50"
         value={largeLoad ? formatPower(largeLoad.p50_mw) : GAP}
       />
       <DashboardStatCard
         layout="stacked"
         icon={<Ruler className="size-4" aria-hidden />}
-        title={last.band_kind ? `${BAND_LABEL[last.band_kind] ?? "Band"}, ${year}` : `Band, ${year}`}
+        title={(last.band_kind && BAND_LABEL[last.band_kind]) || "Band"}
         value={last.p10_mw != null && last.p90_mw != null ? `${formatPower(last.p10_mw)} – ${formatPower(last.p90_mw)}` : GAP}
       />
       <DashboardStatCard
         layout="stacked"
         icon={<Landmark className="size-4" aria-hidden />}
-        title={official ? `${official.label}, ${year}` : `ERCOT's line, ${year}`}
+        title={official?.label ?? "ERCOT's line"}
         value={official ? formatPower(official.mw) : GAP}
       />
     </div>
@@ -381,7 +380,7 @@ export function PeakTab() {
         query={query}
         compact={false}
         isEmpty={(d) => !d.available || d.series.length === 0}
-        empty={{ title: "Not available for this region", description: "This variant is built for ERCOT only; pick the default variant for a zone." }}
+        empty={{ title: "ERCOT only", description: "Use the default variant for zones." }}
         skeleton={<Skeleton className="h-96 w-full" />}
       >
         {(d, meta) => (
@@ -390,12 +389,12 @@ export function PeakTab() {
             <SectionCard
               title={`Summer peak, ${d.region === "ERCOT" ? "ERCOT" : `${d.region} weather zone`}`}
               icon={TrendingUp}
-              subtitle={current ? `${current.label}${current.is_default ? " (default)" : ""} · run of ${formatDate(d.as_of)}` : undefined}
+              subtitle={`Run ${formatDate(d.as_of)}`}
               caveats={meta.caveats}
             >
               <PeakChart data={d} mode={mode} />
             </SectionCard>
-            <SectionCard title="The numbers" icon={Table2} subtitle="Every value of the chart, by summer.">
+            <SectionCard title="Table" icon={Table2}>
               <div className="space-y-3">
                 <PeakNumbers data={d} />
                 <BandBasis data={d} />

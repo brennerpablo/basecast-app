@@ -17,6 +17,7 @@ import {
 import { ChartTooltipCard } from "@/components/product/chart-tooltip";
 import { DataCard } from "@/components/product/data-card";
 import { formatDate, formatPercent, formatPower, GAP } from "@/components/product/format";
+import { Provenance } from "@/components/product/provenance";
 import { SectionCard } from "@/components/product/section-card";
 import { SegmentedControl } from "@/components/product/segmented-control";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,7 +32,7 @@ const MONTH = new Intl.DateTimeFormat("en-US", { timeZone: "UTC", month: "short"
 const monthLabel = (iso: string) => MONTH.format(new Date(`${iso.slice(0, 10)}T00:00:00Z`));
 const yearTick = (iso: string) => iso.slice(0, 4);
 
-/** Weather-normalized load (X12): the monthly average, actual against normal weather, and the summer peak. */
+/** Weather-normalized load (X12): the monthly average, actual against normal weather, and the summer peak; the provenance once at the foot. */
 export function NormalizedTab() {
   const [{ region }, setState] = useQueryStates({ region: parseAsString.withDefault("ERCOT") });
   const { resolvedTheme } = useTheme();
@@ -52,9 +53,10 @@ export function NormalizedTab() {
         />
       )}
       <DataCard<Normalized>
-        title={`Load, actual and at normal weather · ${data?.region ?? region}`}
-        subtitle={data ? `Monthly average load. Normal weather: ${data.normal_period}; weather from ${data.weather_source}.` : undefined}
+        title={`Monthly load · ${data?.region ?? region}`}
+        subtitle={data ? `Normal ${data.normal_period} · ${data.weather_source}` : undefined}
         query={query}
+        provenance={false}
         isEmpty={(d) => d.monthly.length === 0}
         skeleton={<Skeleton className="h-80 w-full" />}
       >
@@ -74,10 +76,10 @@ export function NormalizedTab() {
                         <ChartTooltipCard
                           title={`${monthLabel(m.month)}${m.complete ? "" : " (month in progress)"}`}
                           rows={[
-                            { label: "Average load", value: formatPower(m.avg_mw), color: actualColor },
+                            { label: "Actual", value: formatPower(m.avg_mw), color: actualColor },
                             { label: "At normal weather", value: formatPower(m.avg_norm_mw), color: normalColor },
                             { label: "Peak / at normal weather", value: `${formatPower(m.peak_mw)} / ${formatPower(m.peak_norm_mw)}` },
-                            { label: "Normalized, vs a year before", value: m.yoy_norm_pct == null ? GAP : formatPercent(m.yoy_norm_pct, { signed: true }) },
+                            { label: "YoY (normalized)", value: m.yoy_norm_pct == null ? GAP : formatPercent(m.yoy_norm_pct, { signed: true }) },
                           ]}
                         />
                       );
@@ -99,13 +101,14 @@ export function NormalizedTab() {
           </div>
         )}
       </DataCard>
-      {query.data && query.data.data.annual.length > 0 && <AnnualPeak data={query.data.data} meta={query.data.meta} mode={mode} />}
+      {query.data && query.data.data.annual.length > 0 && <AnnualPeak data={query.data.data} mode={mode} />}
+      {query.data && <Provenance meta={query.data.meta} className="border-t border-border pt-3" />}
     </div>
   );
 }
 
 /** The summer peak each year against the range normal weather would give (P10–P90), and the yearly change. */
-function AnnualPeak({ data, meta, mode }: { data: Normalized; meta: components["schemas"]["Meta"]; mode: ChartMode }) {
+function AnnualPeak({ data, mode }: { data: Normalized; mode: ChartMode }) {
   const ink = INK[mode];
   const [actualColor, normalColor] = SERIES[mode];
   const rows = data.annual.map((y, i) => {
@@ -117,7 +120,7 @@ function AnnualPeak({ data, meta, mode }: { data: Normalized; meta: components["
     };
   });
   return (
-    <SectionCard title="Summer peak against normal weather" subtitle="Each summer's actual peak and the P10–P90 range of peaks under the normal-weather years." meta={meta}>
+    <SectionCard title="Summer peak vs normal">
       <div className="h-72 w-full">
         <ResponsiveContainer>
           <ComposedChart data={rows} margin={{ top: 8, right: 16, bottom: 0, left: 8 }}>
@@ -135,7 +138,7 @@ function AnnualPeak({ data, meta, mode }: { data: Normalized; meta: components["
                       { label: "Actual peak", value: formatPower(y.summer_peak_mw), color: actualColor },
                       { label: "Normal-weather P50", value: formatPower(y.summer_peak_norm_p50), color: normalColor },
                       {
-                        label: "Normal-weather P10–P90",
+                        label: "P10–P90",
                         value: y.band ? `${formatPower(y.band[0])} – ${formatPower(y.band[1])}` : GAP,
                       },
                     ]}
@@ -151,7 +154,7 @@ function AnnualPeak({ data, meta, mode }: { data: Normalized; meta: components["
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-full" style={{ background: actualColor }} /> Actual summer peak
+          <span className="size-2.5 rounded-full" style={{ background: actualColor }} /> Actual peak
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-0.5 w-4" style={{ background: normalColor }} /> Normal-weather P50
@@ -165,8 +168,8 @@ function AnnualPeak({ data, meta, mode }: { data: Normalized; meta: components["
           <thead className="text-muted-foreground">
             <tr className="border-b border-border">
               <th className="py-1.5 pr-3 text-left font-medium">Year</th>
-              <th className="py-1.5 pr-3 text-right font-medium">Energy, actual vs year before</th>
-              <th className="py-1.5 pr-3 text-right font-medium">Energy at normal weather vs year before</th>
+              <th className="py-1.5 pr-3 text-right font-medium">Energy YoY</th>
+              <th className="py-1.5 pr-3 text-right font-medium">Normalized YoY</th>
               <th className="py-1.5 text-right font-medium">Complete through</th>
             </tr>
           </thead>

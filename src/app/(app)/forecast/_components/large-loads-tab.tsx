@@ -1,6 +1,6 @@
 "use client";
 
-import { ChartColumn, Files, Info, LineChart as LineChartIcon, Percent } from "lucide-react";
+import { ChartColumn, Files, LineChart as LineChartIcon, Percent } from "lucide-react";
 import { parseAsInteger, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import {
@@ -22,6 +22,7 @@ import { ChartTooltipCard } from "@/components/product/chart-tooltip";
 import { DashboardStatCard } from "@/components/product/dashboard-stat-card";
 import { QueryBody } from "@/components/product/data-card";
 import { formatDate, formatPercent, formatPower, formatWhole, GAP } from "@/components/product/format";
+import { InfoTip } from "@/components/product/info-tip";
 import { Provenance } from "@/components/product/provenance";
 import { SectionCard } from "@/components/product/section-card";
 import { SegmentedControl } from "@/components/product/segmented-control";
@@ -52,7 +53,7 @@ function Realization({ data, mode, caveats }: { data: LargeLoad; mode: ChartMode
       title="Promised × approved, by deck"
       icon={ChartColumn}
       caveats={caveats}
-      subtitle={`What each ERCOT large-load deck promised for December ${year}, and the MW approved to energize by then.`}
+      subtitle={`Target: Dec ${year}`}
       action={
         years.length > 1 && (
           <SegmentedControl
@@ -85,13 +86,13 @@ function Realization({ data, mode, caveats }: { data: LargeLoad; mode: ChartMode
                   <ChartTooltipCard
                     title={`Deck of ${formatDate(r.deck_vintage)} · p. ${r.page}`}
                     rows={[
-                      { label: `Promised for Dec ${r.target_year}`, value: formatPower(r.promised_mw), color: promisedColor },
+                      { label: "Promised", value: formatPower(r.promised_mw), color: promisedColor },
                       {
-                        label: r.realized_partial ? `Approved so far (through ${formatDate(r.realized_month?.slice(0, 7))})` : "Approved by then",
+                        label: r.realized_partial ? `Approved by Dec (through ${formatDate(r.realized_month?.slice(0, 7))})` : "Approved by Dec",
                         value: r.realized_a2e_mw == null ? "Not known yet" : formatPower(r.realized_a2e_mw),
                         color: approvedColor,
                       },
-                      { label: "Approved when the deck came out", value: formatPower(r.base_a2e_mw) },
+                      { label: "Approved at deck date", value: formatPower(r.base_a2e_mw) },
                       { label: "Incremental ratio", value: r.incremental_a2e == null ? GAP : r.incremental_a2e.toFixed(2) },
                     ]}
                   />
@@ -109,24 +110,23 @@ function Realization({ data, mode, caveats }: { data: LargeLoad; mode: ChartMode
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <span className="size-3 rounded-[3px]" style={{ background: promisedColor }} /> Promised by the deck
+          <span className="size-3 rounded-[3px]" style={{ background: promisedColor }} /> Promised
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="size-3 rounded-[3px]" style={{ background: approvedColor }} /> Approved to energize by December
+          <span className="size-3 rounded-[3px]" style={{ background: approvedColor }} /> Approved by Dec
         </span>
         {rows.some((r) => r.realized_partial) && (
           <span className="flex items-center gap-1.5">
-            <span className="size-3 rounded-[3px]" style={{ background: approvedColor, opacity: 0.45 }} /> Year still open: approved so far
+            <span className="size-3 rounded-[3px]" style={{ background: approvedColor, opacity: 0.45 }} /> Partial (year open)
           </span>
         )}
-        {rows.some((r) => r.realized_a2e_mw == null) && <span>No orange bar: not known yet.</span>}
         <VerifiedBadge verified={rows.every((r) => r.verified !== false)} />
       </div>
     </SectionCard>
   );
 }
 
-/** The decks read and the realization ratio band the forecast uses, as stat cards, with the API's definition below. */
+/** The decks read and the realization ratio band the forecast uses, as stat cards; the API's definition is in the P50 card's info tip. */
 function LargeLoadStats({ data }: { data: LargeLoad }) {
   const decks = data.deck_vintages ?? [];
   const band = data.ratio_band;
@@ -147,18 +147,18 @@ function LargeLoadStats({ data }: { data: LargeLoad }) {
           icon={<Percent className="size-4" aria-hidden />}
           title="Realization ratio, P50"
           value={ratio(band?.p50)}
-          hint={band ? `Deck of ${formatDate(band.deck_vintage)}` : undefined}
+          hint={
+            band ? (
+              <span className="inline-flex items-center gap-1.5">
+                Deck of {formatDate(band.deck_vintage)}
+                {band.definition && <InfoTip label="Realization ratio">{band.definition}</InfoTip>}
+                <VerifiedBadge verified={band.verified} compact />
+              </span>
+            ) : undefined
+          }
         />
         <DashboardStatCard layout="stacked" icon={<Percent className="size-4" aria-hidden />} title="Realization ratio, P90" value={ratio(band?.p90)} />
       </div>
-      {band?.definition && (
-        <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
-          <Info className="mt-px size-3.5 shrink-0" aria-hidden />
-          <span>
-            {band.definition} <VerifiedBadge verified={band.verified} />
-          </span>
-        </p>
-      )}
     </div>
   );
 }
@@ -175,11 +175,7 @@ function Monthly({ data, mode }: { data: LargeLoad; mode: ChartMode }) {
     .map((a, i) => ({ ...a, n: i + 1, month: months.find((m) => m.month.slice(0, 7) === a.date.slice(0, 7))?.month }));
 
   return (
-    <SectionCard
-      title="Approved stock and observed peak"
-      icon={LineChartIcon}
-      subtitle="MW approved to energize, month by month, against the large loads' observed peak; numbered lines mark the events below."
-    >
+    <SectionCard title="Approved stock and observed peak" icon={LineChartIcon}>
       <div className="h-72 w-full">
         <ResponsiveContainer>
           <LineChart data={months} margin={{ top: 16, right: 16, bottom: 0, left: 8 }}>
@@ -196,7 +192,7 @@ function Monthly({ data, mode }: { data: LargeLoad; mode: ChartMode }) {
                     rows={[
                       { label: "Approved stock", value: m.a2e_mw == null ? "No reading" : formatPower(m.a2e_mw), color: stockColor },
                       {
-                        label: "Observed peak (simultaneous)",
+                        label: "Observed peak, simultaneous",
                         value: m.observed_simultaneous_mw == null ? "No reading" : formatPower(m.observed_simultaneous_mw),
                         color: peakColor,
                       },
@@ -223,7 +219,7 @@ function Monthly({ data, mode }: { data: LargeLoad; mode: ChartMode }) {
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <span className="h-0.5 w-4" style={{ background: stockColor }} /> Approved to energize (stock)
+          <span className="h-0.5 w-4" style={{ background: stockColor }} /> Approved stock
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-0.5 w-4" style={{ background: peakColor }} /> Observed peak, simultaneous
@@ -245,21 +241,16 @@ function Monthly({ data, mode }: { data: LargeLoad; mode: ChartMode }) {
                 >
                   {n ?? "·"}
                 </span>
-                <div className="min-w-0 space-y-0.5">
-                  <p>
-                    <span className="font-medium tabular-nums">{formatDate(a.date)}</span> · <span className="font-medium">{a.title}</span>
-                  </p>
-                  {a.detail && <p className="text-xs text-muted-foreground">{a.detail}</p>}
-                  <p className="text-xs">
-                    {a.source_url ? (
-                      <a href={a.source_url} target="_blank" rel="noreferrer" className="text-basecast-brand hover:underline">
-                        Source
-                      </a>
-                    ) : (
-                      <span className="text-muted-foreground">Source not verified</span>
-                    )}
-                  </p>
-                </div>
+                <p className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
+                  <span className="font-medium tabular-nums">{formatDate(a.date)}</span> · <span className="font-medium">{a.title}</span>
+                  {a.detail && <InfoTip label={`About: ${a.title}`}>{a.detail}</InfoTip>}
+                  {a.source_url && (
+                    <a href={a.source_url} target="_blank" rel="noreferrer" className="text-xs text-basecast-brand hover:underline">
+                      Source
+                    </a>
+                  )}
+                  <VerifiedBadge verified={Boolean(a.source_url) && a.verified} compact />
+                </p>
               </li>
             );
           })}
