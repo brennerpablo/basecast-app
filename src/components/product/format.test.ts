@@ -56,6 +56,8 @@ test("the units of the account facts", () => {
   assert.equal(formatValue(50_238.6, "customers"), "50,239 customers");
   assert.equal(formatValue(798_609.5, "MWh"), "798,610 MWh");
   assert.equal(formatValue(0.7188, "sites"), "0.72 sites");
+  assert.equal(formatValue(621.059, "units"), "621.1 units");
+  assert.equal(formatValue(10.1, "%"), "10.1%");
   assert.equal(formatValue(null, "USD/kWh"), GAP);
   assert.equal(formatHour(18.25), "18:15");
 });

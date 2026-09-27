@@ -187,6 +187,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/forecasts/queue-curves": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Queue Curves
+         * @description Generation-queue survival: the share of projects (or MW) reaching COD, and withdrawing, by months since
+         *     they entered the queue or signed their IA, per stratum. Values past the point where fewer than 10 projects
+         *     remain at risk come back null.
+         */
+        get: operations["queue_curves_forecasts_queue_curves_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/load/normalized": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Normalized
+         * @description The region's load actual and at normal weather: monthly (average, energy, peak) and yearly (energy and
+         *     the summer peak under the normal weather years).
+         */
+        get: operations["normalized_load_normalized_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/four-cp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Four Cp
+         * @description The 4CP intervals by year, each zone's load at them, the dispatch days a weather rule needs to catch
+         *     all four, the shift of scarcity past 6 pm, and the transmission rate each year's 4CP is billed at.
+         */
+        get: operations["four_cp_four_cp_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/backtest/peak": {
         parameters: {
             query?: never;
@@ -617,6 +681,15 @@ export interface components {
             /** Gaps */
             gaps?: components["schemas"]["Gap"][];
             coverage?: components["schemas"]["Coverage"];
+            /**
+             * Suppliers
+             * @description P1: the wholesale supplier card
+             */
+            suppliers?: components["schemas"]["SupplierCard"][];
+            /** @description P1: the 4CP offer card */
+            four_cp_offer?: components["schemas"]["FourCpOffer"] | null;
+            /** @description P1: city facts, munis only */
+            city?: components["schemas"]["CityFacts"] | null;
         };
         /** AccountDetailResponse */
         AccountDetailResponse: {
@@ -706,6 +779,11 @@ export interface components {
              * @description The day the action lapses without a new event
              */
             action_changes_on?: string | null;
+            /**
+             * Action Changes To
+             * @description The action it lapses to
+             */
+            action_changes_to?: ("call_now" | "nurture" | "watch" | "hold") | null;
             /** N Strong */
             n_strong: number;
             /** N Context */
@@ -938,6 +1016,28 @@ export interface components {
         CaveatsResponse: {
             /** Items */
             items: components["schemas"]["Caveat"][];
+        };
+        /**
+         * CityFacts
+         * @description Census place facts for a muni (X10), labelled as the city, not the territory.
+         */
+        CityFacts: {
+            /** Place Name */
+            place_name: string;
+            /** Place Fips */
+            place_fips: string;
+            /**
+             * Fit
+             * @description How well the city describes the territory, by area
+             * @enum {string}
+             */
+            fit: "same" | "city_larger" | "territory_larger";
+            /** Place In Territory */
+            place_in_territory?: number | null;
+            /** Territory In Place */
+            territory_in_place?: number | null;
+            /** Facts */
+            facts: components["schemas"]["Fact"][];
         };
         /** ContextSummary */
         ContextSummary: {
@@ -1273,6 +1373,54 @@ export interface components {
              */
             resolution: "zone" | "territory (simulated)";
         };
+        /**
+         * CurveMilestone
+         * @description COD by 12, 24, 36 and 48 months, the numbers the tab prints.
+         */
+        CurveMilestone: {
+            /** Stage */
+            stage: string;
+            /**
+             * Stratum
+             * @enum {string}
+             */
+            stratum: "all" | "solar" | "storage" | "wind" | "gas_other";
+            /**
+             * Weighting
+             * @enum {string}
+             */
+            weighting: "mw" | "count";
+            /** Month */
+            month: number;
+            /** Cif Cod */
+            cif_cod?: number | null;
+            /** Supported */
+            supported: boolean;
+        };
+        /** CurvePoint */
+        CurvePoint: {
+            /**
+             * Month
+             * @description Months since the start of the stage
+             */
+            month: number;
+            /** At Risk */
+            at_risk: number;
+            /**
+             * Cif Cod
+             * @description Share reaching COD; null where fewer than 10 are at risk
+             */
+            cif_cod?: number | null;
+            /** Cif Withdrawn */
+            cif_withdrawn?: number | null;
+            /** Survival */
+            survival?: number | null;
+            /**
+             * Supported
+             * @description At least 10 projects at risk; past that the curve shows no value
+             */
+            supported: boolean;
+        };
         /** DataCenterSite */
         DataCenterSite: {
             /** Tceq Rn */
@@ -1342,6 +1490,29 @@ export interface components {
              * @default false
              */
             rows_estimated: boolean;
+        };
+        /** DispatchPoint */
+        DispatchPoint: {
+            /** Forecast */
+            forecast: string;
+            /** Param */
+            param: number;
+            /** Window */
+            window: string;
+            /**
+             * Dispatch Days
+             * @description Dispatch days per summer
+             */
+            dispatch_days: number;
+            /**
+             * All4 Rate
+             * @description Share of summers with all four CPs caught
+             */
+            all4_rate: number;
+            /** Month Rate */
+            month_rate?: number | null;
+            /** Day Rate */
+            day_rate?: number | null;
         };
         /** EiaYear */
         EiaYear: {
@@ -1531,6 +1702,143 @@ export interface components {
             extension: string;
             /** Files */
             files: number;
+        };
+        /** FourCpData */
+        FourCpData: {
+            /**
+             * Window Start Local
+             * @description The dispatch window the offer uses
+             */
+            window_start_local?: string | null;
+            /** Window End Local */
+            window_end_local?: string | null;
+            /** Intervals */
+            intervals: components["schemas"]["FourCpInterval"][];
+            /** Zones */
+            zones: components["schemas"]["FourCpZone"][];
+            /** Dispatch Curve */
+            dispatch_curve: components["schemas"]["DispatchPoint"][];
+            /** Scarcity */
+            scarcity: components["schemas"]["Scarcity"][];
+            /** Rates */
+            rates: components["schemas"]["TransmissionRate"][];
+        };
+        /** FourCpInterval */
+        FourCpInterval: {
+            /** Year */
+            year: number;
+            /** Month */
+            month: number;
+            /**
+             * Interval End Local
+             * @description Interval end, Central time
+             */
+            interval_end_local: string;
+            /** Interval End Utc */
+            interval_end_utc?: string | null;
+            /** Mw */
+            mw: number;
+            /**
+             * Source
+             * @description de_15min, or hourly_provisional for months not yet in the D&E report
+             */
+            source: string;
+            /** Final */
+            final: boolean;
+        };
+        /**
+         * FourCpOffer
+         * @description What a 4CP discharge is worth to the co-op (X3 + X15): avoided cost for the co-op, not Base revenue.
+         */
+        FourCpOffer: {
+            /** Zone */
+            zone: string;
+            /**
+             * Zone Line
+             * @description The zone's 4CP talking point
+             */
+            zone_line?: string | null;
+            /** Window Start Local */
+            window_start_local: string;
+            /** Window End Local */
+            window_end_local: string;
+            /**
+             * Dispatch Days
+             * @description Dispatch days per summer a weather rule needs
+             */
+            dispatch_days?: number | null;
+            /** Rates */
+            rates: components["schemas"]["FourCpRate"][];
+            /**
+             * Note
+             * @description How to read the dollars: avoided cost, not revenue; fleet kW per home
+             */
+            note: string;
+            /** @description The account's own load at the 4CP: private data, a gap for now */
+            account_4cp: components["schemas"]["Fact"];
+            /**
+             * Verified
+             * @default true
+             */
+            verified: boolean;
+        };
+        /** FourCpRate */
+        FourCpRate: {
+            /** Charges For Year */
+            charges_for_year: number;
+            /** Docket */
+            docket: string;
+            /** Usd Per Mw Yr */
+            usd_per_mw_yr: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "final" | "pending";
+            /** Billed Year */
+            billed_year: number;
+        };
+        /** FourCpResponse */
+        FourCpResponse: {
+            meta: components["schemas"]["Meta"];
+            data: components["schemas"]["FourCpData"];
+        };
+        /** FourCpZone */
+        FourCpZone: {
+            /**
+             * Region Type
+             * @description weather_zone or load_zone
+             */
+            region_type: string;
+            /** Region Id */
+            region_id: string;
+            /** Year */
+            year: number;
+            /** Cp Avg Mw */
+            cp_avg_mw?: number | null;
+            /** Ncp Summer Mw */
+            ncp_summer_mw?: number | null;
+            /**
+             * Cf Summer
+             * @description Load at the CPs ÷ the zone's own summer peak
+             */
+            cf_summer?: number | null;
+            /** Share 4Cp */
+            share_4cp?: number | null;
+            /** Share Energy */
+            share_energy?: number | null;
+            /**
+             * Intensity
+             * @description share_4cp ÷ share_energy
+             */
+            intensity?: number | null;
+            /**
+             * Ncp End Hour
+             * @description The zone's own peak, local hour as a decimal
+             */
+            ncp_end_hour?: number | null;
+            /** Energy Mwh */
+            energy_mwh?: number | null;
         };
         /** Gap */
         Gap: {
@@ -2056,6 +2364,100 @@ export interface components {
             /** Changes To */
             changes_to?: ("call_now" | "nurture" | "watch" | "hold") | null;
         };
+        /** NormalizedLoadData */
+        NormalizedLoadData: {
+            /**
+             * Region
+             * @enum {string}
+             */
+            region: "ERCOT" | "COAST" | "EAST" | "FWEST" | "NCENT" | "NORTH" | "SCENT" | "SOUTH" | "WEST";
+            /** Regions */
+            regions: ("ERCOT" | "COAST" | "EAST" | "FWEST" | "NCENT" | "NORTH" | "SCENT" | "SOUTH" | "WEST")[];
+            /** Normal Period */
+            normal_period?: string | null;
+            /** Weather Source */
+            weather_source?: string | null;
+            /** Monthly */
+            monthly: components["schemas"]["NormalizedMonth"][];
+            /** Annual */
+            annual: components["schemas"]["NormalizedYear"][];
+        };
+        /** NormalizedLoadResponse */
+        NormalizedLoadResponse: {
+            meta: components["schemas"]["Meta"];
+            data: components["schemas"]["NormalizedLoadData"];
+        };
+        /** NormalizedMonth */
+        NormalizedMonth: {
+            /**
+             * Month
+             * Format: date
+             * @description First day of the month
+             */
+            month: string;
+            /** Days */
+            days: number;
+            /**
+             * Complete
+             * @description False for the running month
+             */
+            complete: boolean;
+            /** Avg Mw */
+            avg_mw?: number | null;
+            /**
+             * Avg Norm Mw
+             * @description Average load at normal weather
+             */
+            avg_norm_mw?: number | null;
+            /** Energy Gwh */
+            energy_gwh?: number | null;
+            /** Energy Norm Gwh */
+            energy_norm_gwh?: number | null;
+            /** Peak Mw */
+            peak_mw?: number | null;
+            /**
+             * Peak Norm Mw
+             * @description Weather-adjusted daily peak; not an expected peak
+             */
+            peak_norm_mw?: number | null;
+            /** T Mean C */
+            t_mean_c?: number | null;
+            /**
+             * Yoy Norm Pct
+             * @description 12-month change of avg_norm_mw, in %
+             */
+            yoy_norm_pct?: number | null;
+        };
+        /** NormalizedYear */
+        NormalizedYear: {
+            /** Year */
+            year: number;
+            /** Energy Gwh */
+            energy_gwh?: number | null;
+            /** Energy Norm Gwh */
+            energy_norm_gwh?: number | null;
+            /** Yoy Norm Pct */
+            yoy_norm_pct?: number | null;
+            /**
+             * Summer Peak Mw
+             * @description Actual June–September daily max
+             */
+            summer_peak_mw?: number | null;
+            /**
+             * Summer Peak Norm P10
+             * @description The summer peak under the normal weather years
+             */
+            summer_peak_norm_p10?: number | null;
+            /** Summer Peak Norm P50 */
+            summer_peak_norm_p50?: number | null;
+            /** Summer Peak Norm P90 */
+            summer_peak_norm_p90?: number | null;
+            /**
+             * Complete Through
+             * @description Last day included
+             */
+            complete_through?: string | null;
+        };
         /** ObjectDetail */
         ObjectDetail: {
             object: components["schemas"]["LakeObject"];
@@ -2424,6 +2826,20 @@ export interface components {
             /** Model Variant */
             model_variant?: string | null;
         };
+        /** QueueCurvesData */
+        QueueCurvesData: {
+            /** As Of Month */
+            as_of_month?: string | null;
+            /** Curves */
+            curves: components["schemas"]["StageCurve"][];
+            /** Milestones */
+            milestones: components["schemas"]["CurveMilestone"][];
+        };
+        /** QueueCurvesResponse */
+        QueueCurvesResponse: {
+            meta: components["schemas"]["Meta"];
+            data: components["schemas"]["QueueCurvesData"];
+        };
         /** QueueProject */
         QueueProject: {
             /** Inr */
@@ -2684,6 +3100,25 @@ export interface components {
             meta: components["schemas"]["Meta"];
             data: components["schemas"]["RunsPage"];
         };
+        /** Scarcity */
+        Scarcity: {
+            /** Year */
+            year: number;
+            /** Load Peak Mean He */
+            load_peak_mean_he?: number | null;
+            /** Net Load Peak Mean He */
+            net_load_peak_mean_he?: number | null;
+            /** Cp Net Load Rank Median */
+            cp_net_load_rank_median?: number | null;
+            /** Cp Price Rank Median */
+            cp_price_rank_median?: number | null;
+            /** Cp In Top20 Price Share */
+            cp_in_top20_price_share?: number | null;
+            /** Top20 Price After 18H Share */
+            top20_price_after_18h_share?: number | null;
+            /** Wind Solar Share */
+            wind_solar_share?: number | null;
+        };
         /** ScoreSignal */
         ScoreSignal: {
             /** Signal */
@@ -2873,10 +3308,92 @@ export interface components {
             meta: components["schemas"]["Meta"];
             data: components["schemas"]["SourcesData"];
         };
+        /** StageCurve */
+        StageCurve: {
+            /**
+             * Stage
+             * @description entry (from entering the queue) or ia (from a signed IA)
+             */
+            stage: string;
+            /**
+             * Stratum
+             * @enum {string}
+             */
+            stratum: "all" | "solar" | "storage" | "wind" | "gas_other";
+            /**
+             * Weighting
+             * @enum {string}
+             */
+            weighting: "mw" | "count";
+            /** Points */
+            points: components["schemas"]["CurvePoint"][];
+        };
         /** StructureResponse */
         StructureResponse: {
             meta: components["schemas"]["Meta"];
             data: components["schemas"]["ObjectStructure"];
+        };
+        /**
+         * SupplierCard
+         * @description The wholesale supplier's large-load requests (X13): requests, not forecasts, no location below it.
+         */
+        SupplierCard: {
+            /**
+             * Gt
+             * @description The wholesale supplier (G&T)
+             */
+            gt: string;
+            /**
+             * Tsp
+             * @description Its row in the PUCT 58777 RFI
+             */
+            tsp?: string | null;
+            /**
+             * Via
+             * @description g&t (through the supplier) or self
+             */
+            via: string;
+            /**
+             * Fact
+             * @description The sentence the card shows, built from the mart values
+             */
+            fact: string;
+            /**
+             * Path
+             * @description Requested MW by year (2026, 2030, 2032)
+             */
+            path: components["schemas"]["SupplierPoint"][];
+            /**
+             * Share Of Rfi
+             * @description The supplier's share of the ERCOT-wide RFI (near year)
+             */
+            share_of_rfi?: number | null;
+            /**
+             * N Accounts
+             * @description Analysed accounts with the same supplier
+             */
+            n_accounts?: number | null;
+            /** Filed Date */
+            filed_date?: string | null;
+            /** Source Ref */
+            source_ref?: string | null;
+            /**
+             * Fires Trigger
+             * @description Whether it counts as the tsp_large_load context trigger
+             */
+            fires_trigger: boolean;
+            /**
+             * Verified
+             * @default false
+             */
+            verified: boolean;
+        };
+        /** SupplierPoint */
+        SupplierPoint: {
+            /** Year */
+            year: number;
+            /** Mw */
+            mw: number;
         };
         /** TableColumn */
         TableColumn: {
@@ -3078,6 +3595,27 @@ export interface components {
             event_date: string;
             /** Age Days */
             age_days: number;
+        };
+        /** TransmissionRate */
+        TransmissionRate: {
+            /** Charges For Year */
+            charges_for_year: number;
+            /** Docket */
+            docket: string;
+            /** Postage Stamp Usd Per Kw Yr */
+            postage_stamp_usd_per_kw_yr: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "final" | "pending";
+            /**
+             * Billed Year
+             * @description Year Y's 4CP is billed in year Y+1
+             */
+            billed_year: number;
+            /** Source Url */
+            source_url?: string | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -3621,6 +4159,128 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LargeLoadResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The mart behind this resource is not built yet */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MartNotBuilt"];
+                };
+            };
+        };
+    };
+    queue_curves_forecasts_queue_curves_get: {
+        parameters: {
+            query?: {
+                stratum?: ("all" | "solar" | "storage" | "wind" | "gas_other")[] | null;
+                /** @description entry or ia */
+                stage?: string[] | null;
+                weighting?: ("mw" | "count") | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueueCurvesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The mart behind this resource is not built yet */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MartNotBuilt"];
+                };
+            };
+        };
+    };
+    normalized_load_normalized_get: {
+        parameters: {
+            query?: {
+                /** @description ERCOT or a weather zone */
+                region?: "ERCOT" | "COAST" | "EAST" | "FWEST" | "NCENT" | "NORTH" | "SCENT" | "SOUTH" | "WEST";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NormalizedLoadResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The mart behind this resource is not built yet */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MartNotBuilt"];
+                };
+            };
+        };
+    };
+    four_cp_four_cp_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FourCpResponse"];
                 };
             };
             /** @description Validation Error */

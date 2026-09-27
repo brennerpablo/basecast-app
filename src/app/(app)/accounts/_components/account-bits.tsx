@@ -41,6 +41,18 @@ export function NextActionBadge({ action }: { action: NextAction }) {
   return <CodeBadge kind="next_action" code={action} state={ACTION_STATE[action] ?? "meta"} />;
 }
 
+/** The day the action lapses without a new event, and the action it falls to. */
+export function ActionUntil({ on, to }: { on: string | null | undefined; to: NextAction | null | undefined }) {
+  const { label } = useCodeLabels();
+  if (!on) return <span className="text-muted-foreground">{GAP}</span>;
+  return (
+    <span className="text-xs whitespace-nowrap">
+      until {formatDate(on)}
+      {to && <span className="text-muted-foreground"> → {label("next_action", to)}</span>}
+    </span>
+  );
+}
+
 const days = (n: number) => `${n} ${n === 1 ? "day" : "days"}`;
 
 /** The freshest strong trigger with its age ("Data-center permit · 38 days"); the event's title and date in the tooltip. */
@@ -62,10 +74,11 @@ export function TopTrigger({ trigger }: { trigger: AccountSummary["top_trigger"]
   );
 }
 
+/** The active triggers as chips, on one line: the table scrolls sideways rather than growing each row. */
 export function TriggerChips({ triggers, className }: { triggers: string[]; className?: string }) {
   if (!triggers.length) return <span className="text-muted-foreground">{GAP}</span>;
   return (
-    <span className={cn("flex flex-wrap gap-1", className)}>
+    <span className={cn("flex gap-1", className)}>
       {[...new Set(triggers)].map((trigger) => (
         <CodeBadge key={trigger} kind="trigger" code={trigger} state="meta" />
       ))}

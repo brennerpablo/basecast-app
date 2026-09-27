@@ -6,10 +6,10 @@ import Link from "next/link";
 import type { ColumnMetadata } from "@/components/components-app/data-table";
 import { AppBadge } from "@/components/components-app/ui/badge";
 import { SimulatedBadge } from "@/components/product/caveat-badges";
-import { formatDate, formatWhole, GAP } from "@/components/product/format";
+import { formatWhole, GAP } from "@/components/product/format";
 import { ACCOUNT_TYPE_LABEL, type AccountSummary } from "@/lib/accounts/labels";
 
-import { ACTION_ORDER, FlagIcons, NextActionBadge, ScoreBar, TopTrigger, TriggerChips } from "./account-bits";
+import { ACTION_ORDER, ActionUntil, FlagIcons, NextActionBadge, ScoreBar, TopTrigger, TriggerChips } from "./account-bits";
 
 /** Sorts a nullable text column with the empty cells last. */
 function textNullsLast(a: Row<AccountSummary>, b: Row<AccountSummary>, id: string): number {
@@ -95,16 +95,11 @@ export function accountColumns(rankScope: "all" | "within_type"): ColumnMetadata
     {
       columnId: "action_changes_on",
       title: "Until",
-      description: "The day the action lapses unless a new event lands.",
+      description: "The day the action lapses unless a new event lands, and the action it falls to.",
       type: "text",
       sortable: true,
       sortingFn: textNullsLast,
-      cell: ({ row }) =>
-        row.original.action_changes_on ? (
-          <span className="text-xs whitespace-nowrap">until {formatDate(row.original.action_changes_on)}</span>
-        ) : (
-          <span className="text-muted-foreground">{GAP}</span>
-        ),
+      cell: ({ row }) => <ActionUntil on={row.original.action_changes_on} to={row.original.action_changes_to} />,
     },
     {
       columnId: "top_trigger",
@@ -116,7 +111,7 @@ export function accountColumns(rankScope: "all" | "within_type"): ColumnMetadata
       columnId: "active_triggers",
       title: "Active triggers",
       type: "text",
-      columnClassName: "min-w-64 whitespace-normal",
+      columnClassName: "whitespace-nowrap",
       cell: ({ row }) => <TriggerChips triggers={row.original.active_triggers} />,
     },
     {

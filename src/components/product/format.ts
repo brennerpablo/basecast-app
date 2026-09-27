@@ -81,6 +81,8 @@ const TWO = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFr
 
 /** Units that count whole things: shown without decimals. */
 const WHOLE_UNITS = new Set(["customers", "meters", "homes", "people", "MWh", "projects"]);
+/** Apportioned counts (a share of a county's permits): one decimal. */
+const TENTHS_UNITS = new Set(["units"]);
 
 /**
  * A Fact's value by the unit get-data sends: power and percents by the rules above, `share` as a percent,
@@ -116,6 +118,8 @@ export function formatValue(value: number | string | boolean | null | undefined,
     case "":
       return formatNumber(value);
     default:
-      return `${WHOLE_UNITS.has(unit) ? formatWhole(value) : formatNumber(value)} ${unit}`;
+      if (WHOLE_UNITS.has(unit)) return `${formatWhole(value)} ${unit}`;
+      if (TENTHS_UNITS.has(unit)) return `${ONE.format(value)} ${unit}`;
+      return `${formatNumber(value)} ${unit}`;
   }
 }

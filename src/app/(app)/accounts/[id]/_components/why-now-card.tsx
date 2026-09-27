@@ -20,6 +20,8 @@ const DAY_MS = 86_400_000;
 /** The whole history the timeline draws, and one page of the "full history" table. */
 const TIMELINE_LIMIT = 500;
 const HISTORY_PAGE = 50;
+/** Active strong events shown before "Show all": the freshest first, as the API orders them. */
+const ACTIVE_SHOWN = 5;
 
 const utc = (date: string) => Date.parse(`${date}T00:00:00Z`);
 
@@ -117,6 +119,7 @@ function EventRow({ event }: { event: AccountEvent }) {
 const historyParsers = {
   history: parseAsBoolean.withDefault(false),
   events: parseAsInteger.withDefault(0),
+  active: parseAsBoolean.withDefault(false),
 };
 
 /** Every event of the account, newest first, a page at a time (`/accounts/{id}/events`). */
@@ -215,7 +218,7 @@ export function WhyNowCard({
   className?: string;
 }) {
   const { label } = useCodeLabels();
-  const [{ history }, setState] = useQueryStates(historyParsers);
+  const [{ history, active: allActive }, setState] = useQueryStates(historyParsers);
   const timeline = useProductQuery<EventsPage>(
     `accounts/${encodeURIComponent(account.account_id)}/events`,
     { limit: TIMELINE_LIMIT },
@@ -237,11 +240,23 @@ export function WhyNowCard({
         timeline.isPending && <Skeleton className="h-20 w-full" />
       )}
       {active.length > 0 ? (
-        <ul className="mt-2">
-          {active.map((event, i) => (
-            <EventRow key={`${event.source_ref ?? event.title}-${i}`} event={event} />
-          ))}
-        </ul>
+        <>
+          <ul className="mt-2">
+            {(allActive ? active : active.slice(0, ACTIVE_SHOWN)).map((event, i) => (
+              <EventRow key={`${event.source_ref ?? event.title}-${i}`} event={event} />
+            ))}
+          </ul>
+          {active.length > ACTIVE_SHOWN && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs text-basecast-brand"
+              onClick={() => void setState({ active: allActive ? null : true })}
+            >
+              {allActive ? "Show the latest only" : `Show all ${formatWhole(active.length)} active strong events`}
+            </Button>
+          )}
+        </>
       ) : (
         <p className="mt-3 text-sm text-muted-foreground">No strong event in the last 12 months.</p>
       )}
