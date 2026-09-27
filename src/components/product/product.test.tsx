@@ -1,7 +1,7 @@
 /**
  * The product components mounted in JSDOM: a null Fact is a gap and not a zero, the badges sit beside the
- * value, a card whose mart is not built shows the empty state with the mart's name, and a card with data
- * carries the response's caveats and provenance.
+ * value, a card whose mart is not built shows the empty state, and a card with data carries the response's
+ * caveats and its provenance on one line.
  *
  * `fetch` answers the caveat catalog, so the badges read their labels from it as in the app.
  */
@@ -109,13 +109,13 @@ test("a public, verified Fact carries no badge", async () => {
   unmount();
 });
 
-test("a card whose mart is not built shows the empty state with the mart's name", async () => {
+test("a card whose mart is not built shows the empty state, the mart's name kept for debugging", async () => {
   const query = { data: undefined, error: new BffError("x", 503, "mart_accounts") } as unknown as QueryLike;
   const { root, unmount } = await mount(
     React.createElement(DataCard<number[]>, { title: "Accounts", query, children: () => "body" }),
   );
-  assert.match(root.textContent ?? "", /This view is being rebuilt/);
-  assert.match(root.textContent ?? "", /mart_accounts/);
+  assert.match(root.textContent ?? "", /Being rebuilt/);
+  assert.equal(root.querySelector("[data-mart]")?.getAttribute("data-mart"), "mart_accounts");
   assert.ok(!root.textContent?.includes("body"));
   unmount();
 });
@@ -141,9 +141,10 @@ test("a card with data shows its caveats and its provenance", async () => {
   );
   assert.match(root.textContent ?? "", /rows 2/);
   assert.equal(root.querySelector("[data-caveat]")?.textContent, "Band not calibrated");
-  const provenance = root.querySelector("[data-slot=provenance]")?.textContent ?? "";
-  assert.match(provenance, /Source: ERCOT/);
-  assert.match(provenance, /Data as of: Sep 1, 2026/);
-  assert.match(provenance, /Model: 9c62100\.1/);
+  const provenance = root.querySelector("[data-slot=provenance]");
+  assert.equal(provenance?.textContent, "As of Sep 1, 2026");
+  const details = provenance?.querySelector("[aria-label]")?.getAttribute("aria-label") ?? "";
+  assert.match(details, /Source: ERCOT/);
+  assert.match(details, /Model: 9c62100\.1/);
   unmount();
 });

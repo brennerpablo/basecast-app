@@ -264,7 +264,7 @@ function PeakTable({
                   {formatPower(row[o.key])}
                 </td>
               ))}
-              <td className="py-2">{!allUnverified && <VerifiedBadge verified={row.verified} />}</td>
+              <td className="py-2">{!allUnverified && <VerifiedBadge verified={row.verified} compact />}</td>
             </tr>
           ))}
         </tbody>

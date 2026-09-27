@@ -7,6 +7,7 @@ import type * as React from "react";
 import { AppBadge, type AppBadgeState } from "@/components/components-app/ui/badge";
 import { Card } from "@/components/components-app/ui/card";
 import EmptyState from "@/components/empty-state";
+import { InfoTip } from "@/components/product/info-tip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BRAND_CSS } from "@/lib/brand-tokens";
 import { type HealthStatus, OPS_RANGES, type OpsLevel, type OpsRange, type OpsService } from "@/lib/ops/types";
@@ -180,9 +181,11 @@ export function KpiCard({
         {badge && !isLoading && <div className="ml-auto">{badge}</div>}
       </div>
       <div className="mt-2 text-sm text-muted-foreground">{label}</div>
-      <div className="mt-1 text-xs text-muted-foreground">
-        {isLoading ? <Skeleton className="h-3 w-32" /> : (note ?? "—")}
-      </div>
+      {isLoading ? (
+        <Skeleton className="mt-1 h-3 w-32" />
+      ) : (
+        note && <div className="mt-1 text-xs text-muted-foreground">{note}</div>
+      )}
     </Card>
   );
 }
@@ -192,6 +195,7 @@ export function SectionCard({
   title,
   icon: SectionIcon,
   subtitle,
+  info,
   action,
   className,
   children,
@@ -199,6 +203,7 @@ export function SectionCard({
   title: string;
   icon: LucideIcon;
   subtitle?: React.ReactNode;
+  info?: React.ReactNode;
   action?: React.ReactNode;
   className?: string;
   children: React.ReactNode;
@@ -212,6 +217,7 @@ export function SectionCard({
               <SectionIcon className="size-4 text-basecast-brand" aria-hidden />
             </span>
             <h2 className="text-base font-semibold text-foreground">{title}</h2>
+            {info && <InfoTip>{info}</InfoTip>}
           </div>
           {subtitle && <p className="mt-1.5 text-xs text-muted-foreground">{subtitle}</p>}
         </div>
@@ -238,7 +244,7 @@ export function LoadError({ error }: { error: Error }) {
       Icon={CircleAlert}
       iconClassName="text-red-600"
       title="Could not load this view"
-      description={`${error.message}. It tries again every ${OPS_REFETCH_MS / 1_000} s.`}
+      description={error.message.replace(/\.?$/, ".")}
     />
   );
 }

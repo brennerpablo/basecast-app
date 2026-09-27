@@ -174,7 +174,7 @@ function ZoneTable({ query, layer }: { query: UseQueryResult<Envelope<ZonesData>
                   {z.low != null && z.high != null ? `${zoneValue(z.low, layer.unit)} – ${zoneValue(z.high, layer.unit)}` : "—"}
                 </td>
                 <td className="py-1.5">
-                  <VerifiedBadge verified={z.verified} />
+                  <VerifiedBadge verified={z.verified} compact />
                 </td>
               </tr>
             ))}

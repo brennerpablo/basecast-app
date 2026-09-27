@@ -282,7 +282,7 @@ function CellsTable({ groups }: { groups: TargetGroup[] }) {
                 <td className="py-2 pr-3 align-top">
                   <span className="inline-flex flex-wrap items-center gap-1.5">
                     <span className={cn(cell.source === MODEL && "font-medium text-foreground")}>{cellName(cell)}</span>
-                    <VerifiedBadge verified={cell.verified} />
+                    <VerifiedBadge verified={cell.verified} compact />
                   </span>
                 </td>
                 <td className={num}>{formatPower(cell.p50_mw)}</td>

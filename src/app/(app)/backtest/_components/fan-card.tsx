@@ -401,7 +401,7 @@ function FanTable({ fan, targetYear, actual }: { fan: FanPoint[]; targetYear: nu
               <td className="py-2 pr-3">
                 <span className="inline-flex flex-wrap items-center gap-1.5">
                   {point.label}
-                  <VerifiedBadge verified={point.verified} />
+                  <VerifiedBadge verified={point.verified} compact />
                 </span>
               </td>
               <td className="py-2 pr-3 text-muted-foreground">{kindLabel(point)}</td>

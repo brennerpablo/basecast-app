@@ -16,25 +16,33 @@ const LOOK: Partial<Record<CaveatCode, { state: AppBadgeState; Icon: LucideIcon 
 };
 const DEFAULT_LOOK = { state: "metadata" as const, Icon: Info };
 
-/** One caveat: its label on the badge, the contract's text in the tooltip. */
-export function CaveatBadge({ caveat, className }: { caveat: Caveat; className?: string }) {
+/**
+ * One caveat: its label on the badge, the contract's text in the tooltip. `compact` draws the icon alone, for a
+ * badge repeated on every row of a table; the label moves into the tooltip.
+ */
+export function CaveatBadge({ caveat, compact, className }: { caveat: Caveat; compact?: boolean; className?: string }) {
   const { state, Icon } = LOOK[caveat.code] ?? DEFAULT_LOOK;
+  const hasTip = compact || !!caveat.text;
   const badge = (
     <AppBadge
       state={state}
       data-caveat={caveat.code}
-      tabIndex={caveat.text ? 0 : undefined}
-      className={cn("gap-1", caveat.text && "cursor-help", className)}
+      aria-label={compact ? caveat.label : undefined}
+      tabIndex={hasTip ? 0 : undefined}
+      className={cn("gap-1", hasTip && "cursor-help", compact && "px-1", className)}
     >
       <Icon aria-hidden />
-      {caveat.label}
+      {!compact && caveat.label}
     </AppBadge>
   );
-  if (!caveat.text) return badge;
+  if (!hasTip) return badge;
   return (
     <Tooltip>
       <TooltipTrigger asChild>{badge}</TooltipTrigger>
-      <TooltipContent className="max-w-xs text-xs">{caveat.text}</TooltipContent>
+      <TooltipContent className="max-w-xs text-xs">
+        {compact && <p className="font-medium">{caveat.label}</p>}
+        {caveat.text}
+      </TooltipContent>
     </Tooltip>
   );
 }
@@ -54,14 +62,17 @@ export function CaveatBadges({ caveats, className }: { caveats: Caveat[] | null 
 const fromCode = (code: CaveatCode) => code.charAt(0).toUpperCase() + code.slice(1).replaceAll("_", " ");
 
 /** A caveat of the `GET /caveats` catalog by code. Until the catalog answers, the badge reads the code. */
-function CatalogBadge({ code }: { code: CaveatCode }) {
+function CatalogBadge({ code, compact }: { code: CaveatCode; compact?: boolean }) {
   const catalog = useCaveatCatalog();
-  return <CaveatBadge caveat={catalog.data?.get(code) ?? { code, label: fromCode(code), text: "" }} />;
+  return <CaveatBadge compact={compact} caveat={catalog.data?.get(code) ?? { code, label: fromCode(code), text: "" }} />;
 }
 
-/** "Machine-read, not verified" beside a value whose `verified` is false; nothing otherwise. */
-export function VerifiedBadge({ verified }: { verified: boolean | null | undefined }) {
-  return verified === false ? <CatalogBadge code="machine_read_unverified" /> : null;
+/**
+ * "Machine-read, not verified" beside a value whose `verified` is false; nothing otherwise. `compact` (a table
+ * row) draws the icon alone.
+ */
+export function VerifiedBadge({ verified, compact }: { verified: boolean | null | undefined; compact?: boolean }) {
+  return verified === false ? <CatalogBadge code="machine_read_unverified" compact={compact} /> : null;
 }
 
 /** "Simulated" beside a value from a simulated private-data adapter or a fixture; nothing otherwise. */

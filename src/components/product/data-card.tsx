@@ -10,22 +10,22 @@ import { type CaveatCode, type Envelope, isMartNotBuilt, type Meta } from "@/lib
 
 import { SectionCard } from "./section-card";
 
-/** The empty state of a view whose mart is not built yet (503 `mart_not_built`): the rest of the page stays. */
+/**
+ * The empty state of a view whose mart is not built yet (503 `mart_not_built`): the rest of the page stays. The
+ * mart's name is for whoever debugs it (`data-mart`), not for the reader.
+ */
 export function MartNotBuiltState({ mart, compact = true }: { mart: string; compact?: boolean }) {
   return (
-    <EmptyState
-      compact={compact}
-      Icon={Hammer}
-      title="This view is being rebuilt"
-      description={`It fills in once the ${mart} mart is built.`}
-    />
+    <div data-mart={mart} className="w-full">
+      <EmptyState compact={compact} Icon={Hammer} title="Being rebuilt" />
+    </div>
   );
 }
 
 /**
  * A view over one product query, by state:
  * - loading: `skeleton`, a blank block by default;
- * - 503 `mart_not_built`: "This view is being rebuilt", naming the mart, in this view only;
+ * - 503 `mart_not_built`: "Being rebuilt", in this view only;
  * - empty (`isEmpty`): an empty state;
  * - any other failure with nothing on screen has gone to the route's `error.tsx` (`useProductQuery`);
  *   a query built elsewhere shows it here.
@@ -76,18 +76,23 @@ export function QueryBody<T>({
 export function DataCard<T>({
   title,
   subtitle,
+  info,
   action,
   query,
   isEmpty,
   empty,
   omitCaveats,
+  provenance = true,
   skeleton,
   className,
   children,
 }: {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
+  info?: React.ReactNode;
   action?: React.ReactNode;
+  /** False when the screen shows the same response's provenance at its foot. */
+  provenance?: boolean;
   query: UseQueryResult<Envelope<T>>;
   isEmpty?: (data: T) => boolean;
   empty?: { Icon?: LucideIcon; title: string; description?: string };
@@ -102,9 +107,10 @@ export function DataCard<T>({
     <SectionCard
       title={title}
       subtitle={subtitle}
+      info={info}
       action={action}
       caveats={envelope?.meta.caveats?.filter((caveat) => !omitCaveats?.includes(caveat.code))}
-      meta={envelope?.meta}
+      meta={provenance ? envelope?.meta : undefined}
       className={className}
     >
       <QueryBody query={query} isEmpty={isEmpty} empty={empty} skeleton={skeleton}>
