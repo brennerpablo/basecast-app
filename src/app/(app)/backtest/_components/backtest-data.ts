@@ -284,3 +284,103 @@ export function queueLayout(items: QueueRow[]): { months: string[]; strata: stri
   const strata = [...seen.filter((s) => s === "all"), ...seen.filter((s) => s !== "all")];
   return { months, strata };
 }
+
+// ── The scorecard and the models run ─────────────────────────────────────────────────────────────────
+
+/** A calibrated P10–P90 band holds 8 actuals in 10: the coverage the band is measured against. */
+export const BAND_TARGET = 0.8;
+
+/** A source's score over one era (`all` by default), if the build scored it. */
+export const scoreOf = (scores: Score[], source: string, era = "all") =>
+  scores.find((s) => s.source === source && s.era === era);
+
+export type HeadToHead = { wins: number; total: number; byEra: { era: string; wins: number; total: number }[] };
+
+/**
+ * basecast against each official source on the same cells, era by era (`all` left out, it would count every
+ * pair twice): a win is a lower MAPE. Eras with no pair drop out.
+ */
+export function headToHead(comparisons: Comparison[], eras: Era[]): HeadToHead {
+  const byEra = eras
+    .map(({ era }) => {
+      const pairs = comparisons.filter((c) => c.era === era);
+      return { era, wins: pairs.filter((c) => c.basecast_mape < c.official_mape).length, total: pairs.length };
+    })
+    .filter((e) => e.total > 0);
+  return {
+    wins: byEra.reduce((sum, e) => sum + e.wins, 0),
+    total: byEra.reduce((sum, e) => sum + e.total, 0),
+    byEra,
+  };
+}
+
+export type QueueSummary = {
+  months: string[];
+  windowMonths: number | null;
+  variants: string[];
+  rows: number;
+  /** Over the statewide (`all`) row of each report. */
+  meanAbsError: number | null;
+  meanError: number | null;
+  /** The latest report's rank check. */
+  rank: CountyRank | null;
+};
+
+/** The generation-queue model over its snapshots: the statewide error and the latest county-rank check. */
+export function queueSummary(data: QueueData): QueueSummary {
+  const statewide = data.items.filter((i) => i.stratum === "all");
+  const mean = (values: number[]) => (values.length ? values.reduce((a, b) => a + b, 0) / values.length : null);
+  const windows = [...new Set(data.items.map((i) => i.window_months))];
+  const rank = [...data.county_rank].sort((a, b) => a.report_month.localeCompare(b.report_month)).at(-1) ?? null;
+  return {
+    months: queueLayout(data.items).months,
+    windowMonths: windows.length === 1 ? windows[0] : null,
+    variants: [...new Set(data.items.map((i) => i.model_variant).filter((v): v is string => !!v))],
+    rows: data.items.length,
+    meanAbsError: mean(statewide.map((i) => Math.abs(i.error_pct))),
+    meanError: mean(statewide.map((i) => i.error_pct)),
+    rank,
+  };
+}
+
+export type ModelRow = {
+  source: string;
+  benchmark: boolean;
+  variants: string[];
+  /** The backtest dates the source has a cell at, in order. */
+  dates: string[];
+  cells: number;
+  leaks: number;
+  score: Score | null;
+};
+
+const SOURCE_ORDER = [MODEL, ORGANIC, "LTLF", "LTLF-prelim", "CDR"];
+
+/**
+ * Every source of the peak backtest over all its dates (one list of cells per date): the variants it ran,
+ * the dates and cells it has, the cells that used information from after their date, and its score over
+ * every date. Our models first, then the official benchmarks.
+ */
+export function modelRows(cellsByDate: Cell[][], scores: Score[]): ModelRow[] {
+  const rows = new Map<string, ModelRow>();
+  for (const cell of cellsByDate.flat()) {
+    const row = rows.get(cell.source) ?? {
+      source: cell.source,
+      benchmark: isOfficial(cell.source),
+      variants: [],
+      dates: [],
+      cells: 0,
+      leaks: 0,
+      score: scoreOf(scores, cell.source) ?? null,
+    };
+    if (cell.variant && !row.variants.includes(cell.variant)) row.variants.push(cell.variant);
+    if (!row.dates.includes(cell.as_of)) row.dates.push(cell.as_of);
+    row.cells += 1;
+    if (cell.leak_note) row.leaks += 1;
+    rows.set(cell.source, row);
+  }
+  const rank = (source: string) => (SOURCE_ORDER.includes(source) ? SOURCE_ORDER.indexOf(source) : SOURCE_ORDER.length);
+  return [...rows.values()]
+    .map((row) => ({ ...row, dates: row.dates.sort() }))
+    .sort((a, b) => rank(a.source) - rank(b.source) || a.source.localeCompare(b.source));
+}

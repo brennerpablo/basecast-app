@@ -14,8 +14,10 @@ import {
   fanParts,
   type FanPoint,
   groupByTarget,
+  headToHead,
   inView,
   modelAt,
+  modelRows,
   niceScale,
   type OfficialError,
   officialsInUse,
@@ -23,6 +25,7 @@ import {
   productViews,
   queueLayout,
   type QueueRow,
+  queueSummary,
   scoresByEra,
   sourceLabel,
   yearTicks,
@@ -184,4 +187,115 @@ test("the queue lays out report months in order and `all` first among the strata
   const { months, strata } = queueLayout([row("2023-01-01", "solar"), row("2022-06-01", "wind"), row("2022-06-01", "all")]);
   assert.deepEqual(months, ["2022-06-01", "2023-01-01"]);
   assert.deepEqual(strata, ["all", "solar", "wind"]);
+});
+
+test("head to head counts a win per era and official source, leaving `all` out", () => {
+  const eras = [
+    { era: "before_tsp_loads", label: "Before TSP large loads", description: "" },
+    { era: "with_tsp_loads", label: "With TSP large loads", description: "" },
+  ];
+  const pair = (era: string, official_source: string, basecast_mape: number, official_mape: number) => ({
+    era,
+    official_source,
+    n: 1,
+    basecast_mape,
+    official_mape,
+    basecast_bias_pct: 0,
+    official_bias_pct: 0,
+  });
+  const result = headToHead(
+    [
+      pair("all", "LTLF", 3.3, 5.06),
+      pair("before_tsp_loads", "CDR", 3.37, 2.82),
+      pair("before_tsp_loads", "LTLF", 3.49, 2.74),
+      pair("with_tsp_loads", "CDR", 3.08, 7.08),
+      pair("with_tsp_loads", "LTLF", 3.06, 7.96),
+      pair("with_tsp_loads", "LTLF-prelim", 2.3, 22.9),
+    ],
+    eras,
+  );
+  assert.deepEqual(result, {
+    wins: 3,
+    total: 5,
+    byEra: [
+      { era: "before_tsp_loads", wins: 0, total: 2 },
+      { era: "with_tsp_loads", wins: 3, total: 3 },
+    ],
+  });
+});
+
+test("the queue summary averages the statewide error and reads the latest rank check", () => {
+  const row = (report_month: string, stratum: string, error_pct: number): QueueRow => ({
+    report_month,
+    stratum,
+    window_months: 24,
+    raw_mw: 1,
+    pred_mw: 1,
+    actual_mw: 1,
+    developer_projected_mw: null,
+    error_pct,
+    model_variant: "entry_ia_sm|mw",
+  });
+  const summary = queueSummary({
+    items: [row("2022-06-01", "all", -13.22), row("2022-06-01", "solar", -20.1), row("2023-01-01", "all", 9.29), row("2024-08-01", "all", 1.35)],
+    county_rank: [
+      { report_month: "2024-08-01", rho_adj: 0.642, rho_raw: 0.454, rho_developer: 0.565 },
+      { report_month: "2022-06-01", rho_adj: 0.663, rho_raw: 0.428, rho_developer: 0.483 },
+    ],
+  });
+  assert.deepEqual(summary.months, ["2022-06-01", "2023-01-01", "2024-08-01"]);
+  assert.equal(summary.windowMonths, 24);
+  assert.deepEqual(summary.variants, ["entry_ia_sm|mw"]);
+  assert.equal(summary.rows, 4);
+  assert.ok(Math.abs((summary.meanAbsError ?? 0) - 7.9533) < 1e-3);
+  assert.equal(summary.rank?.report_month, "2024-08-01");
+});
+
+test("model rows gather each source's variants, dates, cells and leaks, ours first", () => {
+  const cell = (as_of: string, source: string, over: Partial<Cell> = {}): Cell => ({
+    as_of,
+    target_year: 2025,
+    horizon: 1,
+    source,
+    product: null,
+    vintage: null,
+    vintage_date: null,
+    variant: source === "basecast" ? "deck_latest" : null,
+    era: "before_tsp_loads",
+    p10_mw: null,
+    p50_mw: 1,
+    p90_mw: null,
+    actual_mw: 1,
+    actual_final: true,
+    error_pct: 0,
+    in_band: null,
+    organic_p50: null,
+    ll_p50: null,
+    u_p50: null,
+    ll_realized: null,
+    u_realized: null,
+    leak_note: null,
+    verified: true,
+    ...over,
+  });
+  const score = { era: "all", source: "basecast", n: 3, mape: 3.3, bias_pct: -1.8, coverage: 0.56 };
+  const rows = modelRows(
+    [
+      [cell("2023-05-31", "CDR"), cell("2023-05-31", "basecast", { leak_note: "Used a later deck" }), cell("2023-05-31", "basecast", { target_year: 2026 })],
+      [cell("2024-05-31", "basecast"), cell("2024-05-31", "LTLF")],
+    ],
+    [score],
+  );
+  assert.deepEqual(rows.map((r) => r.source), ["basecast", "LTLF", "CDR"]);
+  assert.deepEqual(rows[0], {
+    source: "basecast",
+    benchmark: false,
+    variants: ["deck_latest"],
+    dates: ["2023-05-31", "2024-05-31"],
+    cells: 3,
+    leaks: 1,
+    score,
+  });
+  assert.equal(rows[1].benchmark, true);
+  assert.equal(rows[1].score, null);
 });

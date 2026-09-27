@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, CalendarRange, Factory, Grid3x3, type LucideIcon, Target, Trophy } from "lucide-react";
+import { ArrowRight, Boxes, CalendarRange, Factory, Grid3x3, type LucideIcon, Target, Trophy } from "lucide-react";
 import Link from "next/link";
 import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import { useEffect } from "react";
@@ -23,8 +23,10 @@ import { AsOfBar } from "./as-of-bar";
 import { AsOfBody } from "./as-of-card";
 import { type OfficialErrorsData, type PeakData, productViews, type QueueData } from "./backtest-data";
 import { FanBody, FanStats } from "./fan-card";
+import { ModelsBody } from "./models-card";
 import { OfficialErrorsBody, OfficialStats, pickView } from "./official-errors-card";
 import { QueueBody } from "./queue-card";
+import { BacktestScorecard } from "./scorecard";
 import { ScoresBody } from "./scores-card";
 
 const FAN_VIEWS = ["chart", "table"] as const;
@@ -53,7 +55,8 @@ function ScreenSkeleton() {
 /**
  * /backtest: how our peak model would have done at each past date against ERCOT's official forecasts and
  * the actual (the latest summer's fan, one date at a time, the scores by era), how far off the official
- * vintages have been, and the generation-queue backtest. State (date, views) lives in the URL.
+ * vintages have been, the generation-queue backtest and the models that ran, under a scorecard of how solid
+ * the models are. State (date, views) lives in the URL.
  */
 export function BacktestScreen() {
   const [state, setState] = useQueryStates(backtestParsers);
@@ -269,6 +272,21 @@ export function BacktestScreen() {
         </QueryBody>
       ),
     },
+    {
+      value: "models",
+      label: "Models",
+      icon: Boxes,
+      content: (
+        <QueryBody query={peak} compact={false} skeleton={<Skeleton className="h-96 w-full" />}>
+          {(d, meta) => (
+            <div className="space-y-4">
+              <ModelsBody peak={d} meta={meta} queue={queue.data?.data} />
+              {foot(meta)}
+            </div>
+          )}
+        </QueryBody>
+      ),
+    },
   ];
 
   return (
@@ -276,6 +294,11 @@ export function BacktestScreen() {
       <PageHeader title="Backtest">
         <CaveatBadges caveats={peak.data?.meta.caveats} />
       </PageHeader>
+      <BacktestScorecard
+        peak={data}
+        queue={queue.data?.data}
+        loading={{ peak: peak.isPending && !peak.error, queue: queue.isPending && !queue.error }}
+      />
       <Tabs urlParam="tab" defaultValue="summer" className="space-y-6">
         <TabsList variant="line" color="brand" className="max-w-full overflow-x-auto">
           {tabs.map(({ value, label, icon: Icon }) => (
