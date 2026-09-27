@@ -4,15 +4,17 @@ import { ArrowRight, Factory, Landmark, ListOrdered, type LucideIcon, Server, Ta
 import Link from "next/link";
 
 import { AppBadge } from "@/components/components-app/ui/badge";
+import { CaveatBadges } from "@/components/product/caveat-badges";
 import { MartNotBuiltState } from "@/components/product/data-card";
 import { formatDate, formatPercent, formatPower, formatWhole, GAP } from "@/components/product/format";
+import { InfoTip } from "@/components/product/info-tip";
 import { KpiItem } from "@/components/product/kpi-item";
 import { SectionCard } from "@/components/product/section-card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { components } from "@/lib/api/get-data";
-import { isMartNotBuilt } from "@/lib/bff/envelope";
+import { type CaveatCode, isMartNotBuilt } from "@/lib/bff/envelope";
 import { useProductQuery } from "@/lib/bff/queries";
 import { CHANNEL_HUE, type Mode, NO_DATA } from "@/lib/explorer/colors";
 import { CHANNEL_LABEL } from "@/lib/explorer/layers";
@@ -29,15 +31,20 @@ export const STRATUM_LABEL: Record<string, string> = {
   gas_other: "Gas & other",
 };
 
-/** A part of the panel, as Fundsys's detail sections: the icon in a brand-tinted square, the title, a link aside. */
+/**
+ * A part of the panel, as Fundsys's detail sections: the icon in a brand-tinted square, the title, a caveat of
+ * the section's own in `info` (the tooltip), a link aside.
+ */
 function PanelSection({
   icon: Icon,
   title,
+  info,
   aside,
   children,
 }: {
   icon: LucideIcon;
   title: string;
+  info?: React.ReactNode;
   aside?: React.ReactNode;
   children: React.ReactNode;
 }) {
@@ -49,6 +56,7 @@ function PanelSection({
             <Icon className="size-3.5 text-basecast-brand" aria-hidden />
           </span>
           <h3 className="text-sm font-semibold">{title}</h3>
+          {info && <InfoTip>{info}</InfoTip>}
         </div>
         {aside}
       </div>
@@ -60,7 +68,7 @@ function PanelSection({
 /** The county's land by channel, as shares of its area. */
 function ChannelShares({ a, mode }: { a: NonNullable<CountyDetail["acquisition"]>; mode: Mode }) {
   const parts = [
-    { label: "Retail (IOU areas)", share: a.retail_share, color: CHANNEL_HUE.retail_direct[mode] },
+    { label: "Retail (IOU)", share: a.retail_share, color: CHANNEL_HUE.retail_direct[mode] },
     { label: "Co-ops", share: a.coop_share, color: CHANNEL_HUE.partnership[mode] },
     { label: "Munis", share: a.muni_share, color: CHANNEL_HUE.mixed[mode] },
     { label: "Outside", share: a.outside_share, color: NO_DATA[mode] },
@@ -88,9 +96,21 @@ function ChannelShares({ a, mode }: { a: NonNullable<CountyDetail["acquisition"]
 /**
  * The clicked county: its priority as "market × grid", drivers and drags, the channels by area, the
  * generation queue by stratum and its largest projects, new data centers, and the co-ops and munis that
- * cover it, with a link to them in /accounts.
+ * cover it, with a link to them in /accounts. The screen's foot carries the provenance; `shownCaveats` are the
+ * codes its header already shows, left out here. The area and county-level caveats sit on the sections they
+ * qualify, as tooltips.
  */
-export function CountyPanel({ fips, mode, onClose }: { fips: string; mode: Mode; onClose: () => void }) {
+export function CountyPanel({
+  fips,
+  mode,
+  shownCaveats,
+  onClose,
+}: {
+  fips: string;
+  mode: Mode;
+  shownCaveats: CaveatCode[];
+  onClose: () => void;
+}) {
   const query = useProductQuery<CountyDetail>(`geo/counties/${fips}`, undefined, { throwOnError: false });
   const detail = query.data?.data;
   const meta = query.data?.meta;
@@ -118,6 +138,7 @@ export function CountyPanel({ fips, mode, onClose }: { fips: string; mode: Mode;
 
   const a = detail.acquisition;
   const all = detail.queue.find((q) => q.stratum === "all");
+  const caveatText = (code: CaveatCode) => meta.caveats?.find((c) => c.code === code)?.text ?? undefined;
   return (
     <SectionCard
       title={
@@ -127,10 +148,12 @@ export function CountyPanel({ fips, mode, onClose }: { fips: string; mode: Mode;
       }
       subtitle={detail.in_ercot ? `Weather zone ${detail.weather_zone ?? GAP}` : "Outside ERCOT"}
       action={close}
-      caveats={meta.caveats?.filter((c) => ["by_area_not_homes", "by_county_not_point", "fixture", "simulated"].includes(c.code))}
-      meta={meta}
     >
       <div className="space-y-5">
+        <CaveatBadges
+          caveats={meta.caveats?.filter((c) => (c.code === "fixture" || c.code === "simulated") && !shownCaveats.includes(c.code))}
+          className="-mt-2"
+        />
         {a && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-x-4 gap-y-3">
@@ -148,7 +171,7 @@ export function CountyPanel({ fips, mode, onClose }: { fips: string; mode: Mode;
         )}
 
         {a && (
-          <PanelSection icon={Target} title="Why it ranks here">
+          <PanelSection icon={Target} title="Drivers & drags">
             <div className="space-y-4">
               {(a.drivers.length > 0 || a.drags.length > 0) && (
                 <div className="space-y-2 text-xs">
@@ -179,7 +202,10 @@ export function CountyPanel({ fips, mode, onClose }: { fips: string; mode: Mode;
                 </div>
               )}
               <div>
-                <p className="mb-1.5 text-xs font-medium text-muted-foreground">Channels, by area</p>
+                <p className="mb-1.5 flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                  Channels, by area
+                  {caveatText("by_area_not_homes") && <InfoTip>{caveatText("by_area_not_homes")}</InfoTip>}
+                </p>
                 <ChannelShares a={a} mode={mode} />
               </div>
             </div>
@@ -188,7 +214,7 @@ export function CountyPanel({ fips, mode, onClose }: { fips: string; mode: Mode;
 
         <PanelSection icon={Factory} title={`Generation queue${detail.queue_as_of_month ? ` · ${formatDate(detail.queue_as_of_month)}` : ""}`}>
           {detail.queue.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No active project in the generation queue.</p>
+            <p className="text-sm text-muted-foreground">No active projects.</p>
           ) : (
             <table className="w-full text-xs">
               <thead className="text-muted-foreground">
@@ -222,7 +248,7 @@ export function CountyPanel({ fips, mode, onClose }: { fips: string; mode: Mode;
         </PanelSection>
 
         {detail.top_projects.length > 0 && (
-          <PanelSection icon={ListOrdered} title="Largest projects by expected MW, Dec 2028">
+          <PanelSection icon={ListOrdered} title="Top projects, Dec 2028">
             <ul className="space-y-2">
               {detail.top_projects.map((p) => (
                 <li key={p.inr} className="text-xs">
@@ -236,15 +262,16 @@ export function CountyPanel({ fips, mode, onClose }: { fips: string; mode: Mode;
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <span tabIndex={0} className="cursor-help underline decoration-dotted underline-offset-2">
-                          P(COD by Dec 2028) {formatPercent(p.p_cod_2028, { ratio: true })}
+                          P(COD) {formatPercent(p.p_cod_2028, { ratio: true })}
                           {p.clamped_2028 ? "*" : ""}
                         </span>
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs text-xs">
-                        Survival curve: {p.curve}.{p.clamped_2028 ? " Clock clamped past the curve's support (fewer than 10 at risk)." : ""}
+                        Curve: {p.curve}
+                        {p.clamped_2028 ? " · * clamped, <10 at risk" : ""}
                       </TooltipContent>
                     </Tooltip>{" "}
-                    · developer&apos;s COD {formatDate(p.projected_cod)}
+                    · COD {formatDate(p.projected_cod)}
                   </p>
                 </li>
               ))}
@@ -252,9 +279,9 @@ export function CountyPanel({ fips, mode, onClose }: { fips: string; mode: Mode;
           </PanelSection>
         )}
 
-        <PanelSection icon={Server} title="New data centers since 2025">
+        <PanelSection icon={Server} title="New data centers since 2025" info={caveatText("by_county_not_point")}>
           {detail.data_centers.length === 0 ? (
-            <p className="text-sm text-muted-foreground">None matched in this county.</p>
+            <p className="text-sm text-muted-foreground">None.</p>
           ) : (
             <ul className="space-y-1.5 text-xs">
               {detail.data_centers.map((site) => (
@@ -277,7 +304,7 @@ export function CountyPanel({ fips, mode, onClose }: { fips: string; mode: Mode;
 
         <PanelSection
           icon={Landmark}
-          title="Co-ops and munis here"
+          title="Co-ops & munis"
           aside={
             detail.accounts.length > 0 && (
               <Link
@@ -290,7 +317,7 @@ export function CountyPanel({ fips, mode, onClose }: { fips: string; mode: Mode;
           }
         >
           {detail.accounts.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No co-op or muni covers this county.</p>
+            <p className="text-sm text-muted-foreground">None.</p>
           ) : (
             <ul className="space-y-1.5 text-xs">
               {detail.accounts.map((acc) => (

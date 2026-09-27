@@ -11,7 +11,7 @@ export const LAYER_LABEL: Record<Layer, string> = {
   acquisition: "Acquisition priority",
   queue: "Generation queue",
   "data-centers": "New data centers",
-  zones: "Grid layers by zone",
+  zones: "Zones",
 };
 
 export type ZonesData = components["schemas"]["ZonesData"];
@@ -21,8 +21,8 @@ export const LISTS = ["all", "retail", "partnership"] as const;
 export type ChannelList = (typeof LISTS)[number];
 export const LIST_LABEL: Record<ChannelList, string> = {
   all: "All",
-  retail: "Retail-direct list",
-  partnership: "Partnership list",
+  retail: "Retail-direct",
+  partnership: "Partnership",
 };
 
 export const QUEUE_METRICS = ["raw", "adjusted", "ratio", "rank_change"] as const;
@@ -197,7 +197,7 @@ export function paintLayer(rows: CountyRow[], options: LayerOptions, mode: Mode)
           ? `${edges[i]} ${edges[i] === 1 ? "site" : "sites"}`
           : `${edges[i]}–${edges[i + 1] - 1} sites`,
   }));
-  return { styles, legend: [...legend, { color: NO_DATA[mode], label: "None since 2025" }] };
+  return { styles, legend: [...legend, { color: NO_DATA[mode], label: "None" }] };
 }
 
 /**

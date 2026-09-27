@@ -119,7 +119,7 @@ function columnsFor(
         type: "number",
         sortable: true,
         aligned: "center",
-        cell: ({ row }) => (row.original.priority_class == null ? GAP : <AppBadge state="meta">{row.original.priority_class} of 5</AppBadge>),
+        cell: ({ row }) => (row.original.priority_class == null ? GAP : <AppBadge state="meta">{row.original.priority_class}</AppBadge>),
       },
       { columnId: "channel", title: "Channel", type: "text", sortable: true },
       { columnId: "market", title: "Market", type: "number", sortable: true, aligned: "right", formatter: (v) => num(v, (n) => n.toFixed(2)) },
@@ -134,7 +134,7 @@ function columnsFor(
       { columnId: "raw_mw", title: "Raw", type: "number", sortable: true, aligned: "right", formatter: (v) => num(v, formatPower) },
       {
         columnId: "adj_mw",
-        title: horizon ? `Adjusted by Dec ${horizon}` : "Adjusted",
+        title: horizon ? `Adj. Dec ${horizon}` : "Adjusted",
         type: "number",
         sortable: true,
         aligned: "right",
@@ -151,7 +151,7 @@ function columnsFor(
       {
         columnId: "rank_change",
         title: "Rank change",
-        description: "The county's rank by raw MW minus its rank by adjusted MW: positive moves up once adjusted.",
+        description: "Raw rank − adjusted rank; + moves up once adjusted",
         type: "number",
         sortable: true,
         aligned: "right",
@@ -162,7 +162,7 @@ function columnsFor(
   return [
     county,
     zone,
-    { columnId: "sites", title: "New sites since 2025", type: "number", sortable: true, aligned: "right", formatter: (v) => num(v, formatWhole) },
+    { columnId: "sites", title: "New sites", type: "number", sortable: true, aligned: "right", formatter: (v) => num(v, formatWhole) },
     { columnId: "naics_only", title: "NAICS only", type: "number", sortable: true, aligned: "right", formatter: (v) => num(v, formatWhole) },
   ];
 }

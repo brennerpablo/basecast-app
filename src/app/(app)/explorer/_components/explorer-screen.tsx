@@ -2,7 +2,6 @@
 
 import type { UseQueryResult } from "@tanstack/react-query";
 import {
-  ArrowRight,
   CloudSun,
   Factory,
   Gauge,
@@ -21,14 +20,15 @@ import {
   Target,
   Trophy,
 } from "lucide-react";
-import Link from "next/link";
 import { createSerializer, parseAsBoolean, parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import { useCallback, useMemo, useState } from "react";
 
+import { AppBadge } from "@/components/components-app/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/components-app/ui/tabs";
 import { type CountyHover, CountyMap } from "@/components/maps/county-map";
 import { CONTENT_SWAP, PANEL_ENTER, PANEL_EXIT, usePresence } from "@/components/motion/presence";
 import { CaveatBadges, VerifiedBadge } from "@/components/product/caveat-badges";
+import { CardOpenLink } from "@/components/product/dashboard-card-header";
 import { DashboardStatCard } from "@/components/product/dashboard-stat-card";
 import { MartNotBuiltState, QueryBody } from "@/components/product/data-card";
 import { Filter, FilterRow } from "@/components/product/filter";
@@ -98,7 +98,7 @@ const LAYER_CAVEATS: Record<(typeof LAYERS)[number], CaveatCode[]> = {
   acquisition: ["by_area_not_homes"],
   queue: ["beyond_backtested_window", "machine_read_unverified"],
   "data-centers": ["by_county_not_point"],
-  // The zone layer's caveats come with its own response, in the zone card.
+  // The zone layer's caveats come with its own response, joined to the header's on that layer.
   zones: [],
 };
 const ALWAYS: CaveatCode[] = ["fixture", "simulated"];
@@ -110,7 +110,7 @@ const range = (values: number[]) => {
   return low === high ? low.toFixed(2) : `${low.toFixed(2)}–${high.toFixed(2)}`;
 };
 
-/** How far to trust the adjusted queue: the backtest's error by snapshot and the county-rank correlation, from the API. */
+/** The adjusted queue's backtest: the error by snapshot and the county-rank correlation, from the API. */
 function QueueCredibility() {
   const backtest = useProductQuery<QueueBacktest>("backtest/queue", undefined, { throwOnError: false });
   const data = backtest.data?.data;
@@ -121,18 +121,15 @@ function QueueCredibility() {
   if (!statewide.length && !adj) return null;
   return (
     <SectionCard
-      title="How far to trust it"
+      title="Backtest"
       icon={ShieldCheck}
-      subtitle={
+      subtitle={statewide.length > 0 ? `${statewide[0].window_months}-month window` : undefined}
+      info={
         statewide.length > 0
           ? `The same method run from past queue snapshots: predicted vs built over the next ${statewide[0].window_months} months.`
           : undefined
       }
-      action={
-        <Link href="/backtest" className="inline-flex items-center gap-1 text-xs font-medium text-basecast-brand hover:underline">
-          Backtest <ArrowRight className="size-3" aria-hidden />
-        </Link>
-      }
+      action={<CardOpenLink href="/backtest" label="Open the backtest" />}
     >
       <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
         {statewide.map((r) => (
@@ -146,15 +143,16 @@ function QueueCredibility() {
 
 type ZoneCounty = ZonesData["counties"][number];
 
-/** The zone layer's table: each zone's value, its allocation range and whether it was machine-read. */
+/**
+ * The zone layer's table: each zone's value, its allocation range and whether it was machine-read, then the
+ * counties ERCOT names. The response's caveats show in the page header and its provenance at the page's foot.
+ */
 function ZoneTable({ query, layer }: { query: UseQueryResult<Envelope<ZonesData>>; layer: ZonesData["layers"][number] | undefined }) {
   if (isMartNotBuilt(query.error)) return <MartNotBuiltState mart={query.error.mart} />;
   if (!query.data || !layer) return query.isPending ? <Skeleton className="h-32 w-full" /> : null;
-  const { meta } = query.data;
   const namedCounties = query.data.data.counties.filter((c) => c.named_by_ercot);
   return (
     <div className="space-y-3">
-      <CaveatBadges caveats={meta.caveats} />
       <div className="overflow-x-auto">
         <table className="w-full text-xs whitespace-nowrap">
           <thead className="text-left text-muted-foreground">
@@ -182,14 +180,18 @@ function ZoneTable({ query, layer }: { query: UseQueryResult<Envelope<ZonesData>
         </table>
       </div>
       {namedCounties.length > 0 && (
-        <p className="text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">Named by ERCOT (observed):</span>{" "}
-          {namedCounties
-            .map((c) => `${c.county_name}${c.observed_base_mw != null ? ` ${formatPower(c.observed_base_mw)}` : ""}`)
-            .join(" · ")}
-        </p>
+        <div className="space-y-1.5 border-t border-border pt-3">
+          <p className="text-xs font-medium text-muted-foreground">Named by ERCOT</p>
+          <p className="flex flex-wrap gap-1.5">
+            {namedCounties.map((c) => (
+              <AppBadge key={c.county_fips} state="meta" className="gap-1">
+                {c.county_name}
+                {c.observed_base_mw != null && <span className="text-muted-foreground tabular-nums">{formatPower(c.observed_base_mw)}</span>}
+              </AppBadge>
+            ))}
+          </p>
+        </div>
       )}
-      <Provenance meta={meta} className="border-t border-border pt-3" />
     </div>
   );
 }
@@ -215,7 +217,7 @@ function HoverCard({
   if (!row.in_ercot) {
     lines = ["Outside ERCOT"];
     const outside = row.data_centers.sites_outside_ercot;
-    if (layer === "data-centers" && outside) lines.push(`${outside} new data-center ${outside === 1 ? "site" : "sites"}, not counted in ERCOT`);
+    if (layer === "data-centers" && outside) lines.push(`${outside} new ${outside === 1 ? "site" : "sites"} (not counted)`);
   }
   else if (layer === "acquisition") {
     lines = a
@@ -234,7 +236,7 @@ function HoverCard({
           `Raw ${formatPower(q.raw_mw)} → adjusted ${formatPower(q.adj_mw)} · ${q.projects} projects`,
           ...(q.large_gas_mw_2028 ? [`Large new gas: ${formatPower(q.large_gas_mw_2028)}`] : []),
         ]
-      : ["No active project in the generation queue"];
+      : ["No active projects"];
   } else if (layer === "zones") {
     const z = zone?.zones.find((v) => v.weather_zone === row.weather_zone);
     lines = z && zone ? [`${row.weather_zone}: ${zoneValue(z.central, zone.unit)}${z.low != null && z.high != null ? ` (${zoneValue(z.low, zone.unit)} – ${zoneValue(z.high, zone.unit)})` : ""}`] : ["No value for this zone"];
@@ -243,7 +245,7 @@ function HoverCard({
     }
   } else {
     const n = dataCenterCount(row, naics);
-    lines = [`${n} new data-center ${n === 1 ? "site" : "sites"} since 2025`];
+    lines = [`${n} new ${n === 1 ? "site" : "sites"}`];
     if (row.data_centers.sites_naics_only) lines.push(`${row.data_centers.sites_naics_only} matched on NAICS only`);
   }
   return (
@@ -294,11 +296,11 @@ function LayerStats({
         <DashboardStatCard
           layout="stacked" icon={<MapIcon className="size-4" aria-hidden />} title="Counties scored" value={formatWhole(s.scored)} isLoading={loading} />
         <DashboardStatCard
-          layout="stacked" icon={<Trophy className="size-4" aria-hidden />} title="Top class (5 of 5)" value={formatWhole(s.topClass)} isLoading={loading} />
+          layout="stacked" icon={<Trophy className="size-4" aria-hidden />} title="Class 5" value={formatWhole(s.topClass)} isLoading={loading} />
         <DashboardStatCard
           layout="stacked"
           icon={<Store className="size-4" aria-hidden />}
-          title="Retail-direct list"
+          title={LIST_LABEL.retail}
           value={formatWhole(s.retail)}
           isLoading={loading}
           isActive={list === "retail"}
@@ -307,7 +309,7 @@ function LayerStats({
         <DashboardStatCard
           layout="stacked"
           icon={<Handshake className="size-4" aria-hidden />}
-          title="Partnership list"
+          title={LIST_LABEL.partnership}
           value={formatWhole(s.partnership)}
           isLoading={loading}
           isActive={list === "partnership"}
@@ -346,7 +348,7 @@ function LayerStats({
     return (
       <div className={grid}>
         <DashboardStatCard
-          layout="stacked" icon={<Server className="size-4" aria-hidden />} title="New sites since 2025" value={formatWhole(s.sites)} isLoading={loading} />
+          layout="stacked" icon={<Server className="size-4" aria-hidden />} title="New sites" value={formatWhole(s.sites)} isLoading={loading} />
         <DashboardStatCard
           layout="stacked" icon={<MapPin className="size-4" aria-hidden />} title="Counties with a site" value={formatWhole(s.counties)} isLoading={loading} />
         <DashboardStatCard
@@ -403,7 +405,13 @@ export function ExplorerScreen() {
 
   const hovered = hover ? byFips.get(hover.fips) : undefined;
   const shownCaveats = [...LAYER_CAVEATS[state.layer], ...ALWAYS];
-  const caveats = counties.data?.meta.caveats?.filter((c) => shownCaveats.includes(c.code));
+  // On the zone layer the header carries the zone response's caveats too, once each.
+  const caveats = [
+    ...(counties.data?.meta.caveats?.filter((c) => shownCaveats.includes(c.code)) ?? []),
+    ...(state.layer === "zones" ? (zones.data?.meta.caveats ?? []) : []),
+  ].filter((c, i, all) => all.findIndex((d) => d.code === c.code) === i);
+  // The foot's provenance: the zone response's on the zone layer, whose table and map it fills.
+  const footMeta = state.layer === "zones" && zones.data ? zones.data.meta : counties.data?.meta;
   const LayerIcon = LAYER_ICON[state.layer];
 
   const filters = (
@@ -467,27 +475,24 @@ export function ExplorerScreen() {
     </FilterRow>
   );
 
-  const mapTitle =
-    state.layer === "queue" && data
-      ? `Generation queue · ${QUEUE_METRIC_LABEL[state.metric]}${state.metric === "raw" ? "" : ` by Dec ${data.horizon}`}${data.stratum === "all" ? "" : ` · ${STRATUM_LABEL[data.stratum] ?? data.stratum}`}`
-      : state.layer === "zones" && zoneLayer
-        ? `Grid layers by zone · ${zoneLayer.label}`
-        : LAYER_LABEL[state.layer];
   const mapSubtitle =
-    state.layer === "acquisition"
-      ? "Where to win customers: priority by county, colored by the channel that reaches them."
-      : state.layer === "queue"
-        ? `Raw requests against the MW the model expects to reach commercial operation${data?.queue_as_of_month ? ` · ${formatDate(data.queue_as_of_month)} report` : ""}.`
-        : state.layer === "zones"
-          ? `Each county takes its weather zone's value (${zoneLayer?.method ?? "by zone"}); dashed: counties ERCOT names in its reports.`
-          : "Data-center sites with a TCEQ permit since 2025, counted by county.";
+    state.layer === "queue"
+      ? data?.queue_as_of_month
+        ? `${formatDate(data.queue_as_of_month)} queue report`
+        : undefined
+      : state.layer === "zones"
+        ? `Zone values${zoneLayer?.method ? ` (${zoneLayer.method})` : ""} · dashed = named by ERCOT`
+        : state.layer === "data-centers"
+          ? "TCEQ permits since 2025"
+          : undefined;
+  const mapInfo =
+    state.layer === "zones"
+      ? "Each county takes its weather zone's value; nothing is spread below the zone. Dashed: the counties ERCOT names in its large-load reports."
+      : undefined;
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Explorer"
-        subtitle="Texas by county: where to win customers, what the generation queue will really build, where data centers land, and the grid by weather zone."
-      >
+      <PageHeader title="Explorer">
         <CaveatBadges caveats={caveats} />
       </PageHeader>
       {/* The layer lives in the URL; the map sits outside the tabs so a switch repaints it without a reload. */}
@@ -522,7 +527,7 @@ export function ExplorerScreen() {
         )}
       >
         <div className="min-w-0 space-y-4">
-          <SectionCard title={mapTitle} icon={LayerIcon} subtitle={mapSubtitle}>
+          <SectionCard title={LAYER_LABEL[state.layer]} icon={LayerIcon} subtitle={mapSubtitle} info={mapInfo}>
             <QueryBody<CountiesData> query={counties} skeleton={<Skeleton className="h-[62vh] w-full" />}>
               {() => (
                 <div className="space-y-4">
@@ -561,23 +566,13 @@ export function ExplorerScreen() {
             </QueryBody>
           </SectionCard>
           {state.layer === "zones" && (
-            <SectionCard title="Zones" icon={CloudSun} subtitle={zoneLayer ? `${zoneLayer.label}, by weather zone.` : undefined}>
+            <SectionCard title="Weather zones" icon={CloudSun}>
               <ZoneTable query={zones} layer={zoneLayer} />
             </SectionCard>
           )}
           {state.layer === "queue" && <QueueCredibility />}
           {state.layer !== "zones" && data && (
-            <SectionCard
-              title="Counties, ranked"
-              icon={ListOrdered}
-              subtitle={
-                state.layer === "acquisition"
-                  ? "In the layer's order; a county's name opens it beside the map."
-                  : state.layer === "queue"
-                    ? `By ${QUEUE_METRIC_LABEL[state.metric].toLowerCase()}, from the top; a county's name opens it beside the map.`
-                    : "Counties with a new site, the most first; a county's name opens it beside the map."
-              }
-            >
+            <SectionCard title="Counties, ranked" icon={ListOrdered}>
               <CountyTable
                 rows={rows}
                 layer={state.layer}
@@ -595,12 +590,17 @@ export function ExplorerScreen() {
           <div className={cn("xl:sticky xl:top-4 xl:max-h-[calc(100svh-2rem)] xl:overflow-y-auto", panel.closing ? PANEL_EXIT : PANEL_ENTER)}>
             {/* A fixed width, so the shrinking column clips the panel instead of reflowing it. */}
             <div key={panel.shown} className={cn("xl:w-[400px]", CONTENT_SWAP)}>
-              <CountyPanel fips={panel.shown} mode={mode} onClose={() => void setState({ county: null })} />
+              <CountyPanel
+                fips={panel.shown}
+                mode={mode}
+                shownCaveats={caveats.map((c) => c.code)}
+                onClose={() => void setState({ county: null })}
+              />
             </div>
           </div>
         )}
       </div>
-      {counties.data && <Provenance meta={counties.data.meta} className="border-t border-border pt-3" />}
+      {footMeta && <Provenance meta={footMeta} className="border-t border-border pt-3" />}
     </div>
   );
 }
