@@ -247,8 +247,10 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
 - Tests: `npm test` (Node's `node:test` run by `tsx`, `jsdom` for DOM tests), next to the code as `*.test.ts(x)`.
 - Some comments in `components/ui`, `components-app` and `fields` are still in Portuguese (pending
   translation pass).
-- Login, required on every page: next-auth v4 in `src/lib/auth.ts`, session helpers
-  (`getCachedSession`, `withSession` for BFF route handlers) in `src/lib/auth/session.ts`, the redirect/401
+- Login, required on every page: next-auth v4 in `src/lib/auth.ts` (password, and "Continue with Google" where
+  anyone signs up: `src/lib/auth/google.ts` pure rules, `google-user.ts` the upsert and the superadmins' email),
+  session helpers (`getCachedSession`, `withSession` for BFF route handlers, `requireSuperAdmin` /
+  `withSuperAdmin` for admin screens: admin is `isSuperAdmin`, everyone else sees the rest) in `src/lib/auth/session.ts`, the redirect/401
   gate in `src/proxy.ts` plus the check in `src/app/(app)/layout.tsx`, the page in `src/app/(auth)/sign-in/`.
   Users are in Cloud SQL (database `basecast`, schema `app`) through Prisma: `prisma/schema.prisma`,
   `src/lib/db.ts`, client generated to `src/generated/` on install. `npm run user:create` adds a user.

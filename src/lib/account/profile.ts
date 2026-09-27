@@ -48,3 +48,14 @@ export function sniffImageType(bytes: Uint8Array): AvatarContentType | null {
  */
 export const avatarUrl = (userId: string, updatedAt: Date) =>
   `/api/users/${encodeURIComponent(userId)}/avatar?v=${updatedAt.getTime()}`;
+
+/** The photo a user shows: the one uploaded on /account, else their Google photo, else none (initials). */
+export const userImage = (
+  userId: string,
+  avatar: { updatedAt: Date } | null,
+  imageUrl: string | null,
+) => (avatar ? avatarUrl(userId, avatar.updatedAt) : imageUrl);
+
+/** Whether the photo is one the user uploaded, so /account can remove it (a Google photo cannot be). */
+export const isUploadedAvatar = (image: string | null | undefined) =>
+  Boolean(image?.startsWith("/api/users/"));

@@ -4,8 +4,10 @@ import { test } from "node:test";
 import {
   avatarUrl,
   DISPLAY_NAME_MAX,
+  isUploadedAvatar,
   normalizeDisplayName,
   sniffImageType,
+  userImage,
 } from "./profile";
 
 test("a display name is stored trimmed", () => {
@@ -48,4 +50,18 @@ test("the photo's URL changes with each upload", () => {
   const first = avatarUrl("u1", new Date(1_000));
   assert.equal(first, "/api/users/u1/avatar?v=1000");
   assert.notEqual(first, avatarUrl("u1", new Date(2_000)));
+});
+
+test("an uploaded photo wins over the Google one, which wins over none", () => {
+  const avatar = { updatedAt: new Date(0) };
+  const google = "https://lh3.googleusercontent.com/a/x";
+  assert.equal(userImage("u1", avatar, google), avatarUrl("u1", avatar.updatedAt));
+  assert.equal(userImage("u1", null, google), google);
+  assert.equal(userImage("u1", null, null), null);
+});
+
+test("only an uploaded photo can be removed", () => {
+  assert.equal(isUploadedAvatar(avatarUrl("u1", new Date(0))), true);
+  assert.equal(isUploadedAvatar("https://lh3.googleusercontent.com/a/x"), false);
+  assert.equal(isUploadedAvatar(null), false);
 });

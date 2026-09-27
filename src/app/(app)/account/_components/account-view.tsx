@@ -8,7 +8,12 @@ import { toast } from "sonner";
 import { AvatarUpload } from "@/components/avatar-upload/avatar-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AVATAR_SIZE, DISPLAY_NAME_MAX, normalizeDisplayName } from "@/lib/account/profile";
+import {
+  AVATAR_SIZE,
+  DISPLAY_NAME_MAX,
+  isUploadedAvatar,
+  normalizeDisplayName,
+} from "@/lib/account/profile";
 import { BRAND } from "@/lib/brand-tokens";
 
 /** Sends a request to the account routes; throws with the route's own message when it fails. */
@@ -80,7 +85,7 @@ export function AccountView() {
               size={80}
               outputSize={AVATAR_SIZE}
               onUpload={uploadAvatar}
-              onRemove={image ? removeAvatar : undefined}
+              onRemove={isUploadedAvatar(image) ? removeAvatar : undefined}
               loading={avatarBusy}
             />
           </div>

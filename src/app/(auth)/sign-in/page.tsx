@@ -1,5 +1,6 @@
 import Logo from "@/components/brand/logo";
 import { Card } from "@/components/ui/card";
+import { googleSignInEnabled } from "@/lib/auth";
 
 import { SignInForm } from "./_components/sign-in-form";
 
@@ -11,7 +12,7 @@ export default function SignInPage() {
         <Logo size={36} />
       </div>
       <Card className="w-full p-8">
-        <SignInForm />
+        <SignInForm google={googleSignInEnabled} />
       </Card>
     </div>
   );

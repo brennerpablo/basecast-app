@@ -20,8 +20,12 @@ model User {
   /// Lowercase.
   email        String      @unique
   name         String?
-  /// bcrypt.
-  passwordHash String
+  /// bcrypt. Null for users who only sign in with Google.
+  passwordHash String?
+  /// Google's `sub`, set on the first "Continue with Google" (`src/lib/auth/google-user.ts`).
+  googleId     String?     @unique
+  /// The Google photo, refreshed on each Google sign-in; an uploaded `avatar` takes its place.
+  imageUrl     String?
   isSuperAdmin Boolean     @default(false)
   lastLoginAt  DateTime?
   createdAt    DateTime    @default(now())

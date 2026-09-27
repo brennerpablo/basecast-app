@@ -46,9 +46,18 @@ The app needs a session on every page, so running it locally needs the database;
 
 ## Access
 
-Every page needs a session and API routes answer 401 without one. Users sign in with their email or
-username and a password (next-auth v4, Credentials provider, JWT sessions, as in the Fundsys app). Users
-live in Cloud SQL: database `basecast`, schema `app`.
+Every page needs a session and API routes answer 401 without one. There are two ways in (next-auth v4, JWT
+sessions, no adapter, as in the Fundsys app), and users live in Cloud SQL: database `basecast`, schema `app`.
+
+- **Continue with Google**: anyone with a Google account signs up on first use (username from the email,
+  Google's name and photo) and sees every screen except the admin ones. A verified Google email that
+  matches a password user links to that user. Every superadmin gets an email on each sign-up. The button
+  shows only where `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set; Vercel preview URLs are not
+  registered with Google, so previews sign in with a password.
+- **Email or username and a password**, for users made from the command line (below).
+
+Admin is `isSuperAdmin`, checked in the database: `requireSuperAdmin()` on an admin page (a 404 for
+anyone else) and `withSuperAdmin()` on its BFF routes (403), both in `src/lib/auth/session.ts`.
 
 Running it locally:
 
@@ -62,7 +71,7 @@ npm run dev
 Users change their own display name and photo on `/account` (user menu → Account); photos are stored in
 the same database (`app."UserAvatar"`).
 
-There is no sign-up screen: users are created from the command line. The script never overwrites an
+Password users are created from the command line. The script never overwrites an
 existing username or email, and reads the password from stdin (a hidden prompt in a terminal):
 
 ```bash
@@ -146,7 +155,7 @@ Cloud SQL only accepts its own connectors and Vercel has no proxy, so production
 `CLOUD_SQL_INSTANCE` and the app opens the tunnel with Google's Node connector, as the service account
 `app-vercel` (role `cloudsql.client` only; its JSON key is `GCP_SA_KEY`). `DATABASE_URL` then only supplies
 the user, password and database. Production env: `DATABASE_URL`, `NEXTAUTH_SECRET`,
-`CLOUD_SQL_INSTANCE`, `GCP_SA_KEY`, `RESEND_API_KEY`. `NEXTAUTH_URL` stays unset: on Vercel next-auth takes
+`CLOUD_SQL_INSTANCE`, `GCP_SA_KEY`, `RESEND_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`. `NEXTAUTH_URL` stays unset: on Vercel next-auth takes
 the host from the request, so the custom domain and the `*.vercel.app` URLs both work.
 
 ## Stack
