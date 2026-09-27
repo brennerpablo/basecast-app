@@ -165,7 +165,8 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   `fetchEnvelope`, `BffError` (its `mart` is set on a 503 `mart_not_built`), `useProductQuery` (other failures go to
   `error.tsx`), `useCaveatCatalog` (`GET /caveats`, a bare `{items}`, not an envelope). `Meta`, `Caveat` and `Fact`
   are the generated contract types. Shared UI in `src/components/product/`: `SectionCard` (title, caveats, body,
-  `Provenance` below), `DataCard` (a `SectionCard` over one query: loading, "being rebuilt", empty), `FactGrid`, `StatCard`, `FactValue` (a null is a gap, never a zero), `CaveatBadges`, `VerifiedBadge`,
+  `Provenance` below), `DataCard` (a `SectionCard` over one query: loading, "being rebuilt", empty), `InfoTip` (an ⓘ with
+  the text in its tooltip; `SectionCard`/`DataCard` take it as `info`), `FactGrid`, `StatCard`, `FactValue` (a null is a gap, never a zero), `CaveatBadges`, `VerifiedBadge` (`compact`: the icon alone, for table rows),
   `SimulatedBadge`, formatters in `format.ts`. Caveat labels and texts come only from the API. The Fundsys dashboard
   pieces, for screens moving off `SectionCard`: `PageHeader` (a screen's title with no card around it, actions on the right),
   `DashboardCardHeader` + `CardOpenLink` (`DashboardChartCard`'s icon tile header), `KpiItem`, `DashboardStatCard`
@@ -206,7 +207,7 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   (`<Tabs urlParam="layer">`; the map sits outside them, so a switch repaints without a reload), the layer's filters
   in one labeled row, its stat cards (sums of the county rows, `src/lib/explorer/summary.ts`: the queue's add up to the
   statewide totals, counties flagged outside ERCOT included; the channel lists double as the `list` filter), the map
-  card, the layer's own card (queue: how far to trust it; zones: the zone table) and "Counties, ranked" (the map as a
+  card, the layer's own card (queue: its backtest; zones: the weather-zone table) and "Counties, ranked" (the map as a
   DataTable, `rankedCounties`; a county's name links to `county=`). `county=<fips>` opens the county panel beside them,
   sticky (`GET /geo/counties/{fips}`): KPI items, then sections with icon headers.
 - `/forecast` (`src/app/(app)/forecast/`): `<Tabs urlParam="tab">` with `peak` (the summer peak in three stacked
@@ -223,10 +224,11 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   (including the era ERCOT did better), the official vintages' error matrix and the generation-queue backtest. Pure
   helpers in `backtest-data.ts` (tested); marks drawn on recharts' scales for hover targets and keyboard focus.
 - `/insights` (`src/app/(app)/insights/`): the cards of `GET /insights` in the Fundsys dashboard look: `PageHeader` with
-  the response's caveats, then two line tabs with icons (`?tab=`): "Headline findings" (grade A, brand accent) and
-  "Supporting findings", one full-width `InsightCard` per finding stacked in each, the provenance at the foot. Each card: the icon tile header (icon by queue, else by
-  the screen behind it), value and caption beside the figures (`KpiItem`), the line's required caveat (always visible),
-  caveat badges and source doc, "Re-derived" when `verified` (X6), and the open link to the screen behind it. First in
+  the response's caveats, then two line tabs with icons (`?tab=`): "Headline" (grade A, brand accent) and
+  "Supporting", one full-width `InsightCard` per finding stacked in each, the provenance at the foot. Each card: the icon tile header (icon by queue, else by
+  the screen behind it), value and caption beside the figures (`KpiItem`), the line's required caveat as an amber "Caveat"
+  badge (the text in its tooltip), the caveat badges the header doesn't already show, "Re-derived" when `verified`, and the
+  open link to the screen behind it. First in
   the menu and the landing page (`/`, after sign-in, "Exit Data"); cards keep the API's order.
 - `public/geo/`: `tx-counties.geojson` (254 counties; `county_fips` for `promoteId`, `county_name`, `weather_zone`,
   `in_ercot`) and `ercot-weather-zones.geojson` (`weather_zone`), from basecast-airflow `basecast export-geo`.
@@ -263,6 +265,18 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   logo as an inline CID PNG from `logo.ts`, lime rule, light-mode tokens as hex; content is escaped). The
   check of Resend's `{ data, error }` lives in `src/lib/email/send.ts`. `npm run email:test` sends a sample
   notification. `RESEND_API_KEY` only sends from `basecast.pbrenner.com`.
+
+## Screen text
+
+Excess prose is what makes a dashboard look generated. A screen shows data; words only where the data needs them.
+
+- No subtitle that restates the title, the legend, the filters or the tabs, or explains how to read or click. A
+  subtitle holds data only (a date, a count, a unit). A definition or a card's own caveat goes in `info` (`InfoTip`).
+- Titles are labels ("Peak hour"), not headlines ("The peak hour moved") or questions.
+- Provenance once per screen, at its foot (one line, "As of {date}", the rest in its tooltip); caveats once per
+  response, where the screen first shows it. Long API prose (captions, notes, definitions) goes to a tooltip or badge.
+- No internal names in the UI: marts, tables, adapter classes, doc paths, X-refs.
+- Empty states are a title; a description only when it adds something the title and buttons don't.
 
 ## Same-window tabs
 
