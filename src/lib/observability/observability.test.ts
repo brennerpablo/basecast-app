@@ -4,7 +4,7 @@ import { afterEach, beforeEach, test } from "node:test";
 import { buildRow, log, scrub } from "./logger";
 import { runWithRequestLog } from "./request-log";
 import { normalizeRoute } from "./route-name";
-import { flushOpsLog, type OpsLogRow, setOpsLogWriter } from "./sink";
+import { flushOpsLog, opsLogEnabled, type OpsLogRow, setOpsLogWriter } from "./sink";
 
 let written: OpsLogRow[] = [];
 
@@ -134,4 +134,14 @@ test("healthy /api/ops polls are not stored; their failures are", async () => {
     written.map((r) => [r.route, r.status, r.fingerprint]),
     [["/api/ops/logs", 500, "app:HTTP 500:/api/ops/logs"]],
   );
+});
+
+test("ops.log is written from a deploy or on request, never from a local server by default", () => {
+  assert.equal(opsLogEnabled({}), false);
+  assert.equal(opsLogEnabled({ NODE_ENV: "production" }), false);
+  assert.equal(opsLogEnabled({ VERCEL_ENV: "production" }), true);
+  assert.equal(opsLogEnabled({ VERCEL_ENV: "preview" }), true);
+  assert.equal(opsLogEnabled({ VERCEL: "1" }), true);
+  assert.equal(opsLogEnabled({ OPS_LOG: "1" }), true);
+  assert.equal(opsLogEnabled({ VERCEL_ENV: "production", OPS_LOG: "0" }), false);
 });

@@ -202,7 +202,8 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   (`src/lib/ops/queries.ts`, raw SQL) through `/api/ops/*`. The log is Prisma model `OpsLog` (schema `ops`),
   grants in `prisma/ops-grants.sql`, row format in basecast-get-data `docs/data-contract.md` §7. The app writes it
   with `log.info|warn|error(event, message, fields)` (`src/lib/observability/`, ported from Fundsys): stdout
-  plus a row queued in `after()`; `withSession` wraps every BFF request in `runWithRequestLog` (one
+  plus a row queued in `after()`, only on a deploy (`VERCEL_ENV`) or with `OPS_LOG=1` (a local server shares the
+  production database through the proxy); `withSession` wraps every BFF request in `runWithRequestLog` (one
   `http.request` line, `x-request-id` echoed; healthy `/api/ops` polls are not stored); `src/instrumentation.ts`
   logs `server.error`. `getRequestId()` is the id to send to get-data as `x-request-id`.
 - Email: `sendEmail()` in `src/lib/email.ts` (server-only; Resend, from `noreply@basecast.pbrenner.com`) takes

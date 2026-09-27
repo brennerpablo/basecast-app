@@ -44,11 +44,23 @@ export function setOpsLogWriter(next: Writer | null): void {
 }
 
 /**
+ * Rows reach ops.log only from a deploy (Vercel sets `VERCEL` and `VERCEL_ENV`) or when `OPS_LOG=1` asks for it;
+ * `OPS_LOG=0` turns them off anywhere. A server on a laptop reaches the production database through the
+ * Cloud SQL proxy, and its lines must not land in /ops: locally, stdout is the only copy.
+ */
+export function opsLogEnabled(env: Record<string, string | undefined> = process.env): boolean {
+  if (env.OPS_LOG === "0") return false;
+  return env.OPS_LOG === "1" || Boolean(env.VERCEL_ENV || env.VERCEL);
+}
+
+/**
  * Queues a row. Inside a request the write runs in `after()`, once the response is sent, so logging
  * never adds to a page's latency; rows from requests that overlap go out in the same insert.
  * Outside a request (`after` throws there) it runs on the next tick.
  */
 export function enqueueOpsLog(row: OpsLogRow): void {
+  // A writer swapped in (tests) always receives; the database only where `opsLogEnabled` says so.
+  if (writer === prismaWriter && !opsLogEnabled()) return;
   pending.push(row);
   if (scheduled) return;
   scheduled = true;

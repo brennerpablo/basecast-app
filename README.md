@@ -83,7 +83,9 @@ request. All three services write the same row shape to `ops.log` (Postgres `bas
 format in basecast-get-data `docs/data-contract.md` §7), and the page reads it straight from Postgres.
 
 The app logs with `log.info(event, message, fields)` from `src/lib/observability`: one JSON line on
-stdout and, from `info` up, a row in `ops.log` written after the response. Every BFF route behind
+stdout and, from `info` up, a row in `ops.log` written after the response. Rows are written only on a
+deploy (`VERCEL_ENV` is set) or with `OPS_LOG=1`: a local server reaches the production database through
+the Cloud SQL proxy, so by default its log stays on stdout. Every BFF route behind
 `withSession` gets its `http.request` line; unhandled server errors come from `onRequestError`.
 
 After `npm run db:push` created the table, run the grants once as `postgres` (the pipelines append,
