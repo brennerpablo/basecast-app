@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>BaseCast: how it's built</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&amp;family=Schibsted+Grotesk:wght@500;600;700;800&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#F5F3EE;-webkit-font-smoothing:antialiased}
+a{color:#152B1E}a:hover{color:#2F6B47}
+a:focus-visible{outline:3px solid #6FA8FF;outline-offset:3px}
+body{padding-bottom:96px}
+.lp-toggle{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10;display:flex;gap:4px;padding:4px;border-radius:999px;background:#1B3F2A;box-shadow:0 8px 24px rgba(21,43,30,0.28);font-family:Figtree,'Helvetica Neue',Helvetica,sans-serif}
+.lp-toggle a{display:flex;align-items:center;min-height:40px;padding:0 18px;border-radius:999px;color:#D5DED6;font-weight:600;font-size:15px;text-decoration:none;white-space:nowrap}
+.lp-toggle a:hover{color:#F5F3EE}
+.lp-toggle a[aria-current="page"]{background:#F4B840;color:#152B1E}
+</style>
+</head>
+<body>
+<div style="width: 1440px; margin: 0 auto; box-sizing: border-box; display: flex; flex-direction: column; background: #F5F3EE; color: #152B1E; font-family: Figtree, 'Helvetica Neue', Helvetica, sans-serif">
+
+<header style="display: flex; justify-content: space-between; align-items: center; padding: 24px 56px">
+<div style="display: flex; align-items: center; gap: 20px">
+<img src="/landing/basecast-logo.svg" alt="BaseCast" style="display: block; height: 34px; width: auto">
+<span style="padding: 8px 16px; border-radius: 999px; background: #E4EADF; font-weight: 600; font-size: 15px">Internal engineering overview</span>
+</div>
+<nav aria-label="Project links" style="display: flex; align-items: center; gap: 28px; font-weight: 600; font-size: 17px">
+<a href="https://github.com/brennerpablo" style="text-underline-offset: 5px">GitHub</a>
+<a href="/insights" style="text-underline-offset: 5px">Live app</a>
+</nav>
+</header>
+
+<section style="padding: 8px 24px 0">
+<div style="display: flex; flex-direction: column; gap: 56px; padding: 88px 96px 72px; border-radius: 32px; background: radial-gradient(ellipse 60% 70% at 92% 0%, rgba(244,184,64,0.22), rgba(244,184,64,0) 70%), #1B3F2A; color: #F5F3EE">
+<div style="display: flex; flex-direction: column; gap: 24px; max-width: 880px">
+<h1 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 76px; line-height: 1.0; letter-spacing: -0.035em">How BaseCast is built</h1>
+<p style="margin: 0; font-size: 22px; line-height: 1.5; color: #D5DED6">Public grid data in, a ranked call list out. Three repos, one immutable lake, every number traceable to its file.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 14px">
+<dl style="margin: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px">
+<div style="display: flex; flex-direction: column-reverse; gap: 6px; padding: 20px 24px; border-radius: 20px; background: #24503A"><dt style="font-weight: 500; font-size: 15px; color: #B8C7BC">sources</dt><dd style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 36px; line-height: 1; letter-spacing: -0.03em">35</dd></div>
+<div style="display: flex; flex-direction: column-reverse; gap: 6px; padding: 20px 24px; border-radius: 20px; background: #24503A"><dt style="font-weight: 500; font-size: 15px; color: #B8C7BC">raw files</dt><dd style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 36px; line-height: 1; letter-spacing: -0.03em">2,623</dd></div>
+<div style="display: flex; flex-direction: column-reverse; gap: 6px; padding: 20px 24px; border-radius: 20px; background: #24503A"><dt style="font-weight: 500; font-size: 15px; color: #B8C7BC">in the lake</dt><dd style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 36px; line-height: 1; letter-spacing: -0.03em">3.88 GB</dd></div>
+<div style="display: flex; flex-direction: column-reverse; gap: 6px; padding: 20px 24px; border-radius: 20px; background: #24503A"><dt style="font-weight: 500; font-size: 15px; color: #B8C7BC">typed tables</dt><dd style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 36px; line-height: 1; letter-spacing: -0.03em">119</dd></div>
+<div style="display: flex; flex-direction: column-reverse; gap: 6px; padding: 20px 24px; border-radius: 20px; background: #24503A"><dt style="font-weight: 500; font-size: 15px; color: #B8C7BC">marts served</dt><dd style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 36px; line-height: 1; letter-spacing: -0.03em">31</dd></div>
+<div style="display: flex; flex-direction: column-reverse; gap: 6px; padding: 20px 24px; border-radius: 20px; background: #24503A"><dt style="font-weight: 500; font-size: 15px; color: #B8C7BC">API endpoints</dt><dd style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 36px; line-height: 1; letter-spacing: -0.03em">33</dd></div>
+</dl>
+<span style="font-weight: 500; font-size: 14px; color: #B8C7BC">As of September 26, 2026</span>
+</div>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 40px; padding: 120px 120px 0">
+<div style="display: flex; flex-direction: column; gap: 14px; max-width: 820px">
+<h2 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 48px; line-height: 1.05; letter-spacing: -0.03em">The stack</h2>
+<p style="margin: 0; font-size: 20px; line-height: 1.55; color: #3E4C43">Three repos. Every push to main deploys.</p>
+</div>
+<div style="padding: 48px; border-radius: 32px; background: #FFFFFF">
+<div style="display: grid; grid-template-columns: 216px 80px 216px 80px 216px 80px 216px; grid-template-rows: auto 64px auto">
+
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: 20px; background: #F5F3EE">
+<span style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: #1B3F2A"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4B840" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg></span>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 20px">Public data</span>
+<span style="font-size: 15px; color: #56645A">35 sources</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<span style="padding: 4px 10px; border: 1px solid #DDE2D8; border-radius: 999px; background: #FFFFFF; font-weight: 500; font-size: 14px">ERCOT</span>
+<span style="padding: 4px 10px; border: 1px solid #DDE2D8; border-radius: 999px; background: #FFFFFF; font-weight: 500; font-size: 14px">PUCT</span>
+<span style="padding: 4px 10px; border: 1px solid #DDE2D8; border-radius: 999px; background: #FFFFFF; font-weight: 500; font-size: 14px">EIA</span>
+<span style="padding: 4px 10px; border: 1px solid #DDE2D8; border-radius: 999px; background: #FFFFFF; font-weight: 500; font-size: 14px">Census</span>
+<span style="padding: 4px 10px; border: 1px solid #DDE2D8; border-radius: 999px; background: #FFFFFF; font-weight: 500; font-size: 14px">NOAA</span>
+<span style="padding: 4px 10px; border: 1px solid #DDE2D8; border-radius: 999px; background: #FFFFFF; font-weight: 500; font-size: 14px">TCEQ</span>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 0 6px">
+<svg width="56" height="14" viewBox="0 0 56 14" fill="none" aria-hidden="true"><path d="M0 7h52M46 1l6 6-6 6" stroke="#1B3F2A" stroke-width="2"></path></svg>
+<span style="font-weight: 500; font-size: 14px; line-height: 1.3; color: #56645A; text-align: center">files, as published</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: 20px; background: #F5F3EE">
+<span style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: #1B3F2A"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4B840" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="8" x="3" y="3" rx="2"></rect><path d="M7 11v4a2 2 0 0 0 2 2h4"></path><rect width="8" height="8" x="13" y="13" rx="2"></rect></svg></span>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace; font-weight: 500; font-size: 16px">basecast-airflow</span>
+<span style="font-size: 15px; color: #56645A">Airflow 3.3 on a GCP VM</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<span style="padding: 4px 10px; border: 1px solid #DDE2D8; border-radius: 999px; background: #FFFFFF; font-weight: 500; font-size: 14px">raw → process → marts</span>
+<span style="padding: 4px 10px; border: 1px solid #DDE2D8; border-radius: 999px; background: #FFFFFF; font-weight: 500; font-size: 14px">Python 3.12</span>
+<span style="padding: 4px 10px; border: 1px solid #DDE2D8; border-radius: 999px; background: #FFFFFF; font-weight: 500; font-size: 14px">Polars</span>
+<span style="padding: 4px 10px; border: 1px solid #DDE2D8; border-radius: 999px; background: #FFFFFF; font-weight: 500; font-size: 14px">Gemini reads charts</span>
+</div>
+</div>
+
+<div></div>
+
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: 20px; background: #F5F3EE">
+<span style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: #1B3F2A"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4B840" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="8" x="2" y="2" rx="2"></rect><rect width="20" height="8" x="2" y="14" rx="2"></rect><path d="M6 6h.01M6 18h.01"></path></svg></span>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace; font-weight: 500; font-size: 16px">basecast-get-data</span>
+<span style="font-size: 15px; color: #56645A">FastAPI on Cloud Run</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<span style="padding: 4px 10px; border: 1px solid #DDE2D8; border-radius: 999px; background: #FFFFFF; font-weight: 500; font-size: 14px">33 endpoints</span>
+<span style="padding: 4px 10px; border: 1px solid #DDE2D8; border-radius: 999px; background: #FFFFFF; font-weight: 500; font-size: 14px">Pydantic 2</span>
+<span style="padding: 4px 10px; border: 1px solid #DDE2D8; border-radius: 999px; background: #FFFFFF; font-weight: 500; font-size: 14px">Polars in memory</span>
+<span style="padding: 4px 10px; border: 1px solid #DDE2D8; border-radius: 999px; background: #FFFFFF; font-weight: 500; font-size: 14px">OpenAPI 3.1</span>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 0 6px">
+<svg width="56" height="14" viewBox="0 0 56 14" fill="none" aria-hidden="true"><path d="M0 7h52M46 1l6 6-6 6" stroke="#1B3F2A" stroke-width="2"></path></svg>
+<span style="font-weight: 500; font-size: 14px; line-height: 1.3; color: #56645A; text-align: center">typed TS client</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: 20px; background: #F5F3EE">
+<span style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: #1B3F2A"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4B840" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M2 8h20M6 4v4M10 4v4"></path></svg></span>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace; font-weight: 500; font-size: 16px">basecast-app</span>
+<span style="font-size: 15px; color: #56645A">Next.js 16 on Vercel</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<span style="padding: 4px 10px; border: 1px solid #DDE2D8; border-radius: 999px; background: #FFFFFF; font-weight: 500; font-size: 14px">React 19</span>
+<span style="padding: 4px 10px; border: 1px solid #DDE2D8; border-radius: 999px; background: #FFFFFF; font-weight: 500; font-size: 14px">Tailwind 4</span>
+<span style="padding: 4px 10px; border: 1px solid #DDE2D8; border-radius: 999px; background: #FFFFFF; font-weight: 500; font-size: 14px">TanStack Query</span>
+<span style="padding: 4px 10px; border: 1px solid #DDE2D8; border-radius: 999px; background: #FFFFFF; font-weight: 500; font-size: 14px">MapLibre GL</span>
+</div>
+</div>
+
+<div></div>
+<div></div>
+<div style="display: flex; align-items: center; justify-content: center; gap: 8px">
+<svg width="14" height="48" viewBox="0 0 14 48" fill="none" aria-hidden="true"><path d="M7 0v44M1 38l6 6 6-6" stroke="#1B3F2A" stroke-width="2"></path></svg>
+<span style="font-weight: 500; font-size: 14px; color: #56645A">writes</span>
+</div>
+<div></div>
+<div style="display: flex; align-items: center; justify-content: center; gap: 8px">
+<svg width="14" height="48" viewBox="0 0 14 48" fill="none" aria-hidden="true"><path d="M7 48V4M1 10l6-6 6 6" stroke="#1B3F2A" stroke-width="2"></path></svg>
+<span style="font-weight: 500; font-size: 14px; color: #56645A">reads</span>
+</div>
+<div></div>
+<div></div>
+
+<div></div>
+<div></div>
+<div style="grid-column: 3 / 6; display: flex; flex-direction: column; gap: 16px; padding: 24px; border: 2px solid #1B3F2A; border-radius: 20px">
+<div style="display: flex; align-items: center; gap: 12px">
+<span style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: #1B3F2A"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4B840" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v14a9 3 0 0 0 18 0V5"></path><path d="M3 12a9 3 0 0 0 18 0"></path></svg></span>
+<span style="font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 20px">Storage on Google Cloud</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: 14px; background: #F5F3EE"><span style="font-weight: 700; font-size: 16px">GCS lake</span><span style="font-size: 15px; line-height: 1.4; color: #56645A">Raw files, immutable snapshots</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: 14px; background: #F5F3EE"><span style="font-weight: 700; font-size: 16px">Cloud SQL</span><span style="font-size: 15px; line-height: 1.4; color: #56645A">Postgres + PostGIS, tables and marts</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: 14px; background: #F5F3EE"><span style="font-weight: 700; font-size: 16px">BigQuery</span><span style="font-size: 15px; line-height: 1.4; color: #56645A">The large time series</span></div>
+</div>
+</div>
+<div></div>
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 20px; border-radius: 20px; background: #E4EADF">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1B3F2A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>
+<span style="font-weight: 600; font-size: 16px; line-height: 1.4">Every answer carries its as-of date, model version and caveats.</span>
+</div>
+
+</div>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 40px; padding: 120px 120px 0">
+<div style="display: flex; flex-direction: column; gap: 14px; max-width: 820px">
+<h2 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 48px; line-height: 1.05; letter-spacing: -0.03em">Data sources</h2>
+<p style="margin: 0; font-size: 20px; line-height: 1.55; color: #3E4C43">8 of 35 sources, by size on disk.</p>
+</div>
+<div role="table" aria-label="Raw data by source: size and files" style="display: flex; flex-direction: column; gap: 4px; padding: 28px 40px; border-radius: 24px; background: #FFFFFF">
+
+<div role="row" style="display: grid; grid-template-columns: 300px minmax(0, 1fr) 80px 80px; gap: 24px; align-items: center; padding: 10px 0">
+<div role="cell" style="display: flex; align-items: baseline; gap: 10px"><span style="font-weight: 700; font-size: 17px">Load forecasts</span><span style="font-size: 14px; color: #56645A">ERCOT</span></div>
+<div role="cell"><div style="width: 100%; height: 14px; border-radius: 999px; background: #1B3F2A"></div></div>
+<span role="cell" style="text-align: right; font-weight: 700; font-size: 16px">810 MB</span>
+<span role="cell" style="text-align: right; font-size: 15px; color: #56645A">88 files</span>
+</div>
+
+<div role="row" style="display: grid; grid-template-columns: 300px minmax(0, 1fr) 80px 80px; gap: 24px; align-items: center; padding: 10px 0">
+<div role="cell" style="display: flex; align-items: baseline; gap: 10px"><span style="font-weight: 700; font-size: 17px">Filings</span><span style="font-size: 14px; color: #56645A">PUCT</span></div>
+<div role="cell"><div style="width: 73.5%; height: 14px; border-radius: 999px; background: #1B3F2A"></div></div>
+<span role="cell" style="text-align: right; font-weight: 700; font-size: 16px">595 MB</span>
+<span role="cell" style="text-align: right; font-size: 15px; color: #56645A">562 files</span>
+</div>
+
+<div role="row" style="display: grid; grid-template-columns: 300px minmax(0, 1fr) 80px 80px; gap: 24px; align-items: center; padding: 10px 0">
+<div role="cell" style="display: flex; align-items: baseline; gap: 10px"><span style="font-weight: 700; font-size: 17px">Hourly weather</span><span style="font-size: 14px; color: #56645A">NOAA</span></div>
+<div role="cell"><div style="width: 54.5%; height: 14px; border-radius: 999px; background: #1B3F2A"></div></div>
+<span role="cell" style="text-align: right; font-weight: 700; font-size: 16px">441 MB</span>
+<span role="cell" style="text-align: right; font-size: 15px; color: #56645A">564 files</span>
+</div>
+
+<div role="row" style="display: grid; grid-template-columns: 300px minmax(0, 1fr) 80px 80px; gap: 24px; align-items: center; padding: 10px 0">
+<div role="cell" style="display: flex; align-items: baseline; gap: 10px"><span style="font-weight: 700; font-size: 17px">Air permits</span><span style="font-size: 14px; color: #56645A">TCEQ</span></div>
+<div role="cell"><div style="width: 44.3%; height: 14px; border-radius: 999px; background: #1B3F2A"></div></div>
+<span role="cell" style="text-align: right; font-weight: 700; font-size: 16px">359 MB</span>
+<span role="cell" style="text-align: right; font-size: 15px; color: #56645A">16 files</span>
+</div>
+
+<div role="row" style="display: grid; grid-template-columns: 300px minmax(0, 1fr) 80px 80px; gap: 24px; align-items: center; padding: 10px 0">
+<div role="cell" style="display: flex; align-items: baseline; gap: 10px"><span style="font-weight: 700; font-size: 17px">Generator queue</span><span style="font-size: 14px; color: #56645A">ERCOT</span></div>
+<div role="cell"><div style="width: 26.1%; height: 14px; border-radius: 999px; background: #1B3F2A"></div></div>
+<span role="cell" style="text-align: right; font-weight: 700; font-size: 16px">211 MB</span>
+<span role="cell" style="text-align: right; font-size: 15px; color: #56645A">227 files</span>
+</div>
+
+<div role="row" style="display: grid; grid-template-columns: 300px minmax(0, 1fr) 80px 80px; gap: 24px; align-items: center; padding: 10px 0">
+<div role="cell" style="display: flex; align-items: baseline; gap: 10px"><span style="font-weight: 700; font-size: 17px">Large-load decks</span><span style="font-size: 14px; color: #56645A">ERCOT</span></div>
+<div role="cell"><div style="width: 9%; height: 14px; border-radius: 999px; background: #1B3F2A"></div></div>
+<span role="cell" style="text-align: right; font-weight: 700; font-size: 16px">73 MB</span>
+<span role="cell" style="text-align: right; font-size: 15px; color: #56645A">77 files</span>
+</div>
+
+<div role="row" style="display: grid; grid-template-columns: 300px minmax(0, 1fr) 80px 80px; gap: 24px; align-items: center; padding: 10px 0">
+<div role="cell" style="display: flex; align-items: baseline; gap: 10px"><span style="font-weight: 700; font-size: 17px">Utility sales</span><span style="font-size: 14px; color: #56645A">EIA</span></div>
+<div role="cell"><div style="width: 7.3%; height: 14px; border-radius: 999px; background: #1B3F2A"></div></div>
+<span role="cell" style="text-align: right; font-weight: 700; font-size: 16px">59 MB</span>
+<span role="cell" style="text-align: right; font-size: 15px; color: #56645A">13 files</span>
+</div>
+
+<div role="row" style="display: grid; grid-template-columns: 300px minmax(0, 1fr) 80px 80px; gap: 24px; align-items: center; padding: 10px 0">
+<div role="cell" style="display: flex; align-items: baseline; gap: 10px"><span style="font-weight: 700; font-size: 17px">Hourly load</span><span style="font-size: 14px; color: #56645A">ERCOT</span></div>
+<div role="cell"><div style="width: 4.3%; height: 14px; border-radius: 999px; background: #1B3F2A"></div></div>
+<span role="cell" style="text-align: right; font-weight: 700; font-size: 16px">35 MB</span>
+<span role="cell" style="text-align: right; font-size: 15px; color: #56645A">24 files</span>
+</div>
+
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 40px; padding: 120px 120px 0">
+<div style="display: flex; flex-direction: column; gap: 14px; max-width: 820px">
+<h2 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 48px; line-height: 1.05; letter-spacing: -0.03em">From raw file to mart</h2>
+<p style="margin: 0; font-size: 20px; line-height: 1.55; color: #3E4C43">Each format gets its own reader. Everything lands in the same shape.</p>
+</div>
+<div style="padding: 48px; border-radius: 32px; background: #FFFFFF">
+<div style="display: grid; grid-template-columns: 520px 64px 240px 40px 240px">
+
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: center; gap: 16px; height: 89px; box-sizing: border-box; padding: 16px; border-radius: 16px; background: #F5F3EE">
+<span style="display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 56px; height: 56px; border-radius: 12px; background: #1B3F2A; color: #F4B840; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 15px">PDF</span>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-weight: 700; font-size: 17px">ERCOT decks, PUCT filings</span><span style="font-size: 15px; color: #56645A">Text layer parsed; charts read by Gemini, unverified</span></div>
+</div>
+<div style="display: flex; align-items: center; gap: 16px; height: 89px; box-sizing: border-box; padding: 16px; border-radius: 16px; background: #F5F3EE">
+<span style="display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 56px; height: 56px; border-radius: 12px; background: #1B3F2A; color: #F4B840; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 15px">XLSX</span>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-weight: 700; font-size: 17px">GIS queue, LTLF, CDR, hourly load</span><span style="font-size: 15px; color: #56645A">Header found by content; Excel dates and hour 24 fixed</span></div>
+</div>
+<div style="display: flex; align-items: center; gap: 16px; height: 89px; box-sizing: border-box; padding: 16px; border-radius: 16px; background: #F5F3EE">
+<span style="display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 56px; height: 56px; border-radius: 12px; background: #1B3F2A; color: #F4B840; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 15px">TXT</span>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-weight: 700; font-size: 17px">Census building permits</span><span style="font-size: 15px; color: #56645A">Two-line headers read by content, not position</span></div>
+</div>
+<div style="display: flex; align-items: center; gap: 16px; height: 89px; box-sizing: border-box; padding: 16px; border-radius: 16px; background: #F5F3EE">
+<span style="display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 56px; height: 56px; border-radius: 12px; background: #1B3F2A; color: #F4B840; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 15px">CSV</span>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-weight: 700; font-size: 17px">TCEQ air permits, BLS, PUCT directories</span><span style="font-size: 15px; color: #56645A">Typed with Polars; personal data dropped</span></div>
+</div>
+</div>
+
+<div style="display: flex; align-items: center">
+<svg width="64" height="392" viewBox="0 0 64 392" fill="none" aria-hidden="true"><g stroke="#1B3F2A" stroke-width="2"><path d="M0 44 C34 44 30 196 58 196"></path><path d="M0 145 C30 145 32 196 58 196"></path><path d="M0 246 C30 246 32 196 58 196"></path><path d="M0 347 C34 347 30 196 58 196"></path><path d="M52 190 l6 6 -6 6"></path></g></svg>
+</div>
+
+<div style="display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 24px; border: 2px solid #1B3F2A; border-radius: 20px">
+<span style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: #1B3F2A"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4B840" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 9h18M3 15h18M12 3v18"></path></svg></span>
+<span style="font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 22px">Typed tables</span>
+<div style="display: flex; flex-direction: column; gap: 8px; font-size: 15px; line-height: 1.4; color: #3E4C43">
+<span>snake_case, units, UTC</span>
+<span>Source file and ingest time on every row</span>
+<span>Postgres, or BigQuery for large series</span>
+</div>
+</div>
+
+<div style="display: flex; align-items: center; justify-content: center">
+<svg width="32" height="14" viewBox="0 0 32 14" fill="none" aria-hidden="true"><path d="M0 7h28M22 1l6 6-6 6" stroke="#1B3F2A" stroke-width="2"></path></svg>
+</div>
+
+<div style="display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 24px; border-radius: 20px; background: #F4B840">
+<span style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: #1B3F2A"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4B840" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"></path><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path></svg></span>
+<span style="font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 22px">Marts</span>
+<div style="display: flex; flex-direction: column; gap: 8px; font-size: 15px; line-height: 1.4; font-weight: 500">
+<span>Models plus golden checks</span>
+<span>31 served, each with as-of and caveats</span>
+<span>Ready for the API as is</span>
+</div>
+</div>
+
+</div>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 40px; padding: 120px 120px 0">
+<h2 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 48px; line-height: 1.05; letter-spacing: -0.03em">Models</h2>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px">
+
+<article style="display: flex; flex-direction: column; gap: 14px; padding: 28px; border-radius: 24px; background: #FFFFFF">
+<div style="display: flex; flex-direction: column; gap: 4px"><h3 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 24px; letter-spacing: -0.02em">Queue survival</h3><span style="font-size: 15px; color: #56645A">Aalen–Johansen, competing risks</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border: 2px dashed #1B3F2A; border-radius: 14px"><span style="font-weight: 600; font-size: 14px; color: #56645A">In</span><span style="font-weight: 500; font-size: 16px; line-height: 1.4">148 monthly GIS reports, project by project</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: 14px; background: #F4B840"><span style="font-weight: 600; font-size: 14px">Out</span><span style="font-weight: 700; font-size: 16px; line-height: 1.4">MW of the queue that reaches operation, by county and date</span></div>
+</article>
+
+<article style="display: flex; flex-direction: column; gap: 14px; padding: 28px; border-radius: 24px; background: #FFFFFF">
+<div style="display: flex; flex-direction: column; gap: 4px"><h3 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 24px; letter-spacing: -0.02em">Large-load realization</h3><span style="font-size: 15px; color: #56645A">Realization ratio × approved stock</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border: 2px dashed #1B3F2A; border-radius: 14px"><span style="font-weight: 600; font-size: 14px; color: #56645A">In</span><span style="font-weight: 500; font-size: 16px; line-height: 1.4">60 ERCOT decks, chart values read by Gemini</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: 14px; background: #F4B840"><span style="font-weight: 600; font-size: 14px">Out</span><span style="font-weight: 700; font-size: 16px; line-height: 1.4">Large load at the summer peak, P10–P90, by weather zone</span></div>
+</article>
+
+<article style="display: flex; flex-direction: column; gap: 14px; padding: 28px; border-radius: 24px; background: #FFFFFF">
+<div style="display: flex; flex-direction: column; gap: 4px"><h3 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 24px; letter-spacing: -0.02em">Organic peak</h3><span style="font-size: 15px; color: #56645A">Peak ~ year + weather, per zone</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border: 2px dashed #1B3F2A; border-radius: 14px"><span style="font-weight: 600; font-size: 14px; color: #56645A">In</span><span style="font-weight: 500; font-size: 16px; line-height: 1.4">Hourly load by weather zone, ERA5 weather</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: 14px; background: #F4B840"><span style="font-weight: 600; font-size: 14px">Out</span><span style="font-weight: 700; font-size: 16px; line-height: 1.4">The summer peak without large loads</span></div>
+</article>
+
+<article style="display: flex; flex-direction: column; gap: 14px; padding: 28px; border-radius: 24px; background: #FFFFFF">
+<div style="display: flex; flex-direction: column; gap: 4px"><h3 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 24px; letter-spacing: -0.02em">Peak forecast</h3><span style="font-size: 15px; color: #56645A">Organic + large loads + unattributed</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border: 2px dashed #1B3F2A; border-radius: 14px"><span style="font-weight: 600; font-size: 14px; color: #56645A">In</span><span style="font-weight: 500; font-size: 16px; line-height: 1.4">The three models above</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: 14px; background: #F4B840"><span style="font-weight: 600; font-size: 14px">Out</span><span style="font-weight: 700; font-size: 16px; line-height: 1.4">Summer peak to 2030, P10–P90, against LTLF and CDR</span></div>
+</article>
+
+<article style="display: flex; flex-direction: column; gap: 14px; padding: 28px; border-radius: 24px; background: #FFFFFF">
+<div style="display: flex; flex-direction: column; gap: 4px"><h3 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 24px; letter-spacing: -0.02em">Account score</h3><span style="font-size: 15px; color: #56645A">Signals, dated triggers, a rule-based action</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border: 2px dashed #1B3F2A; border-radius: 14px"><span style="font-weight: 600; font-size: 14px; color: #56645A">In</span><span style="font-weight: 500; font-size: 16px; line-height: 1.4">PUCT territories, EIA-861, TCEQ permits, transmission projects, building permits</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: 14px; background: #F4B840"><span style="font-weight: 600; font-size: 14px">Out</span><span style="font-weight: 700; font-size: 16px; line-height: 1.4">107 accounts: call now, nurture, watch or hold</span></div>
+</article>
+
+<article style="display: flex; flex-direction: column; gap: 14px; padding: 28px; border-radius: 24px; background: #FFFFFF">
+<div style="display: flex; flex-direction: column; gap: 4px"><h3 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 24px; letter-spacing: -0.02em">4CP offer</h3><span style="font-size: 15px; color: #56645A">Four summer peaks, one dispatch window</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border: 2px dashed #1B3F2A; border-radius: 14px"><span style="font-weight: 600; font-size: 14px; color: #56645A">In</span><span style="font-weight: 500; font-size: 16px; line-height: 1.4">ERCOT monthly peaks, 15-minute zone load</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: 14px; background: #F4B840"><span style="font-weight: 600; font-size: 14px">Out</span><span style="font-weight: 700; font-size: 16px; line-height: 1.4">Dollars per MW-year a fleet avoids for the co-op</span></div>
+</article>
+
+</div>
+</section>
+
+<section style="padding: 120px 24px 0">
+<div style="display: flex; flex-direction: column; gap: 48px; padding: 96px; border-radius: 32px; background: #1B3F2A; color: #F5F3EE">
+<h2 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 48px; line-height: 1.05; letter-spacing: -0.03em">Ops</h2>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+
+<div style="display: flex; flex-direction: column; gap: 20px; padding: 32px; border-radius: 20px; background: #24503A">
+<div style="display: flex; align-items: center; gap: 14px">
+<span style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: #1B3F2A"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4B840" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></svg></span>
+<h3 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 24px; letter-spacing: -0.02em">Observability</h3>
+</div>
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; font-size: 16px; line-height: 1.45; color: #D5DED6">
+<li style="display: flex; gap: 10px"><span style="flex-shrink: 0; width: 6px; height: 6px; margin-top: 9px; border-radius: 50%; background: #F4B840"></span>One run log per pipeline run: status, duration, events</li>
+<li style="display: flex; gap: 10px"><span style="flex-shrink: 0; width: 6px; height: 6px; margin-top: 9px; border-radius: 50%; background: #F4B840"></span>An Ops screen with service health, pipelines, requests and logs</li>
+<li style="display: flex; gap: 10px"><span style="flex-shrink: 0; width: 6px; height: 6px; margin-top: 9px; border-radius: 50%; background: #F4B840"></span>Every API answer carries its as-of date and caveats</li>
+</ul>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 20px; padding: 32px; border-radius: 20px; background: #24503A">
+<div style="display: flex; align-items: center; gap: 14px">
+<span style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: #1B3F2A"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4B840" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"></path><path d="M16 7h6v6"></path></svg></span>
+<h3 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 24px; letter-spacing: -0.02em">Scalability</h3>
+</div>
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; font-size: 16px; line-height: 1.45; color: #D5DED6">
+<li style="display: flex; gap: 10px"><span style="flex-shrink: 0; width: 6px; height: 6px; margin-top: 9px; border-radius: 50%; background: #F4B840"></span>One thin DAG per source, built by a factory</li>
+<li style="display: flex; gap: 10px"><span style="flex-shrink: 0; width: 6px; height: 6px; margin-top: 9px; border-radius: 50%; background: #F4B840"></span>Large series in BigQuery, partitioned by month</li>
+<li style="display: flex; gap: 10px"><span style="flex-shrink: 0; width: 6px; height: 6px; margin-top: 9px; border-radius: 50%; background: #F4B840"></span>Marts held in memory; the API scales on Cloud Run</li>
+</ul>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 20px; padding: 32px; border-radius: 20px; background: #24503A">
+<div style="display: flex; align-items: center; gap: 14px">
+<span style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: #1B3F2A"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4B840" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle><path d="m4.93 4.93 4.24 4.24M14.83 9.17l4.24-4.24M14.83 14.83l4.24 4.24M9.17 14.83l-4.24 4.24"></path></svg></span>
+<h3 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 24px; letter-spacing: -0.02em">Resilience</h3>
+</div>
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; font-size: 16px; line-height: 1.45; color: #D5DED6">
+<li style="display: flex; gap: 10px"><span style="flex-shrink: 0; width: 6px; height: 6px; margin-top: 9px; border-radius: 50%; background: #F4B840"></span>Raw files immutable, with sha256 manifests</li>
+<li style="display: flex; gap: 10px"><span style="flex-shrink: 0; width: 6px; height: 6px; margin-top: 9px; border-radius: 50%; background: #F4B840"></span>Idempotent writes: a rerun never duplicates</li>
+<li style="display: flex; gap: 10px"><span style="flex-shrink: 0; width: 6px; height: 6px; margin-top: 9px; border-radius: 50%; background: #F4B840"></span>A failed golden check keeps the last good mart live</li>
+</ul>
+</div>
+
+</div>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 40px; padding: 120px 120px 120px">
+<h2 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 48px; line-height: 1.05; letter-spacing: -0.03em">Data traps we designed around</h2>
+<div style="padding: 24px 40px 12px; border-radius: 24px; background: #FFFFFF">
+<table style="width: 100%; border-collapse: collapse; font-size: 17px; line-height: 1.45">
+<thead>
+<tr style="text-align: left">
+<th scope="col" style="width: 50%; padding: 12px 40px 14px 0; border-bottom: 1.5px solid #1B3F2A; font-weight: 600; font-size: 15px; color: #56645A">Trap</th>
+<th scope="col" style="padding: 12px 0 14px 0; border-bottom: 1.5px solid #1B3F2A; font-weight: 600; font-size: 15px; color: #56645A">Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr style="vertical-align: top"><td style="padding: 14px 40px 14px 0; border-bottom: 1px solid #E1E6DE; font-weight: 600">Large loads only as aggregate PDF charts</td><td style="padding: 14px 0; border-bottom: 1px solid #E1E6DE; color: #3E4C43">Gemini reads the charts; model stages, not projects</td></tr>
+<tr style="vertical-align: top"><td style="padding: 14px 40px 14px 0; border-bottom: 1px solid #E1E6DE; font-weight: 600">No county-to-weather-zone table</td><td style="padding: 14px 0; border-bottom: 1px solid #E1E6DE; color: #3E4C43">Built from ZIP-to-zone and Census ZCTA</td></tr>
+<tr style="vertical-align: top"><td style="padding: 14px 40px 14px 0; border-bottom: 1px solid #E1E6DE; font-weight: 600">GIS headers move, INRs repeat</td><td style="padding: 14px 0; border-bottom: 1px solid #E1E6DE; color: #3E4C43">Find the header; dedupe on INR and snapshot</td></tr>
+<tr style="vertical-align: top"><td style="padding: 14px 40px 14px 0; border-bottom: 1px solid #E1E6DE; font-weight: 600">Current-year load file gets overwritten</td><td style="padding: 14px 0; border-bottom: 1px solid #E1E6DE; color: #3E4C43">Immutable snapshots</td></tr>
+<tr style="vertical-align: top"><td style="padding: 14px 40px 14px 0; border-bottom: 1px solid #E1E6DE; font-weight: 600">Hour 24:00 and DST duplicates</td><td style="padding: 14px 0; border-bottom: 1px solid #E1E6DE; color: #3E4C43">Normalized at parse time</td></tr>
+<tr style="vertical-align: top"><td style="padding: 14px 40px 14px 0; border-bottom: 1px solid #E1E6DE; font-weight: 600">2026 LTLF in flux, May CDR skipped</td><td style="padding: 14px 0; border-bottom: 1px solid #E1E6DE; color: #3E4C43">Every vintage versioned</td></tr>
+<tr style="vertical-align: top"><td style="padding: 14px 40px 14px 0; border-bottom: 1px solid #E1E6DE; font-weight: 600">ERCOT API: 30 requests a minute, US only</td><td style="padding: 14px 0; border-bottom: 1px solid #E1E6DE; color: #3E4C43">Throttle and back off</td></tr>
+<tr style="vertical-align: top"><td style="padding: 14px 40px 14px 0; font-weight: 600">RTC+B broke the price series in Dec 2025</td><td style="padding: 14px 0; color: #3E4C43">Prices kept out of the MVP</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<footer style="flex-grow: 1; display: flex; flex-direction: column; padding: 0 24px 24px">
+<div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; gap: 28px; padding: 72px 96px; border-radius: 32px; background: #1B3F2A; color: #F5F3EE">
+<p style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 40px; line-height: 1.1; letter-spacing: -0.03em">Built for the Base Power hackathon, September 2026.</p>
+<div style="display: flex; gap: 12px; font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace; font-size: 15px">
+<a href="https://github.com/brennerpablo/basecast-get-data" style="display: flex; align-items: center; min-height: 44px; box-sizing: border-box; padding: 0 18px; border: 1.5px solid #6F9A80; border-radius: 999px; color: #F5F3EE; text-decoration: none">basecast-get-data</a>
+<a href="https://github.com/brennerpablo/basecast-airflow" style="display: flex; align-items: center; min-height: 44px; box-sizing: border-box; padding: 0 18px; border: 1.5px solid #6F9A80; border-radius: 999px; color: #F5F3EE; text-decoration: none">basecast-airflow</a>
+<a href="https://github.com/brennerpablo/basecast-app" style="display: flex; align-items: center; min-height: 44px; box-sizing: border-box; padding: 0 18px; border: 1.5px solid #6F9A80; border-radius: 999px; color: #F5F3EE; text-decoration: none">basecast-app</a>
+<a href="/insights" style="display: flex; align-items: center; min-height: 44px; box-sizing: border-box; padding: 0 20px; border-radius: 999px; background: #F4B840; color: #152B1E; font-family: Figtree, 'Helvetica Neue', Helvetica, sans-serif; font-weight: 700; font-size: 16px; text-decoration: none">basecast.pbrenner.com</a>
+</div>
+</div>
+</footer>
+
+</div>
+<nav class="lp-toggle" aria-label="Landing pages">
+<a href="/">Product</a>
+<a href="/how-its-built" aria-current="page">How it's built</a>
+</nav>
+</body>
+</html>

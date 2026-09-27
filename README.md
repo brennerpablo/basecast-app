@@ -76,7 +76,9 @@ and with what offer**.
   </tr>
 </table>
 
-Also: **Insights** (the landing page, the headline findings re-derived from the data), **Data** (every raw
+Visitors land on the product page at `/`, with the engineering overview at `/how-its-built` one toggle away
+(static pages in `public/landing/`). Signed in, `/` opens **Insights** (the headline findings re-derived from
+the data). Also: **Data** (every raw
 file, table and pipeline run, with the dataset lineage) and **Ops** (service health, requests and logs).
 
 ## How it fits
@@ -119,7 +121,7 @@ cp .env.example .env.local   # GET_DATA_URL, GET_DATA_TOKEN (server-only), DATAB
 npm run dev                  # http://localhost:3000
 ```
 
-Every page needs a sign-in, so a local run needs the Cloud SQL proxy and a running
+Every app page needs a sign-in, so a local run needs the Cloud SQL proxy and a running
 [basecast-get-data](https://github.com/brennerpablo/basecast-get-data). See [docs/operations.md](docs/operations.md).
 
 <details>

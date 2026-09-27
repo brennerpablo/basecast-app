@@ -239,7 +239,7 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   the screen behind it), value and caption beside the figures (`KpiItem`), the line's required caveat as an amber "Caveat"
   badge (the text in its tooltip), the caveat badges the header doesn't already show, "Re-derived" when `verified`, and the
   open link to the screen behind it. First in
-  the menu and the landing page (`/`, after sign-in, "Exit Data"); cards keep the API's order.
+  the menu and the home (`/` for a signed-in user, "Exit Data"); cards keep the API's order.
 - `public/geo/`: `tx-counties.geojson` (254 counties; `county_fips` for `promoteId`, `county_name`, `weather_zone`,
   `in_ercot`) and `ercot-weather-zones.geojson` (`weather_zone`), from basecast-airflow `basecast export-geo`.
 - `src/components/data-grid/` is the DataGrid (virtualized, server blocks through `src/lib/hooks/use-grid-window-query.ts`
@@ -247,11 +247,15 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
 - Tests: `npm test` (Node's `node:test` run by `tsx`, `jsdom` for DOM tests), next to the code as `*.test.ts(x)`.
 - Some comments in `components/ui`, `components-app` and `fields` are still in Portuguese (pending
   translation pass).
-- Login, required on every page: next-auth v4 in `src/lib/auth.ts` (password, and "Continue with Google" where
+- Landing pages (`public/landing/`, static HTML from Claude Design, 1440px wide, own tokens and fonts, no app code):
+  `product.html` at `/` for visitors, `internal.html` at `/how-its-built` for everyone, with a floating toggle
+  between them (plain links and CSS in each file). The proxy rewrites to them (`LANDING_PAGES` in
+  `src/lib/auth/gate.ts`); the lake numbers in `internal.html` are fixed as of Sep 26, 2026.
+- Login, required on every page but the landing pages: next-auth v4 in `src/lib/auth.ts` (password, and "Continue with Google" where
   anyone signs up: `src/lib/auth/google.ts` pure rules, `google-user.ts` the upsert and the superadmins' email),
   session helpers (`getCachedSession`, `withSession` for BFF route handlers, `requireSuperAdmin` /
   `withSuperAdmin` for admin screens: admin is `isSuperAdmin`, everyone else sees the rest) in `src/lib/auth/session.ts`, the redirect/401
-  gate in `src/proxy.ts` plus the check in `src/app/(app)/layout.tsx`, the page in `src/app/(auth)/sign-in/`.
+  gate in `src/proxy.ts` (its rules pure and tested in `src/lib/auth/gate.ts`) plus the check in `src/app/(app)/layout.tsx`, the page in `src/app/(auth)/sign-in/`.
   Users are in Cloud SQL (database `basecast`, schema `app`) through Prisma: `prisma/schema.prisma`,
   `src/lib/db.ts`, client generated to `src/generated/` on install. `npm run user:create` adds a user.
 - User menu (`src/app/(app)/_components/user-menu.tsx`), the sidebar footer as in the Fundsys app: the photo,

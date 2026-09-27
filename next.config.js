@@ -1,10 +1,5 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  async redirects() {
-    // Insights is the landing page. A config redirect, not a page: a page
-    // that redirects would paint before leaving.
-    return [{ source: "/", destination: "/insights", permanent: false }];
-  },
-};
+// The root's redirect to /insights lives in src/proxy.ts: visitors see the landing page there.
+const nextConfig = {};
 
 module.exports = nextConfig;

@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>BaseCast</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&amp;family=Schibsted+Grotesk:wght@500;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#F5F3EE;-webkit-font-smoothing:antialiased}
+a{color:#152B1E}a:hover{color:#2F6B47}
+a:focus-visible{outline:3px solid #6FA8FF;outline-offset:3px}
+body{padding-bottom:96px}
+.lp-toggle{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10;display:flex;gap:4px;padding:4px;border-radius:999px;background:#1B3F2A;box-shadow:0 8px 24px rgba(21,43,30,0.28);font-family:Figtree,'Helvetica Neue',Helvetica,sans-serif}
+.lp-toggle a{display:flex;align-items:center;min-height:40px;padding:0 18px;border-radius:999px;color:#D5DED6;font-weight:600;font-size:15px;text-decoration:none;white-space:nowrap}
+.lp-toggle a:hover{color:#F5F3EE}
+.lp-toggle a[aria-current="page"]{background:#F4B840;color:#152B1E}
+</style>
+</head>
+<body>
+<div id="top" style="width: 1440px; margin: 0 auto; box-sizing: border-box; display: flex; flex-direction: column; background: #F5F3EE; color: #152B1E; font-family: Figtree, 'Helvetica Neue', Helvetica, sans-serif">
+
+<header style="display: flex; justify-content: space-between; align-items: center; padding: 24px 56px">
+<img src="/landing/basecast-logo.svg" alt="BaseCast" style="display: block; height: 34px; width: auto">
+<a href="/sign-in" style="display: flex; align-items: center; min-height: 48px; box-sizing: border-box; padding: 0 24px; border: 1.5px solid #152B1E; border-radius: 999px; font-weight: 600; font-size: 17px; text-decoration: none">Sign in</a>
+</header>
+
+<section style="padding: 8px 24px 0">
+<div style="display: flex; flex-direction: column; padding: 88px 96px 64px; border-radius: 32px; background: radial-gradient(ellipse 70% 55% at 90% 0%, rgba(244,184,64,0.22), rgba(244,184,64,0) 70%), #1B3F2A; color: #F5F3EE">
+<div style="display: flex; flex-direction: column; gap: 24px; max-width: 900px">
+<h1 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 76px; line-height: 1.0; letter-spacing: -0.035em; text-wrap: balance">Know which co-op to call next, and what to bring.</h1>
+<p style="margin: 0; font-size: 22px; line-height: 1.5; color: #D5DED6">107 ERCOT co-ops and munis, ranked by where demand is really growing.</p>
+</div>
+<figure style="margin: 88px 0 0">
+<div style="display: flex; justify-content: space-between; align-items: flex-end">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 44px; line-height: 1; letter-spacing: -0.03em">8.8 GW</span>
+<span style="font-weight: 500; font-size: 17px; color: #B8C7BC">approved to energize</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end">
+<span style="font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 44px; line-height: 1; letter-spacing: -0.03em">232.5 GW</span>
+<span style="font-weight: 500; font-size: 17px; color: #B8C7BC">requested by large loads</span>
+</div>
+</div>
+<div role="img" aria-label="Drawn to scale: 8.8 GW approved to energize is a thin sliver of 232.5 GW requested by large loads" style="display: flex; overflow: hidden; height: 120px; margin-top: 18px; border: 2px dashed #F5F3EE; border-radius: 20px; background-image: repeating-linear-gradient(135deg, rgba(245,243,238,0.22) 0px, rgba(245,243,238,0.22) 1.5px, transparent 1.5px, transparent 10px)">
+<div style="width: 3.78%; flex-shrink: 0; background: #F4B840"></div>
+</div>
+<figcaption style="display: flex; justify-content: space-between; margin-top: 16px; font-weight: 500; font-size: 15px; color: #B8C7BC">
+<span>Drawn to scale. Dashed: requested. Solid: approved.</span>
+<span>ERCOT Monthly, January 2026</span>
+</figcaption>
+</figure>
+</div>
+</section>
+
+<section style="display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 64px; align-items: center; padding: 120px 120px 0">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<h2 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 48px; line-height: 1.05; letter-spacing: -0.03em; text-wrap: balance">Texas demand is growing. Just not where the headlines say.</h2>
+<p style="margin: 0; font-size: 20px; line-height: 1.55; color: #3E4C43">Prospecting off the headline means chasing megawatts that never show up.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 24px; padding: 40px; border-radius: 24px; background: #FFFFFF">
+<h3 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -0.01em">Summer 2026 peak</h3>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<span style="font-weight: 500; font-size: 17px; color: #56645A">Preliminary forecast</span>
+<span style="font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 36px; letter-spacing: -0.03em">112 GW</span>
+</div>
+<div style="height: 56px; box-sizing: border-box; border: 2px dashed #1B3F2A; border-radius: 14px; background-image: repeating-linear-gradient(135deg, rgba(27,63,42,0.18) 0px, rgba(27,63,42,0.18) 1.5px, transparent 1.5px, transparent 9px)"></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; width: 81.3%">
+<span style="font-weight: 500; font-size: 17px; color: #56645A">Actual</span>
+<span style="font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 36px; letter-spacing: -0.03em">91.1 GW</span>
+</div>
+<div style="width: 81.3%; height: 56px; border-radius: 14px; background: #F4B840"></div>
+</div>
+<span style="font-weight: 500; font-size: 14px; color: #56645A">ERCOT preliminary LTLF (PUCT 58777) and observed peak. Drawn to scale.</span>
+</div>
+</section>
+
+<section style="padding: 120px 24px 0">
+<div style="display: flex; flex-direction: column; gap: 48px; padding: 96px; border-radius: 32px; background: #1B3F2A; color: #F5F3EE">
+<div style="display: flex; flex-direction: column; gap: 18px; max-width: 920px">
+<h2 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 48px; line-height: 1.05; letter-spacing: -0.03em; text-wrap: balance">Sell capacity to the utilities that will need it, right when they need it.</h2>
+<p style="margin: 0; max-width: 760px; font-size: 20px; line-height: 1.55; color: #D5DED6">Co-ops and munis can't switch retail providers. Base sells them dispatchable MW from its home-battery fleet, instead of a new peaker.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 32px; border-radius: 20px; background: #24503A">
+<span style="font-weight: 600; font-size: 15px; color: #F4B840">Who</span>
+<h3 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 24px; line-height: 1.2; letter-spacing: -0.02em">Who will need it</h3>
+<p style="margin: 0; font-size: 17px; line-height: 1.5; color: #D5DED6">Co-ops and munis whose peak is really growing, not just in the headlines.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 32px; border-radius: 20px; background: #24503A">
+<span style="font-weight: 600; font-size: 15px; color: #F4B840">When</span>
+<h3 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 24px; line-height: 1.2; letter-spacing: -0.02em">When to call</h3>
+<p style="margin: 0; font-size: 17px; line-height: 1.5; color: #D5DED6">Before they sign a PPA or build a peaker. Every account carries a call-by date.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 32px; border-radius: 20px; background: #24503A">
+<span style="font-weight: 600; font-size: 15px; color: #F4B840">With what</span>
+<h3 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 24px; line-height: 1.2; letter-spacing: -0.02em">What it's worth to them</h3>
+<p style="margin: 0; font-size: 17px; line-height: 1.5; color: #D5DED6">The 4CP transmission cost each MW avoids, in dollars per year.</p>
+</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 32px 36px; border-radius: 20px; background: #FFFFFF; color: #152B1E">
+<h3 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 24px; line-height: 1.2; letter-spacing: -0.02em">Partnerships</h3>
+<p style="margin: 0; font-size: 18px; line-height: 1.5; color: #3E4C43">Which co-ops and munis to approach next, and the 4CP case to bring to each.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 32px 36px; border-radius: 20px; background: #FFFFFF; color: #152B1E">
+<h3 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 24px; line-height: 1.2; letter-spacing: -0.02em">Sales</h3>
+<p style="margin: 0; font-size: 18px; line-height: 1.5; color: #3E4C43">Where retail-direct demand is really growing, county by county.</p>
+</div>
+</div>
+</div>
+</section>
+
+<section style="flex-grow: 1; display: flex; flex-direction: column; gap: 40px; padding: 120px">
+<h2 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 48px; line-height: 1.05; letter-spacing: -0.03em">Four questions, four screens.</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px">
+
+<article style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 32px 36px; border-radius: 24px; background: #FFFFFF">
+<div style="display: flex; align-items: center; gap: 14px; margin-bottom: 8px">
+<span style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 14px; background: #1B3F2A"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F4B840" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4M10 10h4M10 14h4M10 18h4"></path></svg></span>
+<span style="font-weight: 600; font-size: 16px; color: #56645A">Accounts</span>
+</div>
+<h3 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 26px; line-height: 1.15; letter-spacing: -0.02em">Who do we call, and with what?</h3>
+<p style="margin: 0; font-size: 18px; line-height: 1.5; color: #3E4C43">107 co-ops and munis sorted into call now, nurture, watch or hold, each with its trigger, deadline and pitch.</p>
+</article>
+
+<article style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 32px 36px; border-radius: 24px; background: #FFFFFF">
+<div style="display: flex; align-items: center; gap: 14px; margin-bottom: 8px">
+<span style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 14px; background: #1B3F2A"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F4B840" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"></path><path d="M15 5.764v15M9 3.236v15"></path></svg></span>
+<span style="font-weight: 600; font-size: 16px; color: #56645A">Explorer</span>
+</div>
+<h3 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 26px; line-height: 1.15; letter-spacing: -0.02em">Where is growth real?</h3>
+<p style="margin: 0; font-size: 18px; line-height: 1.5; color: #3E4C43">Texas by county: acquisition priority by channel, the generation queue and new data centers.</p>
+</article>
+
+<article style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 32px 36px; border-radius: 24px; background: #FFFFFF">
+<div style="display: flex; align-items: center; gap: 14px; margin-bottom: 8px">
+<span style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 14px; background: #1B3F2A"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F4B840" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"></path><path d="M16 7h6v6"></path></svg></span>
+<span style="font-weight: 600; font-size: 16px; color: #56645A">Forecast</span>
+</div>
+<h3 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 26px; line-height: 1.15; letter-spacing: -0.02em">How much load is really coming?</h3>
+<p style="margin: 0; font-size: 18px; line-height: 1.5; color: #3E4C43">Summer peak to 2030 by weather zone, P10 to P90, against ERCOT's official lines.</p>
+</article>
+
+<article style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 32px 36px; border-radius: 24px; background: #FFFFFF">
+<div style="display: flex; align-items: center; gap: 14px; margin-bottom: 8px">
+<span style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 14px; background: #1B3F2A"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F4B840" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg></span>
+<span style="font-weight: 600; font-size: 16px; color: #56645A">Backtest</span>
+</div>
+<h3 style="margin: 0; font-family: 'Schibsted Grotesk', Figtree, sans-serif; font-weight: 700; font-size: 26px; line-height: 1.15; letter-spacing: -0.02em">Can we trust the numbers?</h3>
+<p style="margin: 0; font-size: 18px; line-height: 1.5; color: #3E4C43">Our model and every ERCOT vintage, scored against the actual peak.</p>
+</article>
+
+</div>
+</section>
+
+<footer style="display: flex; justify-content: space-between; align-items: center; padding: 28px 56px 40px; border-top: 1px solid #DDE2D8; font-weight: 500; font-size: 15px; color: #56645A">
+<span>© 2026 BaseCast</span>
+<span>Internal tool for Base Power's partnerships team</span>
+</footer>
+
+</div>
+<nav class="lp-toggle" aria-label="Landing pages">
+<a href="/" aria-current="page">Product</a>
+<a href="/how-its-built">How it's built</a>
+</nav>
+</body>
+</html>
