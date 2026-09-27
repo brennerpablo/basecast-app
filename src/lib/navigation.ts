@@ -3,6 +3,7 @@ import {
   Building2,
   Database,
   History,
+  Lightbulb,
   type LucideIcon,
   Map,
   TrendingUp,
@@ -34,8 +35,18 @@ export const SIDEBAR_EXPANDED_COOKIE = "sidebar-menu-expanded";
 const underPath = (base: string) => (pathname: string) =>
   pathname === base || pathname.startsWith(`${base}/`);
 
-/** The sidebar menu, in display order. Accounts leads: commercial intelligence is the core of the product. */
+/**
+ * The sidebar menu, in display order. Insights opens the demo; Accounts, commercial intelligence, is the
+ * core of the product.
+ */
 export const MAIN_MENU: MainMenuItem[] = [
+  {
+    id: "insights",
+    label: "Insights",
+    icon: Lightbulb,
+    href: "/insights",
+    activeCheck: underPath("/insights"),
+  },
   {
     id: "accounts",
     label: "Accounts",

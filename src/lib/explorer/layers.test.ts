@@ -11,7 +11,7 @@ const row = (fips: string, extra: Partial<CountyRow> = {}): CountyRow => ({
   in_ercot: true,
   acquisition: null,
   queue: null,
-  data_centers: { sites: 0, sites_naics_only: 0 },
+  data_centers: { sites: 0, sites_naics_only: 0, sites_outside_ercot: 0 },
   ...extra,
 });
 
@@ -89,7 +89,7 @@ test("queue: a county with no project is no-data, not zero", () => {
 });
 
 test("data centers: NAICS-only matches count only when asked", () => {
-  const r = row("48001", { data_centers: { sites: 5, sites_naics_only: 2 } });
+  const r = row("48001", { data_centers: { sites: 5, sites_naics_only: 2, sites_outside_ercot: 0 } });
   assert.equal(dataCenterCount(r, true), 5);
   assert.equal(dataCenterCount(r, false), 3);
 });

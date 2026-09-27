@@ -179,7 +179,26 @@ function PeakChart({ data, mode }: { data: PeakData; mode: ChartMode }) {
         ))}
       </div>
       <PeakTable rows={rows} officials={officials} bandKind={bandKind} />
+      <BandBasis data={data} />
     </div>
+  );
+}
+
+/** What each band is made of, in the API's words, for the bases this view uses. */
+function BandBasis({ data }: { data: PeakData }) {
+  const texts = data.band_basis ?? {};
+  const used = [...new Set([...data.series, ...data.layers].map((p) => p.band_basis).filter((b): b is string => Boolean(b)))];
+  const lines = used.filter((code) => texts[code]);
+  if (!lines.length) return null;
+  return (
+    <details className="text-xs text-muted-foreground">
+      <summary className="cursor-pointer font-medium text-foreground/80">What the bands are made of</summary>
+      <ul className="mt-2 list-disc space-y-1 pl-4">
+        {lines.map((code) => (
+          <li key={code}>{texts[code]}</li>
+        ))}
+      </ul>
+    </details>
   );
 }
 
@@ -197,7 +216,7 @@ function PeakTable({
   const allUnverified = rows.length > 0 && rows.every((r) => !r.verified);
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-xs">
+      <table className="w-full text-xs whitespace-nowrap">
         <thead className="text-muted-foreground">
           <tr className="border-b border-border">
             <th className="py-2 pr-3 text-left font-medium">Summer</th>

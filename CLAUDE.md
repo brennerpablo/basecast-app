@@ -189,6 +189,10 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   (promised × approved by deck, the ratio band with the API's definition, the monthly stock against the observed
   peak with the dated annotations). P1 tabs (`queue`, `normalized`, `4cp`) come later. Chart colors and ink:
   `src/lib/charts/palette.ts` (dataviz slots, light and dark steps).
+- `/insights` (`src/app/(app)/insights/`): the cards of `GET /insights`, grade A first; each shows value, caption,
+  companion figures, the line's required caveat (always visible), caveat badges, which queue it speaks of, "Re-derived"
+  when `verified` (X6), and a link to the screen behind it. First in the menu; the landing page stays `/accounts` until
+  `mart_insights` is real.
 - `public/geo/`: `tx-counties.geojson` (254 counties; `county_fips` for `promoteId`, `county_name`, `weather_zone`,
   `in_ercot`) and `ercot-weather-zones.geojson` (`weather_zone`), from basecast-airflow `basecast export-geo`.
 - `src/components/data-grid/` is the DataGrid (virtualized, server blocks through `src/lib/hooks/use-grid-window-query.ts`

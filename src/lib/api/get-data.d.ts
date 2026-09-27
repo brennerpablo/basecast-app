@@ -1210,7 +1210,7 @@ export interface components {
         CountyDataCenters: {
             /**
              * Sites
-             * @description New data-center sites since 2025, every match
+             * @description New data-center sites since 2025 in ERCOT, every match
              */
             sites: number;
             /**
@@ -1218,6 +1218,12 @@ export interface components {
              * @description Of which matched on NAICS 518210 only
              */
             sites_naics_only: number;
+            /**
+             * Sites Outside Ercot
+             * @description Sites Q4 places outside ERCOT: flagged, not counted (R7)
+             * @default 0
+             */
+            sites_outside_ercot: number;
         };
         /** CountyDetail */
         CountyDetail: {
@@ -1509,6 +1515,11 @@ export interface components {
             coop_share_w?: number | null;
             /** Iso Class */
             iso_class?: string | null;
+            /**
+             * In Ercot
+             * @description False for sites outside ERCOT, kept out of the counts
+             */
+            in_ercot?: boolean | null;
             /** Density Per Km2 */
             density_per_km2?: number | null;
             /**
@@ -2222,7 +2233,10 @@ export interface components {
             in_service: components["schemas"]["InService"][];
             /** Monthly */
             monthly: components["schemas"]["MonthlyStock"][];
-            /** Annotations */
+            /**
+             * Annotations
+             * @description Empty until mart_annotations is built
+             */
             annotations: components["schemas"]["Annotation"][];
             /** Deck Vintages */
             deck_vintages: string[];
@@ -2730,6 +2744,13 @@ export interface components {
              */
             official: components["schemas"]["OfficialLine"][];
             inputs: components["schemas"]["PeakInputs"];
+            /**
+             * Band Basis
+             * @description band_basis code → its description
+             */
+            band_basis?: {
+                [key: string]: string;
+            };
         };
         /** PeakForecastResponse */
         PeakForecastResponse: {
@@ -2792,6 +2813,11 @@ export interface components {
              */
             band_kind?: ("p10_p90" | "allocation_range") | null;
             /**
+             * Band Basis
+             * @description What the band is made of; its text is in data.band_basis
+             */
+            band_basis?: string | null;
+            /**
              * Verified
              * @default true
              */
@@ -2820,6 +2846,11 @@ export interface components {
              * @description p10_p90: a probabilistic band; allocation_range: low/high across the candidate zone shares, not a P10–P90; null: no band
              */
             band_kind?: ("p10_p90" | "allocation_range") | null;
+            /**
+             * Band Basis
+             * @description What the band is made of; its text is in data.band_basis
+             */
+            band_basis?: string | null;
             /**
              * Verified
              * @default true
@@ -3037,6 +3068,17 @@ export interface components {
             realized_a2e_mw?: number | null;
             /** Realized Energized Mw */
             realized_energized_mw?: number | null;
+            /**
+             * Realized Month
+             * @description The month the realized stock was read
+             */
+            realized_month?: string | null;
+            /**
+             * Realized Partial
+             * @description The target year is not over: the realized stock is partial
+             * @default false
+             */
+            realized_partial: boolean;
             /**
              * Known From
              * @description First deck that reports the December stock

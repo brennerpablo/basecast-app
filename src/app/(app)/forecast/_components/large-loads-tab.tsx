@@ -6,6 +6,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   Line,
   LineChart,
   ReferenceLine,
@@ -82,7 +83,7 @@ function Realization({ data, meta, mode }: { data: LargeLoad; meta: Meta; mode: 
                     rows={[
                       { label: `Promised for Dec ${r.target_year}`, value: formatPower(r.promised_mw), color: promisedColor },
                       {
-                        label: "Approved by then",
+                        label: r.realized_partial ? `Approved so far (through ${formatDate(r.realized_month?.slice(0, 7))})` : "Approved by then",
                         value: r.realized_a2e_mw == null ? "Not known yet" : formatPower(r.realized_a2e_mw),
                         color: approvedColor,
                       },
@@ -94,7 +95,11 @@ function Realization({ data, meta, mode }: { data: LargeLoad; meta: Meta; mode: 
               }}
             />
             <Bar dataKey="promised_mw" fill={promisedColor} radius={[4, 4, 0, 0]} isAnimationActive={false} />
-            <Bar dataKey="realized_a2e_mw" fill={approvedColor} radius={[4, 4, 0, 0]} isAnimationActive={false} />
+            <Bar dataKey="realized_a2e_mw" fill={approvedColor} radius={[4, 4, 0, 0]} isAnimationActive={false}>
+              {rows.map((r) => (
+                <Cell key={r.deck_vintage} fillOpacity={r.realized_partial ? 0.45 : 1} />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -105,7 +110,12 @@ function Realization({ data, meta, mode }: { data: LargeLoad; meta: Meta; mode: 
         <span className="flex items-center gap-1.5">
           <span className="size-3 rounded-[3px]" style={{ background: approvedColor }} /> Approved to energize by December
         </span>
-        {rows.some((r) => r.realized_a2e_mw == null) && <span>No orange bar: the year has not closed yet.</span>}
+        {rows.some((r) => r.realized_partial) && (
+          <span className="flex items-center gap-1.5">
+            <span className="size-3 rounded-[3px]" style={{ background: approvedColor, opacity: 0.45 }} /> Year still open: approved so far
+          </span>
+        )}
+        {rows.some((r) => r.realized_a2e_mw == null) && <span>No orange bar: not known yet.</span>}
         <VerifiedBadge verified={rows.every((r) => r.verified !== false)} />
       </div>
     </SectionCard>

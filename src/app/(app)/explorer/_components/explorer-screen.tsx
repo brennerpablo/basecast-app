@@ -88,7 +88,11 @@ function QueueCredibility() {
 function HoverCard({ row, layer, metric, naics }: { row: CountyRow; layer: string; metric: (typeof QUEUE_METRICS)[number]; naics: boolean }) {
   const a = row.acquisition;
   let lines: string[] = [];
-  if (!row.in_ercot) lines = ["Outside ERCOT"];
+  if (!row.in_ercot) {
+    lines = ["Outside ERCOT"];
+    const outside = row.data_centers.sites_outside_ercot;
+    if (layer === "data-centers" && outside) lines.push(`${outside} new data-center ${outside === 1 ? "site" : "sites"}, not counted in ERCOT`);
+  }
   else if (layer === "acquisition") {
     lines = a
       ? [
