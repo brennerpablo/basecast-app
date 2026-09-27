@@ -36,32 +36,17 @@ function DatasetDots({ source }: { source: SourceSummary }) {
 }
 
 function PendingDatasets({ tables }: { tables: TableSummary[] }) {
-  const declared = tables.filter((t) => t.kind === "dataset");
-  const pending = declared.filter((t) => !t.loaded);
+  const pending = tables.filter((t) => t.kind === "dataset" && !t.loaded);
   if (pending.length === 0) return null;
-  const byEngine = (engine: string) => declared.filter((t) => t.engine === engine);
   return (
-    <section className="flex gap-3 rounded-lg border border-amber-200 bg-amber-50/70 px-4 py-3 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
-      <AlertTriangleIcon className="mt-0.5 size-4 shrink-0" />
-      <div className="min-w-0 space-y-2">
-        <p className="text-sm font-semibold">
-          {pending.length} of {declared.length} datasets declared by the pipeline are not loaded yet
-        </p>
-        <p className="text-xs">
-          Postgres has {byEngine("postgres").filter((t) => t.loaded).length} of {byEngine("postgres").length}; BigQuery has{" "}
-          {byEngine("bigquery").filter((t) => t.loaded).length} of {byEngine("bigquery").length}.
-        </p>
-        <div className="flex flex-wrap items-center gap-1.5">
-          {pending.slice(0, 10).map((t) => (
-            <span key={t.name} className="rounded-full bg-white/70 px-2 py-0.5 font-mono text-[11px] dark:bg-black/20">
-              {t.name}
-            </span>
-          ))}
-          <Link href="/data/tables?status=pending" className="text-xs font-medium underline-offset-2 hover:underline">
-            See all pending tables
-          </Link>
-        </div>
-      </div>
+    <section className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-amber-200 bg-amber-50/70 px-4 py-2.5 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+      <AlertTriangleIcon className="size-4 shrink-0" />
+      <p className="text-sm font-semibold">
+        {pending.length} {pending.length === 1 ? "dataset" : "datasets"} not loaded
+      </p>
+      <Link href="/data/tables?status=pending" className="text-xs font-medium underline-offset-2 hover:underline">
+        See all pending tables
+      </Link>
     </section>
   );
 }
@@ -154,8 +139,8 @@ function SourceCards({ items }: { items: SourceSummary[] }) {
             <FolderGlyph />
             {s.source_id}
           </span>
-          <span className="line-clamp-2 min-h-9 text-xs leading-snug text-muted-foreground">
-            {s.name}. {s.description}
+          <span className="line-clamp-2 min-h-9 text-xs leading-snug text-muted-foreground" title={s.description || undefined}>
+            {s.name}
           </span>
           <span className="flex items-center justify-between text-xs text-muted-foreground tabular-nums">
             <span>
@@ -204,16 +189,14 @@ export function DataOverview() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-lg font-semibold">All sources</h2>
-          <p className="text-sm text-muted-foreground">
-            {sources.data ? (
-              <>
-                {sources.data.totals.sources} sources · {formatCount(sources.data.totals.files)} files ·{" "}
-                {formatBytes(sources.data.totals.bytes)} in <span className="font-mono text-xs">{LAKE_BUCKET}/raw</span>
-              </>
-            ) : (
-              "Reading the lake's manifests…"
-            )}
-          </p>
+          {sources.data ? (
+            <p className="text-sm text-muted-foreground">
+              {sources.data.totals.sources} sources · {formatCount(sources.data.totals.files)} files ·{" "}
+              {formatBytes(sources.data.totals.bytes)} in <span className="font-mono text-xs">{LAKE_BUCKET}/raw</span>
+            </p>
+          ) : (
+            <Skeleton className="mt-1 h-4 w-64" />
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative">

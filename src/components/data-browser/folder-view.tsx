@@ -221,9 +221,15 @@ export function FolderView({ lakeKey }: { lakeKey: string }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-lg font-semibold">{title}</h2>
-          <p className="text-sm text-muted-foreground">
-            {source ? source.description : listing.data ? `${folders.length} folders · ${formatCount(listing.data.total_objects)} files` : ""}
-          </p>
+          {source ? (
+            <p className="line-clamp-2 max-w-3xl text-sm text-muted-foreground" title={source.description || undefined}>
+              {source.description}
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {listing.data ? `${folders.length} folders · ${formatCount(listing.data.total_objects)} files` : ""}
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {isSource ? (

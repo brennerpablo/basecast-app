@@ -44,10 +44,12 @@ test("stageHealth: fresh, stale and manual", () => {
 
   const late = stageHealth({ cron: "15 6 * * *", latest: null, lastSuccessAt: updated, now: new Date(due + HEALTH_GRACE_MS + 1) });
   assert.equal(late.status, "stale");
+  assert.equal(late.reason, "Overdue.");
 
   const manual = stageHealth({ cron: null, latest: null, lastSuccessAt: updated, now: new Date("2030-01-01") });
   assert.equal(manual.status, "healthy");
   assert.equal(manual.dueAt, null);
+  assert.equal(manual.reason, "Manual.");
 });
 
 test("stageHealth: the latest run decides before the schedule", () => {
@@ -58,6 +60,10 @@ test("stageHealth: the latest run decides before the schedule", () => {
   assert.equal(stageHealth({ ...base, latest: run("failed") }).status, "failed");
   assert.equal(stageHealth({ ...base, latest: run("abandoned") }).status, "degraded");
   assert.equal(stageHealth({ ...base, latest: run("partial") }).status, "degraded");
+  // The reason keeps the status and leaves the run's start time to its own field.
+  assert.equal(stageHealth({ ...base, latest: run("running") }).reason, "Running.");
+  assert.equal(stageHealth({ ...base, latest: run("failed") }).reason, "Latest run failed.");
+  assert.equal(stageHealth({ ...base, latest: run("partial") }).reason, "Latest run partial.");
   // A failure keeps the time of the last good update.
   assert.equal(stageHealth({ ...base, latest: run("failed") }).updatedAt, "2026-09-26T12:00:00Z");
   assert.equal(stageHealth({ cron: "0 8 * * 1", latest: null, lastSuccessAt: null, now }).status, "never");

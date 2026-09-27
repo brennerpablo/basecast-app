@@ -153,13 +153,7 @@ function FlowScreen() {
   const header = (
     <>
       <PageBreadcrumb items={[{ label: "Data", href: "/data" }, { label: "Flow" }]} />
-      <div>
-        <h2 className="text-lg font-semibold">Dataset flow</h2>
-        <p className="text-sm text-muted-foreground">
-          Every origin, the pipeline that ingests and processes it, the tables it writes and when each last updated. Select a
-          node to trace everything upstream and downstream of it.
-        </p>
-      </div>
+      <h2 className="text-lg font-semibold">Dataset flow</h2>
     </>
   );
 
@@ -195,7 +189,7 @@ function FlowScreen() {
       />
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border bg-card px-3 py-2">
-        <FlowSearch graph={graph} onPick={(id) => select(id, true)} />
+        <FlowSearch graph={graph} grouped={Boolean(params.group)} onPick={(id) => select(id, true)} />
         <div className="min-w-0 overflow-x-auto">
           <ViewSwitchControl
             size="sm"
@@ -289,13 +283,10 @@ function SelectedPanel({
   /** The enter or exit classes (`PANEL_ENTER`, `PANEL_EXIT`). */
   motion: string;
 }) {
-  const path = useMemo(() => lineage(graph, node.id), [graph, node.id]);
   return (
     <FlowPanel
       graph={graph}
       node={node}
-      upstream={path.up.size}
-      downstream={path.down.size}
       now={now}
       onSelect={onSelect}
       onClose={onClose}
@@ -424,7 +415,7 @@ function FlowCanvas({
   );
 }
 
-function FlowSearch({ graph, onPick }: { graph: FlowGraph; onPick: (id: string) => void }) {
+function FlowSearch({ graph, grouped, onPick }: { graph: FlowGraph; grouped: boolean; onPick: (id: string) => void }) {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
@@ -474,7 +465,7 @@ function FlowSearch({ graph, onPick }: { graph: FlowGraph; onPick: (id: string) 
       {open && needle ? (
         <div role="listbox" className="absolute top-9 right-0 left-0 z-30 min-w-72 rounded-md border bg-popover p-1 shadow-lg">
           {matches.length === 0 ? (
-            <p className="px-2 py-1.5 text-xs text-muted-foreground">Nothing here matches. Try the All group.</p>
+            <p className="px-2 py-1.5 text-xs text-muted-foreground">No match{grouped ? ". Try All." : ""}</p>
           ) : (
             matches.map((n, i) => (
               <button

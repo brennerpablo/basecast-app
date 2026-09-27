@@ -16,76 +16,21 @@ import { cn } from "@/lib/utils";
 
 import type { FileKind } from "./api";
 
-const KINDS: Record<FileKind, { Icon: LucideIcon; color: string; viewer: string; parser: string }> = {
-  sheet: {
-    Icon: FileSpreadsheetIcon,
-    color: "text-emerald-700 dark:text-emerald-400",
-    viewer: "Sheet grid",
-    parser: "Every sheet in a positional grid, with sheet tabs.",
-  },
-  text: {
-    Icon: FileTextIcon,
-    color: "text-teal-700 dark:text-teal-400",
-    viewer: "Delimited grid",
-    parser: "Comma, pipe or tab separated, shown positionally.",
-  },
-  parquet: {
-    Icon: TableIcon,
-    color: "text-violet-700 dark:text-violet-400",
-    viewer: "Typed grid",
-    parser: "Columns with their Parquet names and types.",
-  },
-  json: {
-    Icon: FileJson2Icon,
-    color: "text-blue-700 dark:text-blue-400",
-    viewer: "Tree and table",
-    parser: "Arrays of records or parallel arrays become a table.",
-  },
-  geojson: {
-    Icon: MapIcon,
-    color: "text-cyan-700 dark:text-cyan-400",
-    viewer: "Tree and table",
-    parser: "Feature properties become rows.",
-  },
-  zip: {
-    Icon: FileArchiveIcon,
-    color: "text-amber-700 dark:text-amber-400",
-    viewer: "Archive members",
-    parser: "Each member opens with the viewer of its own type.",
-  },
-  pdf: {
-    Icon: FileTextIcon,
-    color: "text-red-700 dark:text-red-400",
-    viewer: "PDF pages",
-    parser: "Rendered by pdf.js, read in ranges.",
-  },
-  slides: {
-    Icon: PresentationIcon,
-    color: "text-orange-700 dark:text-orange-400",
-    viewer: "Slide text",
-    parser: "The text of every slide.",
-  },
-  document: {
-    Icon: FileTextIcon,
-    color: "text-blue-700 dark:text-blue-400",
-    viewer: "Document text",
-    parser: "Paragraphs grouped by heading, then the tables.",
-  },
-  html: {
-    Icon: FileTextIcon,
-    color: "text-slate-600 dark:text-slate-400",
-    viewer: "Page text",
-    parser: "The page's readable text.",
-  },
-  other: {
-    Icon: FileIcon,
-    color: "text-slate-500 dark:text-slate-400",
-    viewer: "Download only",
-    parser: "No preview for this format.",
-  },
+const KINDS: Record<FileKind, { Icon: LucideIcon; color: string }> = {
+  sheet: { Icon: FileSpreadsheetIcon, color: "text-emerald-700 dark:text-emerald-400" },
+  text: { Icon: FileTextIcon, color: "text-teal-700 dark:text-teal-400" },
+  parquet: { Icon: TableIcon, color: "text-violet-700 dark:text-violet-400" },
+  json: { Icon: FileJson2Icon, color: "text-blue-700 dark:text-blue-400" },
+  geojson: { Icon: MapIcon, color: "text-cyan-700 dark:text-cyan-400" },
+  zip: { Icon: FileArchiveIcon, color: "text-amber-700 dark:text-amber-400" },
+  pdf: { Icon: FileTextIcon, color: "text-red-700 dark:text-red-400" },
+  slides: { Icon: PresentationIcon, color: "text-orange-700 dark:text-orange-400" },
+  document: { Icon: FileTextIcon, color: "text-blue-700 dark:text-blue-400" },
+  html: { Icon: FileTextIcon, color: "text-slate-600 dark:text-slate-400" },
+  other: { Icon: FileIcon, color: "text-slate-500 dark:text-slate-400" },
 };
 
-export function kindInfo(kind: FileKind) {
+function kindInfo(kind: FileKind) {
   return KINDS[kind] ?? KINDS.other;
 }
 

@@ -24,7 +24,6 @@ import { buildGridParams } from "@/lib/grid-params";
 import { fetchGridExportRows, useGridWindowQuery } from "@/lib/hooks/use-grid-window-query";
 
 import { type TableDetail, useLineage, useTable } from "./api";
-import { LoadDot } from "./file-kind";
 import { formatBytes, formatCellText, formatCount, formatDateTime } from "./format";
 import { columnWidth, gridType } from "./lake-grid";
 import { lakeHref, sourceKey } from "./lake-path";
@@ -79,9 +78,7 @@ function TableRows({ table }: { table: TableDetail }) {
         <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">{grid.error?.message}</p>
       ) : null}
       {grid.summary?.estimated ? (
-        <p className="text-xs text-muted-foreground">
-          The total is Postgres&apos;s estimate: counting every matching row took too long. Filter to get an exact count.
-        </p>
+        <p className="text-xs text-muted-foreground">Estimated total; filter for an exact count.</p>
       ) : null}
       <DataGrid<Row>
         columns={columns}
@@ -160,11 +157,7 @@ function Lineage({ table }: { table: TableDetail }) {
   const lineage = useLineage(table.name, offset);
   if (table.derived) {
     return (
-      <EmptyState
-        Icon={TableIcon}
-        title="Built by SQL from other tables"
-        description={`${table.name} is derived inside Postgres, so it reads no raw file of its own.`}
-      />
+      <EmptyState Icon={TableIcon} title="Built by SQL from other tables" compact />
     );
   }
   if (lineage.isPending) return <Skeleton className="h-80 w-full" />;
@@ -174,7 +167,7 @@ function Lineage({ table }: { table: TableDetail }) {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        {formatCount(page.total)} raw files fed this table (<span className="font-mono text-xs">lake_processed</span>).
+        {formatCount(page.total)} raw files fed this table
       </p>
       <div className="grid-scrollbar overflow-x-auto rounded-lg border">
         <table className="w-full text-sm [&_td]:whitespace-nowrap [&_th]:whitespace-nowrap">
@@ -245,12 +238,21 @@ export function TableView({ name }: { name: string }) {
                     {t.key_columns.length ? ` (${t.key_columns.join(", ")})` : ""}
                   </span>
                 ) : null}
-                <span className="rounded-md border px-2 py-0.5 tabular-nums">{rowsLabel(t)} rows</span>
+                <span
+                  className="rounded-md border px-2 py-0.5 tabular-nums"
+                  title={t.loaded && t.rows_estimated ? "Postgres's estimate; the table counts exactly" : undefined}
+                >
+                  {rowsLabel(t)} rows
+                </span>
                 {t.loaded ? <span className="rounded-md border px-2 py-0.5 tabular-nums">{formatBytes(t.bytes)}</span> : null}
                 {t.partition_field ? <span className="rounded-md border px-2 py-0.5">partition {t.partition_field}</span> : null}
               </div>
             ) : null}
-            {t?.description ? <p className="max-w-3xl text-sm text-muted-foreground">{t.description}</p> : null}
+            {t?.description ? (
+              <p className="line-clamp-2 max-w-3xl text-sm text-muted-foreground" title={t.description}>
+                {t.description}
+              </p>
+            ) : null}
             {t && t.sources.length > 0 ? (
               <p className="text-xs text-muted-foreground">
                 From{" "}
@@ -270,12 +272,6 @@ export function TableView({ name }: { name: string }) {
             ) : null}
           </div>
         </div>
-        {t?.loaded ? (
-          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-            <LoadDot loaded />
-            Loaded
-          </span>
-        ) : null}
       </div>
 
       {table.isPending ? (
@@ -286,7 +282,7 @@ export function TableView({ name }: { name: string }) {
         <EmptyState
           Icon={TableIcon}
           title="Declared by the pipeline, not loaded yet"
-          description="The registry lists this dataset, but its table does not exist yet. It appears here after the next process run."
+          description="Appears after the next process run."
         />
       ) : (
         <Tabs urlParam="tab" defaultValue="rows" className="space-y-4">

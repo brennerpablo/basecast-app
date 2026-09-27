@@ -81,7 +81,7 @@ function Viewer({ pdf, url }: { pdf: ReactPdf; url: string }) {
           onLoadSuccess={({ numPages }) => setPages(numPages)}
           onLoadProgress={({ loaded, total }) => setProgress({ loaded, total })}
           loading={<Loading progress={progress} />}
-          error={<EmptyState Icon={FileXIcon} title="The PDF could not be opened" description="Download it to read it offline." compact />}
+          error={<EmptyState Icon={FileXIcon} title="The PDF could not be opened" compact />}
           className="flex justify-center"
         >
           <pdf.Page

@@ -95,17 +95,13 @@ function body(node: FlowNode): { tag?: string; title: string; titleMono?: boolea
         sub: s.id,
         rows: [
           <Row key="s">{s.schedule ?? "Manual"}</Row>,
-          <Row key="f">
-            {s.inLake ? (
-              <>
-                <span className="font-medium text-foreground">{plural(s.files, "file")}</span> · {formatBytes(s.bytes)}
-              </>
-            ) : s.writeStage === "model" ? (
-              "Builds from the processed tables"
-            ) : (
-              "Reads files kept outside the lake"
-            )}
-          </Row>,
+          ...(s.inLake
+            ? [
+                <Row key="f">
+                  <span className="font-medium text-foreground">{plural(s.files, "file")}</span> · {formatBytes(s.bytes)}
+                </Row>,
+              ]
+            : []),
           <RunRow key="r" run={s.latestProcess} />,
         ],
       };

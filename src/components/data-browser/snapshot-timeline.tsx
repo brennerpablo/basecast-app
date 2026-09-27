@@ -33,13 +33,7 @@ export function SnapshotTimeline({ folders, activeDt }: { folders: Folder[]; act
 
   return (
     <section className="rounded-lg border px-4 pt-3 pb-2">
-      <div className="flex items-baseline justify-between gap-2 text-xs text-muted-foreground">
-        <h3 className="text-sm font-semibold text-foreground">Snapshots</h3>
-        <span>
-          {formatCount(dated.length)} folders from {dated[0].name.slice(3)} to {dated[dated.length - 1].name.slice(3)} · bar
-          height is bytes fetched
-        </span>
-      </div>
+      <h3 className="text-sm font-semibold">Snapshots</h3>
       <div className="relative mt-2 h-20 border-b">
         {dated.map((f) => {
           const dt = f.name.slice(3);

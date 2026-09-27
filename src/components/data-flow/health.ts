@@ -16,7 +16,7 @@ const SEVERITY: Record<DataHealth, number> = { failed: 5, degraded: 4, stale: 3,
 
 export type HealthVerdict = {
   status: DataHealth;
-  /** One sentence for the tooltip and the side panel. */
+  /** A short line for the node's tooltip; the side panel shows it only when it adds to the status label. */
   reason: string;
   /** When the data last updated (ISO, UTC), or null when it never did. */
   updatedAt: string | null;
@@ -49,23 +49,19 @@ export function stageHealth({
   const base = { updatedAt, dueAt };
 
   if (latest?.status === "running") {
-    return { ...base, status: "running", reason: `Running since ${formatDateTime(latest.started_at)}.` };
+    return { ...base, status: "running", reason: "Running." };
   }
   if (latest?.status === "failed") {
-    return { ...base, status: "failed", reason: `The latest run failed (${formatDateTime(latest.started_at)}).` };
+    return { ...base, status: "failed", reason: "Latest run failed." };
   }
   if (latest?.status === "abandoned" || latest?.status === "partial") {
-    return {
-      ...base,
-      status: "degraded",
-      reason: `The latest run was ${latest.status} (${formatDateTime(latest.started_at)}).`,
-    };
+    return { ...base, status: "degraded", reason: `Latest run ${latest.status}.` };
   }
   if (!updatedAt) return { ...base, status: "never", reason: "Never updated." };
-  if (!cron) return { ...base, status: "healthy", reason: "Manual source: it updates when someone runs it." };
+  if (!cron) return { ...base, status: "healthy", reason: "Manual." };
   if (!due) return { ...base, status: "healthy", reason: "Updated; the schedule could not be read." };
   if (now.getTime() > due.getTime() + HEALTH_GRACE_MS) {
-    return { ...base, status: "stale", reason: `Overdue: a run was scheduled for ${formatDateTime(dueAt)}.` };
+    return { ...base, status: "stale", reason: "Overdue." };
   }
   return { ...base, status: "healthy", reason: `Up to date. Next scheduled run ${formatDateTime(dueAt)}.` };
 }

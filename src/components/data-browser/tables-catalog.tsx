@@ -81,7 +81,9 @@ function TableRow({ t }: { t: TableSummary }) {
         )}
       </td>
       <td className="px-3 py-2 font-mono text-xs">{t.kind === "system" ? "system" : t.mode === "sql" ? "SQL" : (t.mode ?? "—")}</td>
-      <td className="px-3 py-2 text-right tabular-nums">{rowsLabel(t)}</td>
+      <td className="px-3 py-2 text-right tabular-nums" title={t.loaded && t.rows_estimated ? "Postgres's estimate; the table counts exactly" : undefined}>
+        {rowsLabel(t)}
+      </td>
       <td className="px-3 py-2 text-right tabular-nums">{t.loaded ? formatBytes(t.bytes) : "—"}</td>
       <td className="px-3 py-2">
         <span className="flex items-center gap-1.5 text-xs">
@@ -112,11 +114,13 @@ export function TablesCatalog() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">Tables</h2>
-          <p className="text-sm text-muted-foreground">
-            {tables.data
-              ? `${datasets.length} datasets declared by the pipeline · ${datasets.filter((t) => t.loaded && t.engine === "postgres").length} loaded in Postgres · ${datasets.filter((t) => t.loaded && t.engine === "bigquery").length} in BigQuery`
-              : "Reading the catalog…"}
-          </p>
+          {tables.data ? (
+            <p className="text-sm text-muted-foreground">
+              {`${datasets.length} datasets · ${datasets.filter((t) => t.loaded && t.engine === "postgres").length} Postgres · ${datasets.filter((t) => t.loaded && t.engine === "bigquery").length} BigQuery`}
+            </p>
+          ) : (
+            <Skeleton className="mt-1 h-4 w-56" />
+          )}
         </div>
         <div className="relative">
           <SearchIcon className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -138,7 +142,6 @@ export function TablesCatalog() {
           ariaLabel="Filter tables"
           options={STATUS.map((s) => ({ value: s, label: `${s === "all" ? "All" : s === "bigquery" ? "BigQuery" : s[0].toUpperCase() + s.slice(1)} ${count(s)}` }))}
         />
-        <span className="ml-auto shrink-0 text-xs text-muted-foreground">≈ is Postgres&apos;s estimate; the grid counts exactly</span>
       </div>
 
       {tables.isPending ? (

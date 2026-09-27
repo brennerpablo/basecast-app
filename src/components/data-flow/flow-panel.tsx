@@ -8,6 +8,7 @@ import { RunDot } from "@/components/data-browser/file-kind";
 import { formatBytes, formatCount, formatDateTime, formatDtRange } from "@/components/data-browser/format";
 import { lakeHref, sourceKey } from "@/components/data-browser/lake-path";
 import { formatDuration } from "@/components/data-browser/runs-view";
+import { InfoTip } from "@/components/product/info-tip";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -39,13 +40,20 @@ function Fields({ rows }: { rows: [string, ReactNode][] }) {
 }
 
 function HealthBlock({ health, now, verb, schedule }: { health: HealthVerdict; now: number; verb: string; schedule?: string | null }) {
+  const label = HEALTH_LABEL[health.status];
+  // The reason shows when something needs attention and it says more than the label (the start time and the
+  // schedule have their own fields), or when a schedule is set but could not be read.
+  const showReason =
+    health.status === "healthy"
+      ? Boolean(schedule) && !health.dueAt
+      : health.reason.replace(/\.$/, "").toLowerCase() !== label.toLowerCase();
   return (
     <div className="space-y-2 rounded-md border bg-muted/40 p-2.5">
       <p className="flex items-center gap-1.5 text-sm font-semibold">
         <HealthIcon status={health.status} className="size-4" />
-        {HEALTH_LABEL[health.status]}
+        {label}
       </p>
-      <p className="text-xs text-muted-foreground">{health.reason}</p>
+      {showReason ? <p className="text-xs text-muted-foreground">{health.reason}</p> : null}
       <Fields
         rows={[
           [verb, health.updatedAt ? `${formatDateTime(health.updatedAt)} · ${formatAgo(health.updatedAt, now)}` : "—"],
@@ -198,12 +206,7 @@ function Details({ graph, node, now }: { graph: FlowGraph; node: FlowNode; now: 
             <RunError error={s.latestProcess?.error} />
           </Section>
         ) : null}
-        {!s.inLake ? (
-          <p className="text-xs text-muted-foreground">
-            No ingest step: this pipeline has no raw files in the lake (<span className="font-mono">config_facts</span> reads the
-            YAML kept in basecast-airflow).
-          </p>
-        ) : null}
+        {!s.inLake ? <p className="text-xs text-muted-foreground">No raw files in the lake.</p> : null}
         <Section title="Open">
           <div className="space-y-1">
             {s.inLake ? <AppLink href={lakeHref(sourceKey(s.id))}>Raw files in the lake</AppLink> : null}
@@ -225,13 +228,18 @@ function Details({ graph, node, now }: { graph: FlowGraph; node: FlowNode; now: 
         rows={[
           ["Rows", t.loaded ? `${t.rows_estimated ? "≈ " : ""}${formatCount(t.rows)}` : "Not loaded yet"],
           ["Size", formatBytes(t.bytes)],
-          ["Write mode", <span key="m" className="font-mono">{t.mode ?? "—"}</span>],
+          [
+            "Write mode",
+            <span key="m" className="inline-flex items-center gap-1">
+              <span className="font-mono">{t.mode ?? "—"}</span>
+              {t.mode && MODE_TEXT[t.mode] ? <InfoTip label="About this write mode">{MODE_TEXT[t.mode]}</InfoTip> : null}
+            </span>,
+          ],
           ["Built by", t.sources.join(", ")],
         ]}
       />
-      {t.mode && MODE_TEXT[t.mode] ? <p className="text-xs text-muted-foreground">{MODE_TEXT[t.mode]}</p> : null}
       {node.external ? (
-        <p className="text-xs text-muted-foreground">This table belongs to another origin group. Choose All to see where it comes from.</p>
+        <p className="text-xs text-muted-foreground">From another group; switch to All.</p>
       ) : null}
       <Section title="Open">
         <div className="space-y-1">
@@ -247,8 +255,6 @@ function Details({ graph, node, now }: { graph: FlowGraph; node: FlowNode; now: 
 export function FlowPanel({
   graph,
   node,
-  upstream,
-  downstream,
   now,
   onSelect,
   onClose,
@@ -256,8 +262,6 @@ export function FlowPanel({
 }: {
   graph: FlowGraph;
   node: FlowNode;
-  upstream: number;
-  downstream: number;
   now: number;
   onSelect: (id: string) => void;
   onClose: () => void;
@@ -301,14 +305,6 @@ export function FlowPanel({
         ) : null}
         <Section title={downTitle}>
           <NodeChips graph={graph} ids={down} onSelect={onSelect} />
-        </Section>
-        <Section title="Lineage">
-          <Fields
-            rows={[
-              ["Upstream", `${formatCount(upstream)} nodes`],
-              ["Downstream", `${formatCount(downstream)} nodes`],
-            ]}
-          />
         </Section>
       </div>
     </aside>

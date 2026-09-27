@@ -22,7 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 import { type FileKind, fileUrl, type ObjectDetail, type ObjectStructure, useLakeObject, useObjectStructure } from "./api";
-import { FileKindIcon, kindInfo, LoadDot } from "./file-kind";
+import { FileKindIcon, LoadDot } from "./file-kind";
 import { formatBytes, formatCount, formatDateTime, middleTruncate } from "./format";
 import { copyText, LakeCrumbs } from "./lake-crumbs";
 import { LakeGrid } from "./lake-grid";
@@ -241,7 +241,6 @@ function Preview({
 }) {
   const [sheet, setSheet] = useQueryState("sheet", parseAsString);
   const [mode, setMode] = useQueryState("mode", parseAsStringLiteral(["table", "tree"] as const).withDefault("table"));
-  const info = kindInfo(kind);
   const download = (
     <Button asChild variant="outline" size="sm">
       <a href={fileUrl(lakeKey, member, true)}>
@@ -254,7 +253,7 @@ function Preview({
   if (!previewable && kind !== "pdf") {
     return (
       <div className="flex flex-col items-center gap-3 py-12">
-        <EmptyState Icon={FileWarningIcon} title="Too large to preview here" description="Download the file to open it." compact />
+        <EmptyState Icon={FileWarningIcon} title="Too large to preview here" compact />
         {download}
       </div>
     );
@@ -264,7 +263,7 @@ function Preview({
   if (kind === "other") {
     return (
       <div className="flex flex-col items-center gap-3 py-12">
-        <EmptyState Icon={FileWarningIcon} title="No preview for this format" description="Download the file to open it." compact />
+        <EmptyState Icon={FileWarningIcon} title="No preview for this format" compact />
         {download}
       </div>
     );
@@ -322,7 +321,7 @@ function Preview({
   if (kind === "text" || kind === "parquet") {
     return <LakeGrid lakeKey={lakeKey} member={member} className="h-[62vh] min-h-[420px] rounded-none border-0" />;
   }
-  return <EmptyState Icon={FileWarningIcon} title={info.viewer} description={info.parser} compact />;
+  return <EmptyState Icon={FileWarningIcon} title="No preview for this format" compact />;
 }
 
 /** One raw file: its preview, where it came from, and the tables it fed. */
@@ -416,9 +415,8 @@ export function FileView({ lakeKey }: { lakeKey: string }) {
 
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
         <section className="min-w-0 overflow-hidden rounded-lg border">
-          <div className="flex items-center justify-between gap-2 border-b px-4 py-2.5">
+          <div className="border-b px-4 py-2.5">
             <h3 className="text-sm font-semibold">Preview</h3>
-            {kind ? <span className="text-xs text-muted-foreground">{kindInfo(kind).viewer}</span> : null}
           </div>
           {!kind ? (
             <Skeleton className="h-[62vh] w-full rounded-none" />

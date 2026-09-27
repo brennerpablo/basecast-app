@@ -38,12 +38,7 @@ export function RunsView() {
     <div className="space-y-4">
       <PageBreadcrumb items={[{ label: "Data", href: "/data" }, { label: "Pipeline runs" }]} />
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold">Pipeline runs</h2>
-          <p className="text-sm text-muted-foreground">
-            Every fetch (raw) and parse (process) run the pipeline recorded in <span className="font-mono text-xs">etl_run</span>.
-          </p>
-        </div>
+        <h2 className="text-lg font-semibold">Pipeline runs</h2>
         <select
           value={source ?? ""}
           onChange={(e) => void setSource(e.target.value || null)}
