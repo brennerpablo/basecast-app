@@ -27,7 +27,8 @@ export function SidebarChrome({
       </div>
       <div className="flex min-h-0 flex-1 flex-col">
         {toolbar ? (
-          <div className="w-full shrink-0 px-2 pb-1">{toolbar}</div>
+          // pt-2 matches the nav's p-2, so a toolbar starts where the main menu's first item does.
+          <div className="w-full shrink-0 px-2 pt-2 pb-1">{toolbar}</div>
         ) : null}
         <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
         {footer ? (
