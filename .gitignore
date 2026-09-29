@@ -13,8 +13,6 @@ dist
 next-env.d.ts
 # Local lake data never goes into git
 /data/
-# Prisma client, regenerated on npm install
-src/generated/
 
-# pdf.js worker, copied from node_modules on install
+# MapLibre's worker, copied from node_modules on install
 /public/maplibre/

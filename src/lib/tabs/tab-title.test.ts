@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { MAIN_MENU, OTHER_ROUTES } from "@/lib/navigation";
+import { MAIN_MENU } from "@/lib/navigation";
 
 import { APP_NAME, tabTitle, urlTitle } from "./tab-title";
 
@@ -11,12 +11,6 @@ test("every menu item names its own tab, with its icon", () => {
     const { title, icon } = urlTitle(item.href);
     assert.equal(title, item.label, item.href);
     assert.equal(icon, item.icon, item.href);
-  }
-});
-
-test("a screen outside the menu names its tab too, with its icon", () => {
-  for (const route of OTHER_ROUTES) {
-    assert.deepEqual(urlTitle(route.href), { title: route.label, icon: route.icon });
   }
 });
 

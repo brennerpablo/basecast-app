@@ -163,6 +163,11 @@ export function checkDelta(check: MartCheck): number | null {
 
 export const shortRunId = (runId: string) => runId.slice(0, 8);
 
+/** A model run's `ops.log` lines, newest first, as the snapshot recorded them (at most 200). */
+export type RunLogPage = {
+  entries: { id: string; ts: string; level: string; event: string; message: string }[];
+};
+
 /** The screen that reads a mart, for the run page's links. */
 export function martScreen(mart: string): { href: string; label: string } | null {
   const m = mart.replace(/^mart_/, "");

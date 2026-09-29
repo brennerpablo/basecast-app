@@ -1,10 +1,8 @@
 import { getRequestContext } from "./request-context";
-import { enqueueOpsLog, type OpsLogRow } from "./sink";
 
 /**
- * The app's side of the standardized log (`ops.log`, contract in basecast-get-data
- * `docs/data-contract.md`). Every call prints one JSON line on stdout (Vercel's runtime log) and,
- * from `info` up, queues the same row for the `ops.log` table that /ops reads.
+ * The app's log: every call prints one JSON line on stdout, Vercel's runtime log. The row keeps the shape
+ * of the `ops.log` table it also fed until the GCP teardown (basecast-get-data `docs/data-contract.md` §7).
  *
  * Ported from the Fundsys app's `src/lib/observability/logger.ts`: no pino (its worker thread breaks
  * under Turbopack and Vercel only wants stdout), and `warn` goes to `console.log` because Vercel
@@ -13,12 +11,33 @@ import { enqueueOpsLog, type OpsLogRow } from "./sink";
 
 export type Level = "debug" | "info" | "warn" | "error";
 
+/** One log line. */
+export type LogRow = {
+  ts: Date;
+  service: string;
+  env: string;
+  level: string;
+  event: string;
+  message: string;
+  requestId: string | null;
+  runId: string | null;
+  method: string | null;
+  route: string | null;
+  status: number | null;
+  durationMs: number | null;
+  errorClass: string | null;
+  errorStack: string | null;
+  fingerprint: string | null;
+  version: string | null;
+  host: string | null;
+  context: Record<string, unknown> | null;
+};
+
 const WEIGHT: Record<Level, number> = { debug: 10, info: 20, warn: 30, error: 40 };
 
 export type LogFields = {
   requestId?: string;
   runId?: string;
-  userId?: string;
   method?: string;
   route?: string;
   status?: number;
@@ -26,7 +45,7 @@ export type LogFields = {
   /** An exception: fills `error_class`, `error_stack` and, unless given, `fingerprint`. */
   error?: unknown;
   fingerprint?: string;
-  /** Everything else. Scrubbed of secrets before it is printed or stored. */
+  /** Everything else. Scrubbed of secrets before it is printed. */
   context?: Record<string, unknown>;
 };
 
@@ -90,7 +109,7 @@ function errorParts(error: unknown): { errorClass?: string; errorStack?: string;
 }
 
 /** The row for one log call: the fields given, filled in from the open request. */
-export function buildRow(level: Level, event: string, message: string, fields: LogFields = {}): OpsLogRow {
+export function buildRow(level: Level, event: string, message: string, fields: LogFields = {}): LogRow {
   const ctx = getRequestContext();
   const { errorClass, errorStack, detail } = errorParts(fields.error);
   const route = fields.route ?? ctx?.route;
@@ -107,7 +126,6 @@ export function buildRow(level: Level, event: string, message: string, fields: L
     message: message.slice(0, MAX_MESSAGE_CHARS),
     requestId: fields.requestId ?? ctx?.requestId ?? null,
     runId: fields.runId ?? null,
-    userId: fields.userId ?? ctx?.userId ?? null,
     method: fields.method ?? ctx?.method ?? null,
     route: route ?? null,
     status: fields.status ?? null,
@@ -122,7 +140,7 @@ export function buildRow(level: Level, event: string, message: string, fields: L
   };
 }
 
-function print(row: OpsLogRow): void {
+function print(row: LogRow): void {
   let line: string;
   try {
     line = JSON.stringify(row);
@@ -137,14 +155,13 @@ function emit(level: Level, event: string, message: string, fields?: LogFields):
   try {
     const row = buildRow(level, event, message, fields);
     if (WEIGHT[level] >= stdoutMinWeight()) print(row);
-    if (WEIGHT[level] >= WEIGHT.info) enqueueOpsLog(row);
   } catch {
     // Logging never turns into the request's failure.
   }
 }
 
 export const log = {
-  /** stdout only; never stored. */
+  /** Printed in development, or with `LOG_LEVEL=debug`. */
   debug: (event: string, message: string, fields?: LogFields) => emit("debug", event, message, fields),
   info: (event: string, message: string, fields?: LogFields) => emit("info", event, message, fields),
   warn: (event: string, message: string, fields?: LogFields) => emit("warn", event, message, fields),

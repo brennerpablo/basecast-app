@@ -54,7 +54,7 @@ export const files = {
   lakeObjects: gz("lake/objects"),
   /** Every `etl_run` row in one page, newest first. */
   runs: gz("pipeline/runs"),
-  /** `{ [run_id]: OpsLogPage }`: the ops.log lines of each model run. */
+  /** `{ [run_id]: { entries, levelCounts, nextBefore } }`: the ops.log lines of each model run. */
   runLogs: gz("ops-log/runs"),
   /** Filtered answers of the live API, kept to test the reader's filters against. */
   parity: gz("parity"),

@@ -2,7 +2,6 @@
 
 import { Lightbulb } from "lucide-react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 
 import { QueryBody } from "@/components/product/data-card";
 import { formatDate } from "@/components/product/format";
@@ -56,13 +55,11 @@ function usePageAsOf(): string | null {
  * shows once at the foot; a card whose date differs carries its own.
  */
 export function HomeScreen() {
-  const { data: session } = useSession();
-  const firstName = session?.user?.name?.trim().split(/\s+/)[0];
   const asOf = usePageAsOf();
   return (
     <div className="space-y-6">
       <PageHeader
-        title={firstName ? `Welcome back, ${firstName}` : "Welcome back"}
+        title="Welcome to BaseCast"
         actions={
           <Button variant="outline" size="sm" asChild className="gap-x-2 px-2 py-1.5 text-xs">
             <Link href="/insights">

@@ -1,5 +1,4 @@
 import {
-  Activity,
   Building2,
   Database,
   History,
@@ -8,8 +7,6 @@ import {
   type LucideIcon,
   Map,
   TrendingUp,
-  UserRound,
-  UsersRound,
 } from "lucide-react";
 
 export type MainMenuSubItem = {
@@ -20,7 +17,7 @@ export type MainMenuSubItem = {
   activeCheck?: (pathname: string) => boolean;
 };
 
-/** The menu's blocks, drawn apart by a divider: Home, the analytics screens, the data and ops tools. */
+/** The menu's blocks, drawn apart by a divider: Home, the analytics screens, the data browser. */
 export type MainMenuSection = "home" | "analytics" | "system";
 
 export type MainMenuItem = {
@@ -101,21 +98,4 @@ export const MAIN_MENU: MainMenuItem[] = [
     href: "/data",
     activeCheck: underPath("/data"),
   },
-  {
-    id: "ops",
-    section: "system",
-    label: "Ops",
-    icon: Activity,
-    href: "/ops",
-    activeCheck: underPath("/ops"),
-  },
 ];
-
-/** Screens outside the sidebar menu, reached from the user menu: their tab name and icon. */
-export const OTHER_ROUTES = [
-  { id: "account", label: "Account", icon: UserRound, href: "/account" },
-  // Superadmins only; hiding it is cosmetic, `/admin`'s layout is the check.
-  { id: "admin-users", label: "Users", icon: UsersRound, href: "/admin/users" },
-] satisfies (MainMenuItem & { href: string })[];
-
-export const [ACCOUNT_ROUTE, ADMIN_USERS_ROUTE] = OTHER_ROUTES;

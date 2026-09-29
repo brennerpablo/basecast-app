@@ -9,14 +9,8 @@ import {
 import { normalizeRoute } from "./route-name";
 
 /**
- * Routes whose healthy requests are not worth a row: /ops polls them every 30 s per open screen and
- * would fill the log with itself. Their errors and slow requests are still logged.
- */
-const QUIET_ROUTE_PREFIXES = ["/api/ops"];
-
-/**
  * The one `http.request` line per request: 5xx is `error` (ours), 4xx `warn` (the caller's), a slow
- * success `warn`, everything else `info`. /ops counts and times requests from these lines.
+ * success `warn`, everything else `info`.
  */
 export function logRequest(ctx: RequestContext, status: number, error?: unknown): void {
   const durationMs = Math.round(performance.now() - ctx.startedAt);
@@ -28,8 +22,7 @@ export function logRequest(ctx: RequestContext, status: number, error?: unknown)
   else if (status >= 400) log.warn("http.request", base, fields);
   else if (durationMs > SLOW_REQUEST_MS)
     log.warn("http.request", `${base}, slow: ${durationMs} ms (budget ${SLOW_REQUEST_MS} ms)`, fields);
-  else if (!QUIET_ROUTE_PREFIXES.some((prefix) => ctx.route.startsWith(prefix)))
-    log.info("http.request", base, fields);
+  else log.info("http.request", base, fields);
 }
 
 /** Echoes the id so a browser's network tab leads straight to the log line. */
@@ -64,7 +57,7 @@ export async function runWithRequestLog(req: Request, run: () => Promise<Respons
   });
 }
 
-/** For route handlers that do not go through `withSession` (next-auth's own route). */
+/** Wraps a route handler in `runWithRequestLog`. */
 export function withRequestLog<Context>(
   handler: (req: Request, context: Context) => Promise<Response> | Response,
 ): (req: Request, context: Context) => Promise<Response> {

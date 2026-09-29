@@ -16,7 +16,7 @@ import { type ReactNode, useState } from "react";
 
 import { SidebarChrome } from "@/app/(app)/_components/sidebar-chrome";
 import { useSidebar } from "@/components/ui/sidebar";
-import { HOME } from "@/lib/auth/gate";
+import { HOME } from "@/lib/gate";
 import { cn } from "@/lib/utils";
 
 import { useLakeList, useLakeSources, useTables } from "./api";

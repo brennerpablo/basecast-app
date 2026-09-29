@@ -4,9 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 
 import { useProductQuery } from "@/lib/bff/queries";
 import { dataUrl } from "@/lib/bff/url";
-import type { OpsLogPage } from "@/lib/ops/types";
 
-import { MODEL_RUN_FILTERS, type ModelRun, parseRuns, type RowsPage } from "./model-runs";
+import { MODEL_RUN_FILTERS, type ModelRun, parseRuns, type RowsPage, type RunLogPage } from "./model-runs";
 
 /** The newest model runs (mart builds), read from `etl_run` through get-data with their events and params. */
 export function useModelRuns(limit = 50) {
@@ -36,7 +35,7 @@ export function useRunLogs(runId: string) {
     queryFn: async ({ signal }) => {
       const response = await fetch(dataUrl(`ops-log/runs/${encodeURIComponent(runId)}`), { signal });
       if (!response.ok) throw new Error(`The run's log could not be read (${response.status})`);
-      return (await response.json()) as OpsLogPage;
+      return (await response.json()) as RunLogPage;
     },
   });
 }

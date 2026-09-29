@@ -2,16 +2,14 @@ import { AsyncLocalStorage } from "node:async_hooks";
 
 /**
  * Per-request correlation, carried implicitly so any log line inside a BFF request can name the
- * request, route and user without every call site threading them through. Opened by
- * `runWithRequestLog`, and mutated in place once the session resolves.
+ * request and route without every call site threading them through. Opened by `runWithRequestLog`.
  */
 export type RequestContext = {
-  /** Correlation id, sent on to get-data as `x-request-id`. Vercel's `x-vercel-id` when present. */
+  /** Correlation id, echoed as `x-request-id`. Vercel's `x-vercel-id` when present. */
   requestId: string;
   method: string;
   /** Route template (`/api/accounts/:id`), never the resolved path. See `route-name.ts`. */
   route: string;
-  userId?: string;
   /** `performance.now()` at request start. */
   startedAt: number;
 };
@@ -24,17 +22,6 @@ export function runWithRequestContext<T>(ctx: RequestContext, fn: () => T): T {
 
 export function getRequestContext(): RequestContext | undefined {
   return storage.getStore();
-}
-
-/** The current request's id, for the `x-request-id` header on calls to get-data. */
-export function getRequestId(): string | undefined {
-  return storage.getStore()?.requestId;
-}
-
-/** Mutates the live store. A no-op outside a request, so it is always safe to call. */
-export function enrichRequestContext(patch: Partial<Pick<RequestContext, "userId">>): void {
-  const store = storage.getStore();
-  if (store) Object.assign(store, patch);
 }
 
 /**

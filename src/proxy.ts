@@ -1,19 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
 
-import { gate } from "@/lib/auth/gate";
+import { gate } from "@/lib/gate";
 
 /**
- * The fast check on the JWT cookie (rules in `gate`): the landing pages for visitors, /sign-in or a 401
- * for the rest. The (app) layout and `withSession` check the session again on the server. The root's
- * redirect lives here, not in next.config: config redirects run before the proxy and would hide the
- * landing page.
+ * The landing pages at `/` and `/how-its-built`, and the retired signed-in screens sent to the home
+ * (rules in `gate`). The demo is public: nothing else is checked here.
  */
-export async function proxy(request: NextRequest) {
-  const { pathname, search } = request.nextUrl;
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-
-  const action = gate(pathname, search, Boolean(token));
+export function proxy(request: NextRequest) {
+  const action = gate(request.nextUrl.pathname);
   switch (action.kind) {
     case "next":
       return NextResponse.next();
@@ -21,12 +15,10 @@ export async function proxy(request: NextRequest) {
       return NextResponse.rewrite(new URL(action.to, request.url));
     case "redirect":
       return NextResponse.redirect(new URL(action.to, request.url));
-    case "unauthorized":
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }
 
 export const config = {
-  // Everything except next-auth's own routes, Next's assets and files with an extension (icons, logos).
-  matcher: ["/((?!api/auth|_next/static|_next/image|.*\\.).*)"],
+  // Pages only: not the API, Next's assets or files with an extension (icons, logos).
+  matcher: ["/((?!api/|_next/static|_next/image|.*\\.).*)"],
 };

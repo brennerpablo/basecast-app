@@ -21,6 +21,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ViewSwitchControl } from "@/components/components-app/ui/view-switch-control";
 import { useLakeSources, useRuns, useTables } from "@/components/data-browser/api";
 import { formatBytes, formatCount } from "@/components/data-browser/format";
+import { useSnapshotNow } from "@/components/demo/snapshot-clock";
 import EmptyState from "@/components/empty-state";
 import { PANEL_ENTER, PANEL_EXIT, usePresence } from "@/components/motion/presence";
 import { PageBreadcrumb } from "@/components/page-breadcrumb";
@@ -69,16 +70,6 @@ const FLOW_THEME =
   "[--xy-controls-button-color-hover:hsl(var(--foreground))] [--xy-controls-button-border-color:hsl(var(--border))] " +
   "[--xy-attribution-background-color:transparent]";
 
-/** Re-render every minute so "updated 3 h ago" and the overdue checks stay true. */
-function useNow(intervalMs = 60_000) {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), intervalMs);
-    return () => clearInterval(timer);
-  }, [intervalMs]);
-  return now;
-}
-
 /** /data/flow: every origin, the steps that ingest and process it, the tables they write and when each last updated. */
 export function FlowView() {
   return (
@@ -93,7 +84,8 @@ function FlowScreen() {
   const sources = useLakeSources();
   const tables = useTables();
   const runs = useRuns(null);
-  const now = useNow();
+  // The pipelines are stopped: freshness is read as of the snapshot's recording.
+  const now = useSnapshotNow();
 
   const flowSources = useMemo(
     () =>
