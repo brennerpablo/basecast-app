@@ -1,7 +1,12 @@
 # CLAUDE.md — basecast-app
 
-**basecast** is being built for the Base Power × AITX Hackathon (Austin, Sep 25–27, 2026). This repo is
+**basecast** was built for the Base Power × AITX Hackathon (Austin, Sep 25–27, 2026). This repo is
 **front B: the frontend**, a Next.js app built on the Fundsys app base and deployed to Vercel.
+
+**Since 2026-09-29 it is a static public demo.** To bring the GCP bill to zero, the pipelines, get-data, Cloud SQL
+and the lake's bucket were shut down. The app has no sign-in, no database and no environment: the BFF answers
+from `snapshot/`, get-data's responses recorded once and committed (`src/lib/snapshot/`, details in
+`docs/operations.md`). Where the rules below speak of calling get-data, login or the ops log, read them as history.
 
 This file carries the stable parts of `docs/KICKOFF.md` (in Portuguese): sections 1, 2 and 7, this repo's
 part of section 3, the working rules from section 0 and the front B rules from section 5. The tasks and
@@ -58,7 +63,7 @@ Data is the main track), non-obvious insight, usability, performance.
   `parquet/<dataset>/dt=<date>/part-*.parquet`. The local layout is identical to the GCS bucket's, so
   moving up is `gcloud storage rsync` plus a BigQuery load, with no code rewrite.
 - **Warehouse (later):** BigQuery, tables partitioned by day. No Cloud SQL (there are no user writes).
-  *Superseded:* Cloud SQL `basecast-pg` exists, and the app keeps its login users there (`docs/decisions.md`).
+  *Superseded:* Cloud SQL `basecast-pg` held the app's login users until the 2026-09-29 teardown (`docs/decisions.md`).
 - **Pipelines (`basecast-airflow`):** each source is a pure Python module with
   `run(*, storage, http, since=None, until=None)` that runs on its own from the CLI. The Airflow DAGs
   (later, on a VM with Docker Compose and LocalExecutor) will be thin and only call these `run()`
@@ -81,7 +86,8 @@ Data is the main track), non-obvious insight, usability, performance.
 basecast-app/
 ├── CLAUDE.md
 ├── README.md
-├── .env.example              # GET_DATA_URL, GET_DATA_TOKEN (server-only), DATABASE_URL, NEXTAUTH_SECRET
+├── .env.example              # none needed now; what `npm run snapshot:record` read
+├── snapshot/                 # get-data's responses, recorded 2026-09-29 (gzipped JSON)
 ├── src/ (or app/)            # Fundsys base: layout, auth, components-app, theme
 ├── lib/api/                  # TypeScript client generated from get-data's openapi.json
 ├── public/geo/               # Texas counties and weather zones GeoJSON (A-M2)
@@ -95,13 +101,15 @@ basecast-app/
 - **From the Fundsys base, keep** the layout/shell, auth, `components-app`, theme, the TanStack Query
   setup and the BFF pattern in route handlers. **Remove** tenant scoping, RBAC, Prisma and domain modules,
   Fundsys branding and any reference to clients or regulatory logic. No Fundsys data. (Prisma came back
-  for the login users only; see `docs/decisions.md`.)
-- **Auth stays simple.** The base's login on every page; document it in the README. *Superseded:* the
-  kickoff's `ACCESS_MODE=public` (a read-only demo without login) was removed (`docs/decisions.md`).
+  for the login users, then left with them on 2026-09-29; see `docs/decisions.md`.)
+- **Auth stays simple.** The base's login on every page; document it in the README. *Superseded twice:* the
+  kickoff's `ACCESS_MODE=public` was removed on 2026-09-26, then the login itself on 2026-09-29: the demo is
+  public (`docs/decisions.md`).
 - **Data access:** the BFF calls `basecast-get-data` (running locally with fixtures) through the
   TypeScript client generated from its `openapi.json`. The token stays on the server, never
   `NEXT_PUBLIC_`. No mocks inside the app: the fixtures live in the API, so the app talks to the real
-  contract from day one.
+  contract from day one. *Superseded* on 2026-09-29: the BFF answers from the recorded snapshot of the real
+  API (`snapshot/`), never from data written in the app.
 - **Pages:** `/explorer` (map), `/forecast`, `/backtest`, `/accounts` and `/accounts/[id]` (commercial
   intelligence), `/data` (sources, last update and `etl_run` history, to show the pipeline's robustness).
 - **Map:** MapLibre GL with the Texas counties (GeoJSON from A-M2; *superseded:* the kickoff's TopoJSON, see
@@ -150,9 +158,13 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   `src/app/(app)/_components/tabs/` (the strip) + `src/instrumentation-client.ts`: same-window tabs (below).
 - `/data` (the data browser): pages in `src/app/(app)/data/`, screens in `src/components/data-browser/` (overview,
   folder and file views, previews, tables, runs, the Data mode sidebar swapped in by
-  `src/app/(app)/_components/sidebar-modes.tsx`). The BFF is `src/app/api/data/` over `src/lib/get-data/` (the only
-  place that calls get-data, server-only). Types come from get-data's `openapi.json` (`npm run api:generate` →
-  `src/lib/api/get-data.d.ts`). Lake routes mirror the bucket path (`lake-path.ts`).
+  `src/app/(app)/_components/sidebar-modes.tsx`). The BFF is `src/app/api/data/` over the snapshot:
+  `src/lib/snapshot/resolve.ts` answers a get-data path with the API's statuses and its filters ported (accounts,
+  events, runs, rows, lake listings; tested against the live API's answers), `reader.ts` reads `snapshot/`,
+  `paths.ts` is the layout shared with `scripts/snapshot/record.ts`. A file page has no preview or download (the
+  files are not in the snapshot); tables keep their first 500 rows (`etl_run` whole). Types come from get-data's
+  `openapi.json` (`npm run api:generate` → `src/lib/api/get-data.d.ts`). Lake routes mirror the bucket path
+  (`lake-path.ts`).
 - `/data/flow` (dataset lineage): `src/components/data-flow/`. `graph.ts` builds origin → ingest → process →
   tables → derived from `/lake/sources`, `/tables` and `/pipeline/runs` (pure, tested); `health.ts` is the
   freshness rule (latest run, then `schedule_cron` + 6 h grace; its own small cron reader); `layout.ts` is dagre;
@@ -161,7 +173,7 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   input tables once get-data sends `inputs` (with C-2). The marts are a source outside the lake (`marts`) whose
   runs are `stage = model`; outside the lake the step reads the newer of its `process` and `model` runs.
 - Product screens (accounts, explorer, forecast, backtest) read get-data's v2 envelope `{data, meta}` through the same
-  BFF catch-all (add each path to the allowlist in `src/lib/get-data/routes.ts`). Client side in `src/lib/bff/`:
+  BFF catch-all (a path the snapshot does not hold is a 404). Client side in `src/lib/bff/`:
   `fetchEnvelope`, `BffError` (its `mart` is set on a 503 `mart_not_built`), `useProductQuery` (other failures go to
   `error.tsx`), `useCaveatCatalog` (`GET /caveats`, a bare `{items}`, not an envelope). `Meta`, `Caveat` and `Fact`
   are the generated contract types. Shared UI in `src/components/product/`: `SectionCard` (title, caveats, body,
@@ -173,7 +185,7 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   (a list's or dashboard's stat, `row` or `stacked`, a toggle with `onClick`), `KpiStatCard`/`KpiStatItem` (one
   entity's KPI strip), `QueryBody` (the states of `DataCard` without the card), and `SectionCard`'s `icon` (the Fundsys
   section header). `ChartTooltipCard` (`chart-tooltip.tsx`) is the hover card every recharts chart shares.
-  `SegmentedControl` (and /ops's range toggle) marks the chosen option in the brand's lime fill (`bg-brand`), never
+  `SegmentedControl` marks the chosen option in the brand's lime fill (`bg-brand`), never
   in foreground black. A panel that opens on a click (the Explorer's county, the data flow's node) goes through
   `usePresence` + `PANEL_ENTER`/`PANEL_EXIT` (`src/components/motion/presence.ts`: a fade with a short slide, held
   through its exit, off under reduced motion); a side column that makes room animates `grid-template-columns`.
@@ -230,7 +242,7 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
 - `/backtest/runs/[runId]`: one model run (a mart build) as an audited notebook: numbered cells for the parameters, the
   config (only the commit for now), one cell per mart (inputs from `/tables/{name}`, the `mart.check` events as asserts
   with expected, actual and Δ, what `mart.built` wrote, links to the table and the screen), what is not recorded yet,
-  and the run's `ops.log`. Runs come from `etl_run` through get-data's `/tables/etl_run/rows` (`src/lib/model-runs.ts`,
+  and the run's `ops.log` lines (recorded in the snapshot, `ops-log/runs/{id}`). Runs come from `etl_run` through get-data's `/tables/etl_run/rows` (`src/lib/model-runs.ts`,
   pure and tested; hooks in `model-runs-query.ts`). The Models tab's "Model builds" rows open it. What airflow and
   get-data must add for the rest: `docs/model-run-audit.md`.
 - `/insights` (`src/app/(app)/insights/`): the cards of `GET /insights` in the Fundsys dashboard look: `PageHeader` with
@@ -240,7 +252,8 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
   badge (the text in its tooltip), the caveat badges the header doesn't already show, "Re-derived" when `verified`, and the
   open link to the screen behind it. First of the analytics screens in the menu; cards keep the API's order.
 - `/home` (`src/app/(app)/home/`): one highlight per module, first in the menu. It is the home (`HOME` in
-  `src/lib/auth/gate.ts`): after sign-in, `/` for a signed-in user, "Exit Data".
+  `src/lib/gate.ts`): the landing pages' "Open the demo", "Exit Data", and where the retired `/sign-in`, `/account`,
+  `/admin` and `/ops` redirect.
 - `public/geo/`: `tx-counties.geojson` (254 counties; `county_fips` for `promoteId`, `county_name`, `weather_zone`,
   `in_ercot`) and `ercot-weather-zones.geojson` (`weather_zone`), from basecast-airflow `basecast export-geo`.
 - `src/components/data-grid/` is the DataGrid (virtualized, server blocks through `src/lib/hooks/use-grid-window-query.ts`
@@ -249,45 +262,19 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
 - Some comments in `components/ui`, `components-app` and `fields` are still in Portuguese (pending
   translation pass).
 - Landing pages (`public/landing/`, static HTML from Claude Design, 1440px wide, own tokens and fonts, no app code):
-  `product.html` at `/` for visitors, `internal.html` at `/how-its-built` for everyone, with the same header (logo, Sign in;
+  `product.html` at `/` for visitors, `internal.html` at `/how-its-built` for everyone, with the same header (logo, "Open the demo";
   sticky, turning to blurred glass on scroll through a CSS scroll-driven animation) and a floating toggle
   between them (plain links and CSS, repeated in each file). Switching is a cross-document view transition
   (`@view-transition`): header and toggle stay, the toggle's pill slides, the page slides the way of the click. The proxy rewrites to them (`LANDING_PAGES` in
-  `src/lib/auth/gate.ts`); the lake numbers in `internal.html` are fixed as of Sep 26, 2026.
-- Login, required on every page but the landing pages: next-auth v4 in `src/lib/auth.ts` (password, and "Continue with Google" where
-  anyone signs up: `src/lib/auth/google.ts` pure rules, `google-user.ts` the upsert and the superadmins' email),
-  session helpers (`getCachedSession`, `withSession` for BFF route handlers, `requireSuperAdmin` /
-  `withSuperAdmin` for admin screens: admin is `isSuperAdmin`, everyone else sees the rest) in `src/lib/auth/session.ts`, the redirect/401
-  gate in `src/proxy.ts` (its rules pure and tested in `src/lib/auth/gate.ts`) plus the check in `src/app/(app)/layout.tsx`, the page in `src/app/(auth)/sign-in/`.
-  Users are in Cloud SQL (database `basecast`, schema `app`) through Prisma: `prisma/schema.prisma`,
-  `src/lib/db.ts`, client generated to `src/generated/` on install. `npm run user:create` adds a user.
-- User menu (`src/app/(app)/_components/user-menu.tsx`), the sidebar footer as in the Fundsys app: the photo,
-  or the initials (`src/components/user-avatar.tsx`), then name and email, Account, the theme submenu
-  (`src/components/theme/theme-menu.tsx`) and sign out. It reads `useSession()` (`AuthSessionProvider`, seeded
-  in `(app)/layout.tsx`).
-- Account (`/account`, `src/app/(app)/account/`): display name and photo. Routes `PATCH /api/account`,
-  `PUT`/`DELETE /api/account/avatar`, `GET /api/users/[id]/avatar`; rules in `src/lib/account/profile.ts`;
-  photos in `app."UserAvatar"`; crop dialog in `src/components/avatar-upload/`. After an edit the page calls
-  `update()`, and the `jwt` callback re-reads name and photo from the database. `withSession` hands the
-  session to the handler. Screens outside the sidebar get their tab name and icon from `OTHER_ROUTES`.
-- Admin (`/admin/*`, `src/app/(app)/admin/`): superadmins only. `admin/layout.tsx` calls `requireSuperAdmin()` (a 404 for
-  anyone else) and each page checks again before reading; the user menu shows them, first and in Fundsys's superadmin
-  orange, only to superadmins (`ADMIN_USERS_ROUTE` in `OTHER_ROUTES`). `/admin/users`: every account, newest first
-  (Prisma straight from the page; rows and stat cards pure in `src/lib/admin/users.ts`), read-only.
-- Ops (`/ops`, `src/app/(app)/ops/`, after Data in the menu): tabs Overview, Requests, Pipelines, Logs, all state
-  in the URL, refetch every 30 s. Reads `ops.log` and `public.etl_run` straight from Postgres
-  (`src/lib/ops/queries.ts`, raw SQL) through `/api/ops/*`. The log is Prisma model `OpsLog` (schema `ops`),
-  grants in `prisma/ops-grants.sql`, row format in basecast-get-data `docs/data-contract.md` §7. The app writes it
-  with `log.info|warn|error(event, message, fields)` (`src/lib/observability/`, ported from Fundsys): stdout
-  plus a row queued in `after()`, only on a deploy (`VERCEL_ENV`) or with `OPS_LOG=1` (a local server shares the
-  production database through the proxy); `withSession` wraps every BFF request in `runWithRequestLog` (one
-  `http.request` line, `x-request-id` echoed; healthy `/api/ops` polls are not stored); `src/instrumentation.ts`
-  logs `server.error`. `getRequestId()` is the id to send to get-data as `x-request-id`.
-- Email: `sendEmail()` in `src/lib/email.ts` (server-only; Resend, from `noreply@basecast.pbrenner.com`) takes
-  content, not HTML: every email renders in the one layout of `src/lib/email/layout.ts` (forest band with the
-  logo as an inline CID PNG from `logo.ts`, lime rule, light-mode tokens as hex; content is escaped). The
-  check of Resend's `{ data, error }` lives in `src/lib/email/send.ts`. `npm run email:test` sends a sample
-  notification. `RESEND_API_KEY` only sends from `basecast.pbrenner.com`.
+  `src/lib/gate.ts`); the lake numbers in `internal.html` are fixed as of Sep 26, 2026.
+- The demo's shell: `DemoBanner` above every screen (built for the hackathon, the snapshot's recording date, a link to
+  `/how-its-built`; closing it sets the `demo_banner` cookie, read by `(app)/layout.tsx`) and `DemoMenu` in the sidebar
+  footer (the same facts, the link and the theme submenu, `src/components/theme/theme-menu.tsx`), both in
+  `src/components/demo/` with the facts in `src/lib/demo.ts`. `SnapshotClock` / `useSnapshotNow` hand the recording
+  time to what measures freshness (the data flow's health), so nothing drifts overdue while the pipelines are stopped.
+- Logging: `log.info|warn|error(event, message, fields)` (`src/lib/observability/`, ported from Fundsys) prints one
+  JSON line on stdout; `withRequestLog` wraps the data routes (one `http.request` line, `x-request-id` echoed) and
+  `src/instrumentation.ts` logs `server.error`. The `ops.log` table and `/ops` left with Cloud SQL.
 
 ## Screen text
 
@@ -326,7 +313,7 @@ strip of app tabs; the breadcrumb moves below as the page title, shown only for 
 - **Traps paid in fundsys/ops**: nothing in `history.state` (nuqs would drop queued URL writes); Back comes
   from `onRouterTransitionStart(url, "traverse")`, never `popstate`; a `<head>` observer keeps our `<title>`.
 - **Storage**: `sessionStorage` `basecast.tabs.<owner>`, pinned tabs also in `localStorage`
-  `basecast.pinned-tabs.<owner>`. `(app)/layout.tsx` passes the owner: the user id. Sign-out (`UserMenu`) calls `clearTabs()`; pinned tabs stay under the user's key.
+  `basecast.pinned-tabs.<owner>`. `(app)/layout.tsx` passes the owner: `demo`, one list per browser (there are no users).
 
 ## Docs
 

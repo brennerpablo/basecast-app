@@ -77,9 +77,14 @@ and with what offer**.
 </table>
 
 Visitors land on the product page at `/`, with the engineering overview at `/how-its-built` one toggle away
-(static pages in `public/landing/`). Signed in, `/` opens **Insights** (the headline findings re-derived from
-the data). Also: **Data** (every raw
-file, table and pipeline run, with the dataset lineage) and **Ops** (service health, requests and logs).
+(static pages in `public/landing/`). "Open the demo" leads to **Home**, one highlight per module, and
+**Insights** holds the headline findings re-derived from the data. Also: **Data** (every raw file, table and
+pipeline run, with the dataset lineage).
+
+> [!NOTE]
+> **The live copy is a static demo.** After the hackathon the pipelines, the API and the cloud database were
+> shut down. The app is public (no sign-in) and answers from `snapshot/`: get-data's responses, recorded on
+> 2026-09-29 and committed. Nothing on it updates, and the lake's files themselves are not in it.
 
 ## How it fits
 
@@ -109,20 +114,19 @@ flowchart TB
   style app fill:#b2dd79,stroke:#102a17,stroke-width:2px,color:#102a17
 ```
 
-The browser only talks to this app's route handlers; they call get-data with a server-side token, through the
-TypeScript client generated from its OpenAPI spec. Every card shows the API's caveats, and the screen's
+The browser only talks to this app's route handlers. During the hackathon they called get-data with a
+server-side token; now they answer from the recorded snapshot, with the same envelope, statuses and filters
+(the types still come from get-data's OpenAPI spec). Every card shows the API's caveats, and the screen's
 provenance sits at its foot.
 
 ## Quickstart
 
 ```bash
 npm install
-cp .env.example .env.local   # GET_DATA_URL, GET_DATA_TOKEN (server-only), DATABASE_URL, NEXTAUTH_SECRET
-npm run dev                  # http://localhost:3000
+npm run dev   # http://localhost:3000
 ```
 
-Every app page needs a sign-in, so a local run needs the Cloud SQL proxy and a running
-[basecast-get-data](https://github.com/brennerpablo/basecast-get-data). See [docs/operations.md](docs/operations.md).
+No environment and no backend: the data is the snapshot in `snapshot/`. See [docs/operations.md](docs/operations.md).
 
 <details>
 <summary><b>Scripts</b></summary>
@@ -134,9 +138,7 @@ Every app page needs a sign-in, so a local run needs the Cloud SQL proxy and a r
 | `npm run lint` · `npm run typecheck` | ESLint · TypeScript, no emit |
 | `npm test` | Unit and DOM tests (`node:test` via `tsx`) |
 | `npm run api:generate` | Regenerates `src/lib/api/get-data.d.ts` from `../basecast-get-data/openapi.json` |
-| `npm run db:push` | Applies `prisma/schema.prisma` to the database |
-| `npm run user:create` | Creates a password user |
-| `npm run email:test` | Sends a sample email |
+| `npm run snapshot:record` | Recorded `snapshot/` from the live get-data (needs the services that were shut down) |
 
 Node 22 or newer (`.nvmrc` pins 24, the version on Vercel). A push to `main` deploys to production.
 
@@ -144,7 +146,7 @@ Node 22 or newer (`.nvmrc` pins 24, the version on Vercel). A push to `main` dep
 
 ## Docs
 
-- [docs/operations.md](docs/operations.md): access, the `/data` browser, the ops log, email, deploy
+- [docs/operations.md](docs/operations.md): access, the data snapshot, the `/data` browser, logging, deploy
 - [docs/decisions.md](docs/decisions.md): decision log
 - [docs/KICKOFF.md](docs/KICKOFF.md): project kickoff (Portuguese)
 

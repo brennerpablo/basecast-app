@@ -1,118 +1,72 @@
 # Operations
 
-The detail behind the README: access, the `/data` browser, the ops log, email and deploy.
+The detail behind the README: access, the data snapshot, the `/data` browser, logging and deploy.
 
 ## Access
 
-Every page needs a session and API routes answer 401 without one. There are two ways in (next-auth v4, JWT
-sessions, no adapter, as in the Fundsys app), and users live in Cloud SQL: database `basecast`, schema `app`.
+The app is a public demo: no sign-in, no users, no database. `/` is the product landing page and
+`/how-its-built` the engineering one (static files in `public/landing/`); their "Open the demo" button leads
+to `/home`. The retired signed-in screens (`/sign-in`, `/account`, `/admin`, `/ops`) redirect to `/home`
+(`src/lib/gate.ts`, applied by `src/proxy.ts`).
 
-- **Continue with Google**: anyone with a Google account signs up on first use (username from the email,
-  Google's name and photo) and sees every screen except the admin ones. A verified Google email that
-  matches a password user links to that user. Every superadmin gets an email on each sign-up. The button
-  shows only where `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set; Vercel preview URLs are not
-  registered with Google, so previews sign in with a password.
-- **Email or username and a password**, for users made from the command line (below).
+A banner above every screen says what this copy is: built for the Base Power × AITX Hackathon, running on a
+snapshot recorded on one day (`src/components/demo/`, facts in `src/lib/demo.ts`, the date from
+`snapshot/manifest.json`). Closing it sets the `demo_banner` cookie; the sidebar's footer card keeps the same
+facts, the link to `/how-its-built` and the theme.
 
-Admin is `isSuperAdmin`, checked in the database: `requireSuperAdmin()` on an admin page (a 404 for
-anyone else) and `withSuperAdmin()` on its BFF routes (403), both in `src/lib/auth/session.ts`.
+## The snapshot
 
-Running it locally:
+After the hackathon the pipelines (basecast-airflow), the API (basecast-get-data), Cloud SQL and the lake's
+bucket were shut down to bring the GCP bill to zero. The app answers from `snapshot/`: get-data's responses,
+recorded once from the live API on 2026-09-29 and committed (5.3 MB, gzipped JSON).
 
-```bash
-cloud-sql-proxy --port 5439 --quota-project basecast-509812 basecast-509812:us-central1:basecast-pg
-# .env.local: DATABASE_URL, NEXTAUTH_SECRET (see .env.example)
-npm run db:push   # creates or updates the tables in schemas `app` and `ops`
-npm run dev
-```
-
-Users change their own display name and photo on `/account` (user menu → Account); photos are stored in
-the same database (`app."UserAvatar"`).
-
-Password users are created from the command line. The script never overwrites an
-existing username or email, and reads the password from stdin (a hidden prompt in a terminal):
-
-```bash
-npm run user:create -- --username jane --email jane@example.com --name "Jane Doe" [--superadmin]
-```
-
-The superadmin is `admin`; its password is in Secret Manager:
-
-```bash
-gcloud secrets versions access latest --secret app-superadmin-password --project basecast-509812
-```
+- `scripts/snapshot/record.ts` (`npm run snapshot:record`) crawled every resource the screens read with every
+  parameter they can send, taking the choices (variants, regions, backtest dates, horizons and strata,
+  counties, accounts, tables, lake folders) from the answers themselves, plus the model runs' `ops.log` lines
+  from Postgres. It needs the live services, so it can no longer run; it stays as the record of how the
+  snapshot was made. The layout is `src/lib/snapshot/paths.ts`.
+- `src/lib/snapshot/resolve.ts` answers a get-data path from it with the API's envelope and statuses. Where
+  a screen sends open-ended parameters, the routers' filters are ported: the accounts list and its CSV,
+  an account's events, pipeline runs, table rows (`filter`, `sort`, paging) and the lake's listings. Its
+  tests check them against filtered answers the live API gave (`parity`).
+- What is not in it: the lake's files (a file page shows its details, provenance and lineage, no preview or
+  download), and past the first 500 rows of each table (`etl_run` is whole; filters and sorting work within
+  what was kept).
 
 ## Data
 
-`/data` browses everything the pipelines fetched and built, through basecast-get-data (run it locally
-with its README; `GET_DATA_URL` and `GET_DATA_TOKEN` point the app at it). Under `/data` the sidebar is
-the Data mode's own: Overview, Tables, Pipeline runs, Flow and the bucket's folder tree.
+`/data` browses everything the pipelines fetched and built. Under `/data` the sidebar is the Data mode's own:
+Overview, Tables, Pipeline runs, Flow and the bucket's folder tree.
 
 - `/data`: every raw source with its files, snapshots, formats and the tables it feeds.
 - `/data/lake/<bucket path>`: the route mirrors `gs://basecast-509812-lake`, so every folder and file has a
-  link. A file opens with a viewer for its format (spreadsheets and CSVs in a positional grid, Parquet
-  and JSON as typed grids, PDFs in pdf.js, zip members, slide and document text), its manifest entry and
-  the tables it fed.
-- `/data/tables` and `/data/tables/<name>`: the processed tables in Postgres and BigQuery, with rows in the
-  DataGrid (server blocks of 500, sort and filters on the server), the schema and the raw files behind them.
+  link. A file shows its manifest entry, where it came from and the tables it fed.
+- `/data/tables` and `/data/tables/<name>`: the processed tables that lived in Postgres and BigQuery, with
+  their first rows in the DataGrid, the schema and the raw files behind them.
 - `/data/runs`: the pipelines' `etl_run` history.
 - `/data/flow`: the dataset flow in React Flow, from each origin (publisher) through its ingest and process
   steps to the tables it writes and the derived tables built from them. Each node says when its data last
   updated, with a health icon: up to date, running, overdue (no update 6 h past the next scheduled run of
-  `schedule_cron`, America/Chicago), degraded (last run abandoned or partial), failed, never. Selecting a node
-  highlights its whole lineage and opens its details.
+  `schedule_cron`, America/Chicago), degraded (last run abandoned or partial), failed, never. With the
+  pipelines stopped, "now" is the snapshot's recording time (`useSnapshotNow`), so the health reads as it did
+  that day. Selecting a node highlights its whole lineage and opens its details.
 
-The browser only calls the BFF under `/api/data` (`src/app/api/data/`), which adds the token: a
-catch-all that forwards an allowlist of get-data paths, `grid/` for the DataGrid's blocks, and `file` for
-bytes (a signed GCS URL when get-data can sign one, otherwise streamed with `Range`).
+The browser only calls the BFF under `/api/data` (`src/app/api/data/`): a catch-all over the snapshot and
+`grid/` for the DataGrid's blocks. The answers carry `Cache-Control: public, max-age=3600, s-maxage=86400`:
+the snapshot only changes with a deploy, so Vercel's CDN serves most of them.
 
 The product screens read get-data's v2 envelope (`data` plus a `meta` with sources, data date, model version and
 caveats) through the same catch-all: `src/lib/bff/` fetches it, and `src/components/product/` shows each card's
-caveats, provenance and its loading, "being rebuilt" (a 503 `mart_not_built`) and empty states.
+caveats, provenance and its loading, "being rebuilt" and empty states.
 
-## Ops
+## Logging
 
-`/ops` shows what the app, get-data and the pipelines are doing: service health, requests per route
-(counts, 4xx/5xx, p50/p95/p99), pipeline runs from `etl_run`, and one log stream with a trace per
-request. All three services write the same row shape to `ops.log` (Postgres `basecast`, schema `ops`;
-format in basecast-get-data `docs/data-contract.md` §7), and the page reads it straight from Postgres.
-
-The app logs with `log.info(event, message, fields)` from `src/lib/observability`: one JSON line on
-stdout and, from `info` up, a row in `ops.log` written after the response. Rows are written only on a
-deploy (`VERCEL_ENV` is set) or with `OPS_LOG=1`: a local server reaches the production database through
-the Cloud SQL proxy, so by default its log stays on stdout. Every BFF route behind
-`withSession` gets its `http.request` line; unhandled server errors come from `onRequestError`.
-
-After `npm run db:push` created the table, run the grants once as `postgres` (the pipelines append,
-and the app reads `etl_run` through the reader role):
-
-```bash
-psql "postgresql://postgres@127.0.0.1:5439/basecast" -v ON_ERROR_STOP=1 -f prisma/ops-grants.sql
-```
-
-## Email
-
-The app sends email through [Resend](https://resend.com), from `BaseCast <noreply@basecast.pbrenner.com>`.
-Server code calls `sendEmail()` from `src/lib/email.ts` with the content (heading, paragraphs, key facts, one
-button), and every email comes out in the same layout (`src/lib/email/layout.ts`, light-mode colors, logo
-inline). It rejects with `EmailError` when Resend refuses the email. `RESEND_API_KEY` is a sending-only key
-restricted to `basecast.pbrenner.com` (Secret Manager `app-resend-api-key`). To send a sample notification
-and see the layout in a real inbox:
-
-```bash
-npm run email:test -- --to jane@example.com
-```
+The app logs with `log.info(event, message, fields)` from `src/lib/observability`: one JSON line on stdout,
+Vercel's runtime log. Every data route gets its `http.request` line (`withRequestLog`); unhandled server
+errors come from `onRequestError`. The `ops.log` table and the `/ops` screen that read it left with Cloud SQL.
 
 ## Deploy
 
 Vercel (personal scope `brennerpablos-projects`, project `basecast-app`), production at
-https://basecast.pbrenner.com, deployed from `main`. Functions run in `cle1` (Cleveland, the closest region
-to Cloud SQL in `us-central1`; see `vercel.json`).
-
-Cloud SQL only accepts its own connectors and Vercel has no proxy, so production sets
-`CLOUD_SQL_INSTANCE` and the app opens the tunnel with Google's Node connector, as the service account
-`app-vercel` (role `cloudsql.client` only; its JSON key is `GCP_SA_KEY`). `DATABASE_URL` then only supplies
-the user, password and database. Production env: `DATABASE_URL`, `NEXTAUTH_SECRET`,
-`CLOUD_SQL_INSTANCE`, `GCP_SA_KEY`, `RESEND_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
-`NEXTAUTH_URL` stays unset: on Vercel next-auth takes the host from the request, so the custom domain and the
-`*.vercel.app` URLs both work.
+https://basecast.pbrenner.com, deployed from `main`. The app needs no environment variables. Functions run in
+`cle1` (`vercel.json`), chosen when they called Cloud SQL in `us-central1`.
