@@ -1,0 +1,518 @@
+{
+  "recordedAt": "2026-09-29T17:39:18.736Z",
+  "source": "https://basecast-get-data-2ffqrle2qa-uc.a.run.app",
+  "defaults": {
+    "peakVariant": "deck_pre_batch_zero",
+    "peakRegion": "ERCOT",
+    "normalizedRegion": "ERCOT",
+    "backtestAsOf": "2026-05-31",
+    "countiesHorizon": 2028,
+    "countiesStratum": "all"
+  },
+  "tableRows": {
+    "base_public_facts": {
+      "kept": 70,
+      "rows": 70
+    },
+    "bls_qcew_county": {
+      "kept": 500,
+      "rows": 1117
+    },
+    "cdr_capacity": {
+      "kept": 500,
+      "rows": 50115
+    },
+    "cdr_forecasts": {
+      "kept": 500,
+      "rows": 3785
+    },
+    "census_housing_county": {
+      "kept": 500,
+      "rows": 5842
+    },
+    "census_permits_county": {
+      "kept": 500,
+      "rows": 34431
+    },
+    "census_population_county": {
+      "kept": 500,
+      "rows": 73660
+    },
+    "census_zcta_county": {
+      "kept": 500,
+      "rows": 3017
+    },
+    "county_iso_share": {
+      "kept": 254,
+      "rows": 254
+    },
+    "county_utility_overlap": {
+      "kept": 500,
+      "rows": 1934
+    },
+    "county_utility_overlap_eia": {
+      "kept": 500,
+      "rows": 991
+    },
+    "county_utility_overlap_puct": {
+      "kept": 500,
+      "rows": 943
+    },
+    "county_weather_zone": {
+      "kept": 254,
+      "rows": 254
+    },
+    "cpa_data_centers": {
+      "kept": 167,
+      "rows": 167
+    },
+    "cpa_jeti": {
+      "kept": 21,
+      "rows": null
+    },
+    "cpa_local_dev_agreements": {
+      "kept": 500,
+      "rows": 5847
+    },
+    "dataset_registry": {
+      "kept": 125,
+      "rows": 125
+    },
+    "document_pages": {
+      "kept": 500,
+      "rows": 3759
+    },
+    "eaglei_coverage_history": {
+      "kept": 280,
+      "rows": 280
+    },
+    "eaglei_dqi": {
+      "kept": 50,
+      "rows": null
+    },
+    "eaglei_mcc": {
+      "kept": 500,
+      "rows": 3233
+    },
+    "eia860_generators": {
+      "kept": 500,
+      "rows": 3424
+    },
+    "eia860_plants": {
+      "kept": 500,
+      "rows": 1533
+    },
+    "eia860m_generators": {
+      "kept": 500,
+      "rows": 27419
+    },
+    "eia861_sales": {
+      "kept": 500,
+      "rows": 12125
+    },
+    "eia861_service_territory": {
+      "kept": 500,
+      "rows": 12762
+    },
+    "eia861_utility": {
+      "kept": 500,
+      "rows": 2646
+    },
+    "eia_utility_territories": {
+      "kept": 256,
+      "rows": 256
+    },
+    "ercot_ccp_resource": {
+      "kept": 68,
+      "rows": 68
+    },
+    "ercot_fuel_mix_15min": {
+      "kept": 500,
+      "rows": 5987078
+    },
+    "ercot_hub_dc_tie": {
+      "kept": 11,
+      "rows": null
+    },
+    "ercot_load_hourly_wz": {
+      "kept": 500,
+      "rows": 1873263
+    },
+    "ercot_load_hourly_wz_archive": {
+      "kept": 500,
+      "rows": 1867228
+    },
+    "ercot_load_hourly_wz_np6345": {
+      "kept": 500,
+      "rows": 7776
+    },
+    "ercot_market_participants": {
+      "kept": 500,
+      "rows": 4254
+    },
+    "ercot_members": {
+      "kept": 500,
+      "rows": 4291
+    },
+    "ercot_monthly_peaks": {
+      "kept": 500,
+      "rows": 11815
+    },
+    "ercot_noie_load_map": {
+      "kept": 500,
+      "rows": 817
+    },
+    "ercot_resource_node_unit": {
+      "kept": 500,
+      "rows": 1635
+    },
+    "ercot_settlement_point_map": {
+      "kept": 500,
+      "rows": 19389
+    },
+    "ercot_zip_weather_zone": {
+      "kept": 500,
+      "rows": 2476
+    },
+    "etl_run": {
+      "kept": 182,
+      "rows": 151
+    },
+    "gis_cells": {
+      "kept": 500,
+      "rows": 2331913
+    },
+    "gis_colocated_battery": {
+      "kept": 500,
+      "rows": 64309
+    },
+    "gis_project_events": {
+      "kept": 500,
+      "rows": 3764
+    },
+    "gis_snapshots": {
+      "kept": 500,
+      "rows": 125470
+    },
+    "lake_processed": {
+      "kept": 500,
+      "rows": 3736
+    },
+    "large_load_chart_values": {
+      "kept": 500,
+      "rows": 6470
+    },
+    "large_load_headlines": {
+      "kept": 247,
+      "rows": 247
+    },
+    "large_load_status": {
+      "kept": 103,
+      "rows": 103
+    },
+    "ltlf_forecasts": {
+      "kept": 500,
+      "rows": 12782
+    },
+    "ltlf_hourly": {
+      "kept": 500,
+      "rows": 6361326
+    },
+    "ltlf_weather_scenarios": {
+      "kept": 500,
+      "rows": 38272457
+    },
+    "manual_official_figures": {
+      "kept": 10,
+      "rows": 10
+    },
+    "manual_official_forecasts": {
+      "kept": 5,
+      "rows": null
+    },
+    "mart_account_counties": {
+      "kept": 431,
+      "rows": 431
+    },
+    "mart_account_detail": {
+      "kept": 107,
+      "rows": 107
+    },
+    "mart_account_events": {
+      "kept": 500,
+      "rows": 5971
+    },
+    "mart_accounts": {
+      "kept": 107,
+      "rows": 107
+    },
+    "mart_actual_summer_peaks": {
+      "kept": 19,
+      "rows": null
+    },
+    "mart_annotations": {
+      "kept": 8,
+      "rows": null
+    },
+    "mart_backtest_fan": {
+      "kept": 41,
+      "rows": null
+    },
+    "mart_county_acquisition": {
+      "kept": 204,
+      "rows": 204
+    },
+    "mart_county_large_load": {
+      "kept": 204,
+      "rows": 204
+    },
+    "mart_data_center_sites_new": {
+      "kept": 38,
+      "rows": null
+    },
+    "mart_four_cp_dispatch_curve": {
+      "kept": 450,
+      "rows": 450
+    },
+    "mart_four_cp_intervals": {
+      "kept": 76,
+      "rows": 76
+    },
+    "mart_four_cp_rates": {
+      "kept": 2,
+      "rows": null
+    },
+    "mart_four_cp_scarcity": {
+      "kept": 16,
+      "rows": null
+    },
+    "mart_four_cp_zone": {
+      "kept": 280,
+      "rows": 280
+    },
+    "mart_glossary": {
+      "kept": 17,
+      "rows": null
+    },
+    "mart_insights": {
+      "kept": 14,
+      "rows": null
+    },
+    "mart_large_load_in_service": {
+      "kept": 500,
+      "rows": 817
+    },
+    "mart_large_load_monthly": {
+      "kept": 45,
+      "rows": null
+    },
+    "mart_large_load_realization": {
+      "kept": 63,
+      "rows": 63
+    },
+    "mart_load_normalized_annual": {
+      "kept": 216,
+      "rows": 216
+    },
+    "mart_load_normalized_monthly": {
+      "kept": 500,
+      "rows": 2565
+    },
+    "mart_meta": {
+      "kept": 219,
+      "rows": 219
+    },
+    "mart_official_forecast_errors": {
+      "kept": 354,
+      "rows": 354
+    },
+    "mart_official_peak_lines": {
+      "kept": 76,
+      "rows": 76
+    },
+    "mart_peak_backtest": {
+      "kept": 70,
+      "rows": 70
+    },
+    "mart_peak_forecast": {
+      "kept": 176,
+      "rows": 176
+    },
+    "mart_queue_adjusted_county": {
+      "kept": 500,
+      "rows": 661
+    },
+    "mart_queue_backtest": {
+      "kept": 15,
+      "rows": null
+    },
+    "mart_queue_project_scores": {
+      "kept": 500,
+      "rows": 1810
+    },
+    "mart_queue_stage_curves": {
+      "kept": 500,
+      "rows": 1940
+    },
+    "mart_zone_layers": {
+      "kept": 48,
+      "rows": null
+    },
+    "mora_outlook": {
+      "kept": 500,
+      "rows": 32069
+    },
+    "noaa_ghcnh_hourly": {
+      "kept": 500,
+      "rows": 6105321
+    },
+    "official_forecasts": {
+      "kept": 500,
+      "rows": 16572
+    },
+    "open_meteo_hourly": {
+      "kept": 500,
+      "rows": 2494410
+    },
+    "prices_dam_hub_lz": {
+      "kept": 500,
+      "rows": 2004754
+    },
+    "prices_rtm_hub_lz": {
+      "kept": 500,
+      "rows": 12106354
+    },
+    "puct_ccn_territories": {
+      "kept": 148,
+      "rows": 148
+    },
+    "puct_directory_agg": {
+      "kept": 232,
+      "rows": 232
+    },
+    "puct_directory_coop": {
+      "kept": 139,
+      "rows": 139
+    },
+    "puct_directory_iou": {
+      "kept": 18,
+      "rows": null
+    },
+    "puct_directory_muni": {
+      "kept": 116,
+      "rows": 116
+    },
+    "puct_directory_pgc": {
+      "kept": 500,
+      "rows": 1095
+    },
+    "puct_directory_pgc_facility": {
+      "kept": 500,
+      "rows": 1650
+    },
+    "puct_directory_ra": {
+      "kept": 6,
+      "rows": null
+    },
+    "puct_directory_rep": {
+      "kept": 181,
+      "rows": 181
+    },
+    "puct_directory_sg": {
+      "kept": 103,
+      "rows": 103
+    },
+    "puct_directory_sg_facility": {
+      "kept": 128,
+      "rows": 128
+    },
+    "puct_directory_tdu": {
+      "kept": 80,
+      "rows": 80
+    },
+    "puct_filing_documents": {
+      "kept": 500,
+      "rows": 500
+    },
+    "puct_tsp_large_load_requests": {
+      "kept": 266,
+      "rows": 266
+    },
+    "pudl_core_eia860m__changelog_generators": {
+      "kept": 500,
+      "rows": 17670
+    },
+    "pudl_core_eia861__yearly_service_territory": {
+      "kept": 500,
+      "rows": 24831
+    },
+    "pudl_core_eia930__hourly_subregion_demand": {
+      "kept": 500,
+      "rows": 573696
+    },
+    "pudl_core_ferc714__respondent_id": {
+      "kept": 219,
+      "rows": 219
+    },
+    "pudl_core_ferc714__yearly_planning_area_demand_forecast": {
+      "kept": 500,
+      "rows": 22405
+    },
+    "pudl_out_eia__yearly_plants": {
+      "kept": 500,
+      "rows": 16628
+    },
+    "pudl_out_ferc714__respondents_with_fips": {
+      "kept": 500,
+      "rows": 7464
+    },
+    "pudl_out_ferc714__summarized_demand": {
+      "kept": 500,
+      "rows": 4380
+    },
+    "rtp_load": {
+      "kept": 500,
+      "rows": 1143
+    },
+    "tceq_air_permits": {
+      "kept": 500,
+      "rows": 693114
+    },
+    "tceq_data_center_sites": {
+      "kept": 88,
+      "rows": 88
+    },
+    "tpit_project_history": {
+      "kept": 500,
+      "rows": 66402
+    },
+    "tpit_projects": {
+      "kept": 500,
+      "rows": 68529
+    },
+    "tx_counties": {
+      "kept": 254,
+      "rows": 254
+    },
+    "weather_hourly_wz": {
+      "kept": 500,
+      "rows": 1663488
+    },
+    "weather_points": {
+      "kept": 12,
+      "rows": 12
+    }
+  },
+  "counts": {
+    "peak": 11,
+    "normalized": 9,
+    "backtestPeak": 8,
+    "countyDetails": 254,
+    "accounts": 107,
+    "tables": 123,
+    "lakeFolders": 534,
+    "lakeFiles": 3507,
+    "runs": 182,
+    "runLogs": 10
+  }
+}
