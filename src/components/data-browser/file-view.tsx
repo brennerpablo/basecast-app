@@ -1,34 +1,19 @@
 "use client";
 
-import {
-  ArrowLeftIcon,
-  CopyIcon,
-  DownloadIcon,
-  ExternalLinkIcon,
-  FileWarningIcon,
-  FileXIcon,
-  GitBranchIcon,
-  TableIcon,
-} from "lucide-react";
+import { CopyIcon, ExternalLinkIcon, FileWarningIcon, FileXIcon } from "lucide-react";
 import Link from "next/link";
-import { parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
 import type { ReactNode } from "react";
 
-import { ViewSwitchControl } from "@/components/components-app/ui/view-switch-control";
 import EmptyState from "@/components/empty-state";
 import { PageBreadcrumb } from "@/components/page-breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 
-import { type FileKind, fileUrl, type ObjectDetail, type ObjectStructure, useLakeObject, useObjectStructure } from "./api";
+import { type FileKind, type ObjectDetail, useLakeObject } from "./api";
 import { FileKindIcon, LoadDot } from "./file-kind";
 import { formatBytes, formatCount, formatDateTime, middleTruncate } from "./format";
 import { copyText, LakeCrumbs } from "./lake-crumbs";
-import { LakeGrid } from "./lake-grid";
-import { LAKE_BUCKET, lakeHref, sourceKey } from "./lake-path";
-import { PdfPreview } from "./pdf-preview";
-import { JsonTree, TextBlocks, ZipMembers } from "./previews";
+import { lakeHref, sourceKey } from "./lake-path";
 
 function Panel({ title, children, aside }: { title: string; children: ReactNode; aside?: ReactNode }) {
   return (
@@ -201,143 +186,15 @@ function OtherSnapshots({ detail }: { detail: ObjectDetail }) {
   );
 }
 
-function SheetTabs({ sheets, current, onPick }: { sheets: ObjectStructure["sheets"]; current: string; onPick: (name: string) => void }) {
-  return (
-    <div className="grid-scrollbar flex overflow-x-auto border-t bg-muted/40" role="tablist" aria-label="Sheets">
-      {(sheets ?? []).map((s) => (
-        <button
-          key={s.name}
-          type="button"
-          role="tab"
-          aria-selected={s.name === current}
-          onClick={() => onPick(s.name)}
-          title={s.rows !== null && s.rows !== undefined ? `${formatCount(s.rows)} rows × ${s.columns} columns` : undefined}
-          className={cn(
-            "shrink-0 border-r px-3 py-1.5 text-xs whitespace-nowrap transition-colors hover:bg-accent",
-            s.name === current
-              ? "bg-background font-semibold text-foreground shadow-[inset_0_2px_0_var(--color-brand-hover)]"
-              : "text-muted-foreground",
-          )}
-        >
-          {s.name}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function Preview({
-  lakeKey,
-  member,
-  kind,
-  previewable,
-  structure,
-}: {
-  lakeKey: string;
-  member: string | null;
-  kind: FileKind;
-  previewable: boolean;
-  structure: ReturnType<typeof useObjectStructure>;
-}) {
-  const [sheet, setSheet] = useQueryState("sheet", parseAsString);
-  const [mode, setMode] = useQueryState("mode", parseAsStringLiteral(["table", "tree"] as const).withDefault("table"));
-  const download = (
-    <Button asChild variant="outline" size="sm">
-      <a href={fileUrl(lakeKey, member, true)}>
-        <DownloadIcon />
-        Download
-      </a>
-    </Button>
-  );
-
-  if (!previewable && kind !== "pdf") {
-    return (
-      <div className="flex flex-col items-center gap-3 py-12">
-        <EmptyState Icon={FileWarningIcon} title="Too large to preview here" compact />
-        {download}
-      </div>
-    );
-  }
-  if (kind === "pdf") return <PdfPreview url={fileUrl(lakeKey, member)} />;
-  if (kind === "slides" || kind === "document" || kind === "html") return <TextBlocks lakeKey={lakeKey} member={member} />;
-  if (kind === "other") {
-    return (
-      <div className="flex flex-col items-center gap-3 py-12">
-        <EmptyState Icon={FileWarningIcon} title="No preview for this format" compact />
-        {download}
-      </div>
-    );
-  }
-  if (structure.isPending) return <Skeleton className="h-[62vh] w-full rounded-none" />;
-  if (structure.isError) {
-    return <EmptyState Icon={FileXIcon} title="This file could not be read" description={structure.error.message} />;
-  }
-  const s = structure.data;
-  if (s.too_large) {
-    return (
-      <div className="flex flex-col items-center gap-3 py-12">
-        <EmptyState Icon={FileWarningIcon} title="Too large to preview here" description={s.note ?? undefined} compact />
-        {download}
-      </div>
-    );
-  }
-  if (kind === "zip") return <ZipMembers lakeKey={lakeKey} members={s.members ?? []} />;
-  if (kind === "sheet") {
-    const current = sheet && s.sheets?.some((x) => x.name === sheet) ? sheet : (s.sheets?.[0]?.name ?? null);
-    return (
-      <div className="flex flex-col">
-        <LakeGrid lakeKey={lakeKey} member={member} sheet={current} className="h-[60vh] min-h-[400px] rounded-none border-0" />
-        <SheetTabs sheets={s.sheets} current={current ?? ""} onPick={(name) => void setSheet(name === s.sheets?.[0]?.name ? null : name)} />
-      </div>
-    );
-  }
-  if ((kind === "json" || kind === "geojson") && s.json_tree) {
-    if (!s.columns) return <JsonTree node={s.json_tree} />;
-    return (
-      <div className="flex flex-col">
-        <div className="flex items-center justify-between gap-2 border-b px-3 py-1.5 text-xs text-muted-foreground">
-          <span>
-            {formatCount(s.row_count)} rows from <span className="font-mono">{s.tabular_path}</span>
-          </span>
-          <ViewSwitchControl
-            size="sm"
-            value={mode}
-            onValueChange={(v) => void setMode(v === "table" ? null : v)}
-            ariaLabel="Table or tree"
-            options={[
-              { value: "table", label: "Table", icon: TableIcon },
-              { value: "tree", label: "Tree", icon: GitBranchIcon },
-            ]}
-          />
-        </div>
-        {mode === "tree" ? (
-          <JsonTree node={s.json_tree} />
-        ) : (
-          <LakeGrid lakeKey={lakeKey} member={member} className="h-[58vh] min-h-[400px] rounded-none border-0" />
-        )}
-      </div>
-    );
-  }
-  if (kind === "text" || kind === "parquet") {
-    return <LakeGrid lakeKey={lakeKey} member={member} className="h-[62vh] min-h-[420px] rounded-none border-0" />;
-  }
-  return <EmptyState Icon={FileWarningIcon} title="No preview for this format" compact />;
-}
-
-/** One raw file: its preview, where it came from, and the tables it fed. */
+/**
+ * One raw file: where it came from and the tables it fed. The static demo keeps the lake's catalog, not its
+ * files, so there is no preview or download.
+ */
 export function FileView({ lakeKey }: { lakeKey: string }) {
-  const [member] = useQueryState("member", parseAsString);
   const detail = useLakeObject(lakeKey);
   const object = detail.data?.object;
-  const isZip = object?.kind === "zip";
-  const zip = useObjectStructure(lakeKey, null, Boolean(isZip && member));
-  const memberInfo = member ? zip.data?.members?.find((m) => m.name === member) : undefined;
-  const kind: FileKind | undefined = member ? memberInfo?.kind : object?.kind;
-  const needsStructure = Boolean(kind && !["pdf", "slides", "document", "html", "other"].includes(kind));
-  const structure = useObjectStructure(lakeKey, member, Boolean(detail.data?.previewable) && needsStructure);
-
+  const kind: FileKind | undefined = object?.kind;
   const fileName = object?.file ?? lakeKey.split("/").at(-1) ?? "";
-  const shownName = member ? (member.split("/").at(-1) ?? member) : fileName;
 
   if (detail.isError) {
     return (
@@ -349,14 +206,9 @@ export function FileView({ lakeKey }: { lakeKey: string }) {
     );
   }
 
-  const s = structure.data;
   const badges = [
-    (member ? shownName : fileName).split(".").at(-1)?.toUpperCase(),
-    memberInfo ? formatBytes(memberInfo.bytes) : object ? formatBytes(object.bytes) : null,
-    s?.sheets ? `${s.sheets.length} sheets` : null,
-    s?.members ? `${s.members.length} members` : null,
-    s?.row_count !== null && s?.row_count !== undefined && kind !== "sheet" ? `${formatCount(s.row_count)} rows` : null,
-    s?.delimiter ? `delimiter ${s.delimiter === "\t" ? "tab" : s.delimiter}` : null,
+    fileName.split(".").at(-1)?.toUpperCase(),
+    object ? formatBytes(object.bytes) : null,
     object?.dt ? `dt=${object.dt}` : null,
   ].filter(Boolean) as string[];
 
@@ -366,7 +218,7 @@ export function FileView({ lakeKey }: { lakeKey: string }) {
         items={[
           { label: "Data", href: "/data" },
           ...(object?.source_id ? [{ label: object.source_id, href: lakeHref(sourceKey(object.source_id)) }] : []),
-          { label: shownName },
+          { label: fileName },
         ]}
       />
       <LakeCrumbs lakeKey={lakeKey} />
@@ -375,13 +227,7 @@ export function FileView({ lakeKey }: { lakeKey: string }) {
         <div className="flex min-w-0 flex-1 items-start gap-3">
           {kind ? <FileKindIcon kind={kind} className="mt-0.5 size-8" /> : <Skeleton className="size-8" />}
           <div className="min-w-0 space-y-1.5">
-            {member ? (
-              <Link href={lakeHref(lakeKey)} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-                <ArrowLeftIcon className="size-3" />
-                <span className="font-mono">{middleTruncate(fileName, 60)}</span>
-              </Link>
-            ) : null}
-            <h2 className="font-mono text-[15px] font-semibold break-all">{shownName}</h2>
+            <h2 className="font-mono text-[15px] font-semibold break-all">{fileName}</h2>
             <div className="flex flex-wrap gap-1.5">
               {badges.map((b) => (
                 <span key={b} className="rounded-md border px-2 py-0.5 text-[11px] text-muted-foreground">
@@ -391,26 +237,14 @@ export function FileView({ lakeKey }: { lakeKey: string }) {
             </div>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {object?.url ? (
-            <Button asChild variant="outline" size="sm">
-              <a href={object.url} target="_blank" rel="noopener noreferrer">
-                <ExternalLinkIcon />
-                Open at source
-              </a>
-            </Button>
-          ) : null}
+        {object?.url ? (
           <Button asChild variant="outline" size="sm">
-            <a href={fileUrl(lakeKey, member, true)}>
-              <DownloadIcon />
-              Download
+            <a href={object.url} target="_blank" rel="noopener noreferrer">
+              <ExternalLinkIcon />
+              Open at source
             </a>
           </Button>
-          <Button variant="outline" size="sm" onClick={() => void copyText(`${LAKE_BUCKET}/${lakeKey}`, "gs:// URI")}>
-            <CopyIcon />
-            gs:// URI
-          </Button>
-        </div>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
@@ -418,17 +252,14 @@ export function FileView({ lakeKey }: { lakeKey: string }) {
           <div className="border-b px-4 py-2.5">
             <h3 className="text-sm font-semibold">Preview</h3>
           </div>
-          {!kind ? (
-            <Skeleton className="h-[62vh] w-full rounded-none" />
-          ) : (
-            <Preview
-              lakeKey={lakeKey}
-              member={member}
-              kind={kind}
-              previewable={detail.data?.previewable ?? true}
-              structure={structure}
+          <div className="py-12">
+            <EmptyState
+              Icon={FileWarningIcon}
+              title="No file previews in this demo"
+              description="The static snapshot keeps the lake's catalog, not its files."
+              compact
             />
-          )}
+          </div>
         </section>
         <aside className="space-y-4">
           {detail.data ? (

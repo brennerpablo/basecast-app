@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { useProductQuery } from "@/lib/bff/queries";
+import { dataUrl } from "@/lib/bff/url";
 import type { OpsLogPage } from "@/lib/ops/types";
 
 import { MODEL_RUN_FILTERS, type ModelRun, parseRuns, type RowsPage } from "./model-runs";
@@ -28,12 +29,12 @@ export function useModelRun(runId: string) {
   return { ...query, run };
 }
 
-/** A run's `ops.log` lines (the /ops logs route, scoped to the run whatever the range). */
+/** A run's `ops.log` lines, as recorded in the snapshot. */
 export function useRunLogs(runId: string) {
   return useQuery({
     queryKey: ["ops", "logs", "run", runId],
     queryFn: async ({ signal }) => {
-      const response = await fetch(`/api/ops/logs?run=${encodeURIComponent(runId)}&limit=200`, { signal });
+      const response = await fetch(dataUrl(`ops-log/runs/${encodeURIComponent(runId)}`), { signal });
       if (!response.ok) throw new Error(`The run's log could not be read (${response.status})`);
       return (await response.json()) as OpsLogPage;
     },

@@ -12,9 +12,6 @@ export type SourcesData = Schemas["SourcesData"];
 export type LakeListing = Schemas["LakeListing"];
 export type LakeObject = Schemas["LakeObject"];
 export type ObjectDetail = Schemas["ObjectDetail"];
-export type ObjectStructure = Schemas["ObjectStructure"];
-export type ObjectText = Schemas["ObjectText"];
-export type JsonNode = Schemas["JsonNode"];
 export type RowsPage = Schemas["RowsPage"];
 export type GridColumnInfo = Schemas["GridColumn"];
 export type TableSummary = Schemas["TableSummary"];
@@ -44,21 +41,11 @@ export async function fetchData<T>(path: string, params?: Params, signal?: Abort
   return body.data;
 }
 
-/** The URL a viewer or a download link reads a raw file's bytes from. */
-export function fileUrl(key: string, member?: string | null, download = false): string {
-  const qs = new URLSearchParams({ key });
-  if (member) qs.set("member", member);
-  if (download) qs.set("download", "1");
-  return `/api/data/file?${qs.toString()}`;
-}
-
 export const dataKeys = {
   all: ["data"] as const,
   sources: () => ["data", "sources"] as const,
   list: (prefix: string, q: string, recursive: boolean) => ["data", "list", prefix, q, recursive] as const,
   object: (key: string) => ["data", "object", key] as const,
-  structure: (key: string, member: string | null) => ["data", "structure", key, member] as const,
-  text: (key: string, member: string | null) => ["data", "text", key, member] as const,
   tables: () => ["data", "tables"] as const,
   table: (name: string) => ["data", "table", name] as const,
   lineage: (name: string, offset: number) => ["data", "lineage", name, offset] as const,
@@ -86,24 +73,6 @@ export function useLakeObject(key: string) {
   return useQuery({
     queryKey: dataKeys.object(key),
     queryFn: ({ signal }) => fetchData<ObjectDetail>("lake/object", { key }, signal),
-  });
-}
-
-export function useObjectStructure(key: string, member: string | null, enabled = true) {
-  return useQuery({
-    queryKey: dataKeys.structure(key, member),
-    queryFn: ({ signal }) => fetchData<ObjectStructure>("lake/object/structure", { key, member }, signal),
-    enabled,
-    // Raw files never change under a key.
-    staleTime: Infinity,
-  });
-}
-
-export function useObjectText(key: string, member: string | null) {
-  return useQuery({
-    queryKey: dataKeys.text(key, member),
-    queryFn: ({ signal }) => fetchData<ObjectText>("lake/object/text", { key, member }, signal),
-    staleTime: Infinity,
   });
 }
 

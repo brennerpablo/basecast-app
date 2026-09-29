@@ -22,10 +22,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { gridFilterParams } from "@/lib/get-data/grid";
 import { buildGridParams } from "@/lib/grid-params";
 import { fetchGridExportRows, useGridWindowQuery } from "@/lib/hooks/use-grid-window-query";
+import { TABLE_SAMPLE, WHOLE_TABLES } from "@/lib/snapshot/paths";
 
 import { type TableDetail, useLineage, useTable } from "./api";
 import { formatBytes, formatCellText, formatCount, formatDateTime } from "./format";
-import { columnWidth, gridType } from "./lake-grid";
+import { columnWidth, gridType } from "./grid-columns";
 import { lakeHref, sourceKey } from "./lake-path";
 import { rowsLabel } from "./tables-catalog";
 
@@ -71,14 +72,18 @@ function TableRows({ table }: { table: TableDetail }) {
   const paramsQs = buildGridParams(columns, filters, sorting);
   const apiUrl = `/api/data/grid/table/${table.name}`;
   const grid = useGridWindowQuery<Row, Summary>({ apiUrl, queryKey: ["data", "table-grid", table.name], paramsQs });
+  // The snapshot keeps a table's first rows: filters and sorting work within them.
+  const sampled = !WHOLE_TABLES.has(table.name) && (table.rows ?? 0) > TABLE_SAMPLE;
 
   return (
     <div className="space-y-2">
       {grid.isError ? (
         <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">{grid.error?.message}</p>
       ) : null}
-      {grid.summary?.estimated ? (
-        <p className="text-xs text-muted-foreground">Estimated total; filter for an exact count.</p>
+      {sampled ? (
+        <p className="text-xs text-muted-foreground">
+          First {formatCount(TABLE_SAMPLE)} of {formatCount(table.rows)} rows
+        </p>
       ) : null}
       <DataGrid<Row>
         columns={columns}
