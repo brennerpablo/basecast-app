@@ -3,9 +3,10 @@
 **basecast** was built for the Base Power × AITX Hackathon (Austin, Sep 25–27, 2026). This repo is
 **front B: the frontend**, a Next.js app built on the Fundsys app base and deployed to Vercel.
 
-**Since 2026-09-29 it is a static public demo.** To bring the GCP bill to zero, the pipelines, get-data, Cloud SQL
-and the lake's bucket were shut down. The app has no sign-in, no database and no environment: the BFF answers
-from `snapshot/`, get-data's responses recorded once and committed (`src/lib/snapshot/`, details in
+**Since 2026-09-29 it is a static public demo.** To bring the GCP bill to zero, GCP project `basecast-509812` was
+deleted (the pipelines' VM, get-data, Cloud SQL, the lake's bucket, BigQuery; local backups in
+`~/Documents/repos/basecast/backups/2026-09-29/`). The app has no sign-in, no database and no environment: the BFF
+answers from `snapshot/`, get-data's responses recorded once and committed (`src/lib/snapshot/`, details in
 `docs/operations.md`). Where the rules below speak of calling get-data, login or the ops log, read them as history.
 
 This file carries the stable parts of `docs/KICKOFF.md` (in Portuguese): sections 1, 2 and 7, this repo's
