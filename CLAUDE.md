@@ -262,7 +262,9 @@ Reference only: `~/Documents/repos/fundsys/fundsys-app` (the base) and `~/Docume
 - Tests: `npm test` (Node's `node:test` run by `tsx`, `jsdom` for DOM tests), next to the code as `*.test.ts(x)`.
 - Some comments in `components/ui`, `components-app` and `fields` are still in Portuguese (pending
   translation pass).
-- Landing pages (`public/landing/`, static HTML from Claude Design, 1440px wide, own tokens and fonts, no app code):
+- Landing pages (`public/landing/`, static HTML from Claude Design, own tokens and fonts, no app code): laid out at
+  1440px and responsive below it (classes and `clamp()` in each file's `<style>`, breakpoints at 1279px for the
+  two diagrams, 1024px and 760px), pixel-identical to the design at 1440px and wider;
   `product.html` at `/` for visitors, `internal.html` at `/how-its-built` for everyone, with the same header (logo, "Open the demo";
   sticky, turning to blurred glass on scroll through a CSS scroll-driven animation) and a floating toggle
   between them (plain links and CSS, repeated in each file). Switching is a cross-document view transition
